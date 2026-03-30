@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MapPin, CheckCircle, ArrowLeft, Clock, Shield } from 'lucide-react';
 import BookingModal from '../components/BookingModal';
+import { API_URL } from '../config';
 import './ProviderProfile.css';
 
 const ProviderProfile = () => {
@@ -14,7 +15,7 @@ const ProviderProfile = () => {
   useEffect(() => {
     const fetchProvider = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/providers/${id}`);
+        const res = await fetch(`${API_URL}/providers/${id}`);
         if (res.ok) {
           const data = await res.json();
           setProvider(data);

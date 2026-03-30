@@ -3,6 +3,7 @@ import { X, Calendar, Clock, CheckCircle, Navigation, MapPin } from 'lucide-reac
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentLocationName } from '../utils/geolocation';
+import { API_URL } from '../config';
 import './BookingModal.css';
 
 const BookingModal = ({ provider, onClose }) => {
@@ -51,7 +52,7 @@ const BookingModal = ({ provider, onClose }) => {
     
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/bookings', {
+      const res = await fetch(`${API_URL}/bookings`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

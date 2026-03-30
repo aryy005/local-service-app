@@ -12,7 +12,7 @@ const Home = () => {
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/providers');
+        const res = await fetch(`${API_URL}/providers`);
         if (res.ok) {
           const data = await res.json();
           setProvidersList(data);

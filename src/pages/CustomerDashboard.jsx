@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Edit2, Save, Phone } from 'lucide-react';
+import { API_URL } from '../config';
 
 const CustomerDashboard = () => {
   const { user, token, updateProfile } = useAuth();
@@ -31,7 +32,7 @@ const CustomerDashboard = () => {
 
     const fetchBookings = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/bookings', {
+        const res = await fetch(`${API_URL}/bookings`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { categories } from '../data/mockData';
 import ProviderCard from '../components/ProviderCard';
 import { Filter, Star } from 'lucide-react';
+import { API_URL } from '../config';
 import './Search.css';
 
 const Search = () => {
@@ -17,7 +18,7 @@ const Search = () => {
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/providers');
+        const res = await fetch(`${API_URL}/providers`);
         if (res.ok) {
           const data = await res.json();
           setProviders(data);

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, Phone, MapPin } from 'lucide-react';
 import { getCurrentLocationName } from '../utils/geolocation';
+import { API_URL } from '../config';
 
 const ProviderDashboard = () => {
   const { user, token, updateProfile } = useAuth();
@@ -24,7 +25,7 @@ const ProviderDashboard = () => {
 
   const fetchJobs = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/bookings', {
+      const res = await fetch(`${API_URL}/bookings`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -65,7 +66,7 @@ const ProviderDashboard = () => {
 
   const updateJobStatus = async (id, status) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${id}/status`, {
+      const res = await fetch(`${API_URL}/bookings/${id}/status`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
