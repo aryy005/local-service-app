@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { categories } from '../data/mockData';
+import { API_URL } from '../config';
 import './Home.css';
 import ProviderCard from '../components/ProviderCard';
 
