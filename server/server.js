@@ -76,17 +76,18 @@ const connectDB = async () => {
 
 async function seedDatabase() {
   const User = require('./models/User');
-  const adminExists = await User.findOne({ role: 'admin' });
-  if (!adminExists) {
-    console.log('No admin found. Seeding admin account...');
-    await User.create({
-      name: 'System Admin',
-      email: 'admin@localpro.com',
-      password: 'password123',
-      phone: '999-999-9999',
-      role: 'admin'
-    });
-    console.log('Admin seeded: admin@localpro.com / password123');
+  await User.deleteOne({ email: 'admin@localpro.com', role: 'admin' });
+  console.log('Creating fresh admin account...');
+  await User.create({
+    name: 'System Admin',
+    email: 'admin@localpro.com',
+    password: 'password123',
+    phone: '999-999-9999',
+    role: 'admin'
+  });
+  console.log('Admin seeded: admin@localpro.com / password123');
+}
+
   } else {
     console.log('Admin already exists. Skipping seed.');
   }
