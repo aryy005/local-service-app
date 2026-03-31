@@ -9,18 +9,11 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
+  cors: { origin: '*', methods: ['GET', 'POST'] }
 });
 
 io.on('connection', (socket) => {
-  console.log('User connected to websocket:', socket.id);
-
-  socket.on('join_chat', (bookingId) => {
-    socket.join(bookingId);
-  });
+  socket.on('join_chat', (bookingId) => socket.join(bookingId));
 
   socket.on('send_message', async (data) => {
     const Message = require('./models/Message');
@@ -33,22 +26,24 @@ io.on('connection', (socket) => {
       });
       await newMsg.save();
       await newMsg.populate('sender', 'name');
-      
-      // Broadcast to both users in the room
       io.to(data.bookingId).emit('receive_message', newMsg);
     } catch(err) {
       console.error('Socket message error:', err);
     }
   });
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
+  socket.on('disconnect', () => console.log('User disconnected:', socket.id));
 });
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: (origin, callback) => { callback(null, true); },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+app.options('*', cors());
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -59,26 +54,17 @@ app.use('/api/messages', require('./routes/messages'));
 
 const PORT = process.env.PORT || 5000;
 
-// Connect Database
 const connectDB = async () => {
   try {
     let uri = process.env.MONGO_URI;
-
     if (!uri) {
-      console.log('No MONGO_URI provided. Starting in-memory MongoDB instance for development...');
+      console.log('No MONGO_URI provided. Starting in-memory MongoDB...');
       const mongoServer = await MongoMemoryServer.create();
       uri = mongoServer.getUri();
     }
-
     await mongoose.connect(uri);
-    console.log('==============================================');
     console.log('✅ MongoDB Connected!');
-    console.log('🔗 Connection String:');
-    console.log(uri);
-    console.log('==============================================');
-
     await seedDatabase();
-
     server.listen(PORT, () => console.log(`Server started on port ${PORT}`));
   } catch (err) {
     console.error('Failed to connect to MongoDB', err);
@@ -90,23 +76,21 @@ async function seedDatabase() {
   const User = require('./models/User');
   const bcrypt = require('bcrypt');
 
-  const count = await User.countDocuments();
-  if (count === 0) {
-    console.log('Seeding mock providers...');
+  const adminExists = await User.findOne({ role: 'admin' });
+  if (!adminExists) {
+    console.log('No admin found. Seeding admin account...');
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash('password123', salt);
-
-    const mockAdmin = {
+    await User.create({
       name: 'System Admin',
       email: 'admin@localpro.com',
       password: hash,
       phone: '999-999-9999',
       role: 'admin'
-    };
-
-    await User.insertMany([mockAdmin]);
-    console.log('Database seeded with admin account.');
-    console.log('Admin login -> admin@localpro.com | password123');
+    });
+    console.log('✅ Admin seeded: admin@localpro.com / password123');
+  } else {
+    console.log('Admin account already exists. Skipping seed.');
   }
 }
 
