@@ -83,17 +83,14 @@ const connectDB = async () => {
 
 async function seedDatabase() {
   const User = require('./models/User');
-  const bcrypt = require('bcrypt');
 
   const adminExists = await User.findOne({ role: 'admin' });
   if (!adminExists) {
     console.log('No admin found. Seeding admin account...');
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash('password123', salt);
     await User.create({
       name: 'System Admin',
       email: 'admin@localpro.com',
-      password: hash,
+      password: 'password123',
       phone: '999-999-9999',
       role: 'admin'
     });
@@ -101,6 +98,8 @@ async function seedDatabase() {
   } else {
     console.log('Admin account already exists. Skipping seed.');
   }
+}
+
 }
 
 connectDB();
