@@ -2,7 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const { MongoMemoryServer } = require('mongodb-memory-server');
+let MongoMemoryServer;
+try { MongoMemoryServer = require('mongodb-memory-server').MongoMemoryServer; } catch(e) {}
+
 const http = require('http');
 const { Server } = require('socket.io');
 
