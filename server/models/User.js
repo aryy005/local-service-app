@@ -4,7 +4,8 @@ const bcrypt = require('bcrypt');
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
-  phone: { type: String, required: true, default: '000-000-0000' }, // Default for legacy users without a phone
+ phone: { type: String, default: '' },
+
   password: { type: String, required: true },
   role: { type: String, enum: ['customer', 'provider', 'admin'], required: true },
   
@@ -30,7 +31,7 @@ userSchema.pre('save', async function() {
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
-Fix: provider registration server error
+
 
 // Compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
