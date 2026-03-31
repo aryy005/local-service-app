@@ -13,7 +13,6 @@ const io = new Server(server, {
 
 io.on('connection', (socket) => {
   socket.on('join_chat', (bookingId) => socket.join(bookingId));
-
   socket.on('send_message', async (data) => {
     const Message = require('./models/Message');
     try {
@@ -30,7 +29,6 @@ io.on('connection', (socket) => {
       console.error('Socket message error:', err);
     }
   });
-
   socket.on('disconnect', () => console.log('User disconnected:', socket.id));
 });
 
@@ -56,11 +54,10 @@ const connectDB = async () => {
     if (!uri) {
       try {
         const { MongoMemoryServer } = require('mongodb-memory-server');
-        console.log('No MONGO_URI. Starting in-memory MongoDB for dev...');
         const mongoServer = await MongoMemoryServer.create();
         uri = mongoServer.getUri();
       } catch(e) {
-        console.error('No MONGO_URI set. Please set MONGO_URI environment variable.');
+        console.error('No MONGO_URI set.');
         process.exit(1);
       }
     }
@@ -77,7 +74,6 @@ const connectDB = async () => {
 async function seedDatabase() {
   const User = require('./models/User');
   await User.deleteOne({ email: 'admin@localpro.com', role: 'admin' });
-  console.log('Creating fresh admin account...');
   await User.create({
     name: 'System Admin',
     email: 'admin@localpro.com',
@@ -86,11 +82,6 @@ async function seedDatabase() {
     role: 'admin'
   });
   console.log('Admin seeded: admin@localpro.com / password123');
-}
-
-  } else {
-    console.log('Admin already exists. Skipping seed.');
-  }
 }
 
 connectDB();
