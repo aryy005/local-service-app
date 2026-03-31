@@ -34,7 +34,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => console.log('User disconnected:', socket.id));
 });
 
-// Middleware
 app.use(express.json());
 app.use(cors({
   origin: (origin, callback) => { callback(null, true); },
@@ -43,8 +42,6 @@ app.use(cors({
   credentials: true
 }));
 
-
-// Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/providers', require('./routes/providers'));
 app.use('/api/bookings', require('./routes/bookings'));
@@ -56,25 +53,21 @@ const PORT = process.env.PORT || 5000;
 const connectDB = async () => {
   try {
     let uri = process.env.MONGO_URI;
-
     if (!uri) {
-      // Only use in-memory MongoDB for local development
       try {
         const { MongoMemoryServer } = require('mongodb-memory-server');
         console.log('No MONGO_URI. Starting in-memory MongoDB for dev...');
         const mongoServer = await MongoMemoryServer.create();
         uri = mongoServer.getUri();
       } catch(e) {
-        console.error('No MONGO_URI set and mongodb-memory-server not available.');
-        console.error('Please set MONGO_URI environment variable.');
+        console.error('No MONGO_URI set. Please set MONGO_URI environment variable.');
         process.exit(1);
       }
     }
-
     await mongoose.connect(uri);
-    console.log('✅ MongoDB Connected!');
+    console.log('MongoDB Connected!');
     await seedDatabase();
-    server.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+    server.listen(PORT, () => console.log('Server started on port ' + PORT));
   } catch (err) {
     console.error('Failed to connect to MongoDB', err);
     process.exit(1);
@@ -83,7 +76,6 @@ const connectDB = async () => {
 
 async function seedDatabase() {
   const User = require('./models/User');
-
   const adminExists = await User.findOne({ role: 'admin' });
   if (!adminExists) {
     console.log('No admin found. Seeding admin account...');
@@ -94,12 +86,10 @@ async function seedDatabase() {
       phone: '999-999-9999',
       role: 'admin'
     });
-    console.log('✅ Admin seeded: admin@localpro.com / password123');
+    console.log('Admin seeded: admin@localpro.com / password123');
   } else {
-    console.log('Admin account already exists. Skipping seed.');
+    console.log('Admin already exists. Skipping seed.');
   }
-}
-
 }
 
 connectDB();
