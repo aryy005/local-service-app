@@ -2,9 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-let MongoMemoryServer;
-try { MongoMemoryServer = require('mongodb-memory-server').MongoMemoryServer; } catch(e) {}
-
 const http = require('http');
 const { Server } = require('socket.io');
 
@@ -59,11 +56,21 @@ const PORT = process.env.PORT || 5000;
 const connectDB = async () => {
   try {
     let uri = process.env.MONGO_URI;
+
     if (!uri) {
-      console.log('No MONGO_URI provided. Starting in-memory MongoDB...');
-      const mongoServer = await MongoMemoryServer.create();
-      uri = mongoServer.getUri();
+      // Only use in-memory MongoDB for local development
+      try {
+        const { MongoMemoryServer } = require('mongodb-memory-server');
+        console.log('No MONGO_URI. Starting in-memory MongoDB for dev...');
+        const mongoServer = await MongoMemoryServer.create();
+        uri = mongoServer.getUri();
+      } catch(e) {
+        console.error('No MONGO_URI set and mongodb-memory-server not available.');
+        console.error('Please set MONGO_URI environment variable.');
+        process.exit(1);
+      }
     }
+
     await mongoose.connect(uri);
     console.log('✅ MongoDB Connected!');
     await seedDatabase();
