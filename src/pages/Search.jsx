@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { categories } from '../data/mockData';
 import ProviderCard from '../components/ProviderCard';
+import SkeletonLoader from '../components/SkeletonLoader';
 import { Filter, Star } from 'lucide-react';
 import { API_URL } from '../config';
 import './Search.css';
@@ -111,7 +112,14 @@ const Search = () => {
             </select>
           </div>
           
-          {filteredProviders.length > 0 ? (
+          {loading ? (
+            <div className="providers-grid">
+              <SkeletonLoader />
+              <SkeletonLoader />
+              <SkeletonLoader />
+              <SkeletonLoader />
+            </div>
+          ) : filteredProviders.length > 0 ? (
             <div className="providers-grid">
               {filteredProviders.map(provider => (
                 <ProviderCard key={provider.id} provider={provider} />

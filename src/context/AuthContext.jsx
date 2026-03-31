@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { API_URL } from '../config';
+import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
@@ -25,6 +26,7 @@ export const AuthProvider = ({ children }) => {
           const data = await res.json();
           setUser(data);
         } else {
+          toast.error("Session expired. Please log in again.");
           logout();
         }
       } catch (err) {
@@ -44,11 +46,15 @@ export const AuthProvider = ({ children }) => {
     });
     
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Login failed');
+    if (!res.ok) {
+      toast.error(data.message || 'Login failed');
+      throw new Error(data.message || 'Login failed');
+    }
     
     setToken(data.token);
     setUser(data.user);
     localStorage.setItem('token', data.token);
+    toast.success('Welcome back!');
     return data;
   };
 
@@ -60,11 +66,15 @@ export const AuthProvider = ({ children }) => {
     });
     
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Registration failed');
+    if (!res.ok) {
+      toast.error(data.message || 'Registration failed');
+      throw new Error(data.message || 'Registration failed');
+    }
     
     setToken(data.token);
     setUser(data.user);
     localStorage.setItem('token', data.token);
+    toast.success('Account created successfully!');
     return data;
   };
 

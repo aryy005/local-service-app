@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, Phone, MapPin } from 'lucide-react';
 import { getCurrentLocationName } from '../utils/geolocation';
 import { API_URL } from '../config';
+import ChatModal from '../components/ChatModal';
+import { MessageSquare } from 'lucide-react';
 
 const ProviderDashboard = () => {
   const { user, token, updateProfile } = useAuth();
@@ -11,6 +13,7 @@ const ProviderDashboard = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('jobs'); // 'jobs' | 'profile'
+  const [activeChat, setActiveChat] = useState(null);
 
   // Profile Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -147,14 +150,14 @@ const ProviderDashboard = () => {
 
           <div className="jobs-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '3rem' }}>
             {newJobs.length > 0 ? newJobs.map(job => (
-              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} />
+              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} openChat={() => setActiveChat(job)} />
             )) : <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No new job requests</div>}
           </div>
 
           <h2 style={{ marginBottom: '1.5rem' }}>Previous / Accepted Orders</h2>
           <div className="jobs-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {pastJobs.length > 0 ? pastJobs.map(job => (
-              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} />
+              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} openChat={() => setActiveChat(job)} />
             )) : <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No previous orders found</div>}
           </div>
         </div>
@@ -238,12 +241,18 @@ const ProviderDashboard = () => {
           )}
         </div>
       )}
+      
+      <ChatModal 
+        isOpen={!!activeChat} 
+        booking={activeChat} 
+        onClose={() => setActiveChat(null)} 
+      />
     </div>
   );
 };
 
 // Helper component for rendering jobs
-const JobCard = ({ job, updateJobStatus }) => (
+const JobCard = ({ job, updateJobStatus, openChat }) => (
   <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
@@ -282,6 +291,12 @@ const JobCard = ({ job, updateJobStatus }) => (
               <Check size={16} /> Accept Job
             </button>
             <button 
+              onClick={openChat}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+            >
+              <MessageSquare size={16} /> Message
+            </button>
+            <button 
               onClick={() => updateJobStatus(job._id, 'declined')}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--text-muted)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}
             >
@@ -290,12 +305,20 @@ const JobCard = ({ job, updateJobStatus }) => (
           </div>
         )}
         {job.status === 'accepted' && (
-          <button 
-            onClick={() => updateJobStatus(job._id, 'completed')}
-            className="btn btn-outline mt-2"
-          >
-            Mark as Completed
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <button 
+              onClick={() => updateJobStatus(job._id, 'completed')}
+              className="btn btn-outline"
+            >
+              Mark as Completed
+            </button>
+            <button 
+              onClick={openChat}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+            >
+              <MessageSquare size={16} /> Message
+            </button>
+          </div>
         )}
       </div>
     </div>

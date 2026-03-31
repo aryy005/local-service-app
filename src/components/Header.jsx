@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, User, Menu, Moon, Sun, LogOut, Navigation } from 'lucide-react';
+import { Search, MapPin, User, Menu, Moon, Sun, LogOut, Navigation, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { getCurrentLocationName } from '../utils/geolocation';
@@ -13,9 +13,11 @@ const Header = () => {
 
   const [locationValue, setLocationValue] = useState("");
   const [isLocating, setIsLocating] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
+    setIsMobileMenuOpen(false);
     navigate('/');
   };
 
@@ -101,9 +103,43 @@ const Header = () => {
           )}
         </nav>
         
-        <button className="mobile-menu-btn">
-          <Menu size={24} />
+        <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
+      </div>
+
+      {/* Mobile Navigation Panel */}
+      <div className={`mobile-nav-panel ${isMobileMenuOpen ? 'open' : ''}`}>
+         <Link to="/search" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Browse Services</Link>
+         <button className="mobile-nav-link text-left bg-transparent border-0 cursor-pointer" onClick={() => { toggleTheme(); setIsMobileMenuOpen(false); }}>
+           Toggle {theme === 'light' ? 'Dark' : 'Light'} Mode
+         </button>
+         
+         <div className="mobile-nav-actions">
+           {user ? (
+             <>
+               <Link to={user.role === 'provider' ? '/provider-dashboard' : '/customer-dashboard'} 
+                     className="btn btn-outline"
+                     onClick={() => setIsMobileMenuOpen(false)}>
+                 Dashboard
+               </Link>
+               <button onClick={handleLogout} className="btn btn-primary" style={{ padding: '0.75rem' }}>
+                 <LogOut size={18} />
+                 <span>Sign Out</span>
+               </button>
+             </>
+           ) : (
+             <>
+               <Link to="/auth/login" className="btn btn-outline" onClick={() => setIsMobileMenuOpen(false)}>
+                 <User size={18} />
+                 <span>Sign In</span>
+               </Link>
+               <Link to="/auth/signup" className="btn btn-primary" onClick={() => setIsMobileMenuOpen(false)}>
+                 Sign Up
+               </Link>
+             </>
+           )}
+         </div>
       </div>
     </header>
   );

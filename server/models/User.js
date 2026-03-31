@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true },
   phone: { type: String, required: true, default: '000-000-0000' }, // Default for legacy users without a phone
   password: { type: String, required: true },
-  role: { type: String, enum: ['customer', 'provider'], required: true },
+  role: { type: String, enum: ['customer', 'provider', 'admin'], required: true },
   
   // Provider specific fields
   providerDetails: {

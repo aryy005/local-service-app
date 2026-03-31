@@ -5,6 +5,7 @@ import { categories } from '../data/mockData';
 import { API_URL } from '../config';
 import './Home.css';
 import ProviderCard from '../components/ProviderCard';
+import SkeletonLoader from '../components/SkeletonLoader';
 
 const Home = () => {
   const [providersList, setProvidersList] = useState([]);
@@ -81,9 +82,19 @@ const Home = () => {
           <p className="section-subtitle">Highly recommended by your community</p>
         </div>
         <div className="providers-grid">
-          {topProviders.map(provider => (
-            <ProviderCard key={provider.id} provider={provider} />
-          ))}
+          {loading ? (
+            <>
+              <SkeletonLoader />
+              <SkeletonLoader />
+              <SkeletonLoader />
+            </>
+          ) : topProviders.length > 0 ? (
+            topProviders.map(provider => (
+              <ProviderCard key={provider.id} provider={provider} />
+            ))
+          ) : (
+            <p className="text-gray-500">No top providers found.</p>
+          )}
         </div>
       </section>
     </div>

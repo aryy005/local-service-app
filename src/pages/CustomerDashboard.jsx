@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Edit2, Save, Phone } from 'lucide-react';
+import { Calendar, Clock, Edit2, Save, Phone, MessageSquare } from 'lucide-react';
 import { API_URL } from '../config';
+import ChatModal from '../components/ChatModal';
 
 const CustomerDashboard = () => {
   const { user, token, updateProfile } = useAuth();
@@ -10,6 +11,7 @@ const CustomerDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'profile'
+  const [activeChat, setActiveChat] = useState(null);
 
   // Profile Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -101,6 +103,15 @@ const CustomerDashboard = () => {
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Calendar size={16} /> {booking.date}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Clock size={16} /> {booking.timePreference}</span>
               </div>
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                <button 
+                  onClick={() => setActiveChat(booking)}
+                  className="btn btn-outline btn-sm" 
+                  style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                  <MessageSquare size={16} /> Message Provider
+                </button>
+              </div>
               <div style={{ background: 'var(--surface-color)', padding: '1rem', borderRadius: '0.5rem' }}>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>"{booking.description}"</p>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid var(--surface-border)', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
@@ -164,6 +175,12 @@ const CustomerDashboard = () => {
           )}
         </div>
       )}
+
+      <ChatModal 
+        isOpen={!!activeChat} 
+        booking={activeChat} 
+        onClose={() => setActiveChat(null)} 
+      />
     </div>
   );
 };
