@@ -4,10 +4,12 @@ import { categories } from '../data/mockData';
 import ProviderCard from '../components/ProviderCard';
 import SkeletonLoader from '../components/SkeletonLoader';
 import { Filter, Star } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
 import './Search.css';
 
 const Search = () => {
+  const { userLocation } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryId = searchParams.get('category');
   
@@ -15,11 +17,18 @@ const Search = () => {
   const [filteredProviders, setFilteredProviders] = useState([]);
   const [activeCategory, setActiveCategory] = useState(categoryId || 'all');
   const [loading, setLoading] = useState(true);
+  const [radius, setRadius] = useState(30000); // 30km default
 
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const res = await fetch(`${API_URL}/providers`);
+        setLoading(true);
+        let url = `${API_URL}/providers`;
+        if (userLocation?.lng && userLocation?.lat) {
+          url += `?lng=${userLocation.lng}&lat=${userLocation.lat}&radius=${radius}`;
+        }
+        
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           setProviders(data);
@@ -31,7 +40,7 @@ const Search = () => {
       }
     };
     fetchProviders();
-  }, []);
+  }, [userLocation, radius]);
 
   useEffect(() => {
     let result = providers;
@@ -128,10 +137,22 @@ const Search = () => {
           ) : (
             <div className="empty-state glass-panel">
               <h3>No professionals found</h3>
-              <p>Try selecting a different category or adjusting your search criteria.</p>
-              <button className="btn btn-outline mt-4" onClick={() => handleCategoryChange('all')}>
-                Clear Filters
-              </button>
+              
+              {userLocation && radius === 30000 ? (
+                <>
+                  <p>No professionals found within 30km of your location.</p>
+                  <button className="btn btn-primary mt-4" onClick={() => setRadius(100000)}>
+                    Expand Search to 100km
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p>Try selecting a different category or adjusting your search criteria.</p>
+                  <button className="btn btn-outline mt-4" onClick={() => handleCategoryChange('all')}>
+                    Clear Filters
+                  </button>
+                </>
+              )}
             </div>
           )}
         </main>

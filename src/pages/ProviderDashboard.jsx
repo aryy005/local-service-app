@@ -22,8 +22,10 @@ const ProviderDashboard = () => {
     name: '',
     phone: '',
     hourlyRate: '',
+    experienceYears: '',
     location: '',
-    description: ''
+    description: '',
+    upiId: ''
   });
 
   const fetchJobs = async () => {
@@ -58,8 +60,10 @@ const ProviderDashboard = () => {
         name: user.name || '',
         phone: user.phone || '',
         hourlyRate: user.providerDetails?.hourlyRate || '',
+        experienceYears: user.providerDetails?.experienceYears || '',
         location: user.providerDetails?.location || '',
-        description: user.providerDetails?.description || ''
+        description: user.providerDetails?.description || '',
+        upiId: user.providerDetails?.upiId || ''
       });
     }
 
@@ -67,7 +71,7 @@ const ProviderDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, token, navigate]);
 
-  const updateJobStatus = async (id, status) => {
+  const updateJobStatus = async (id, status, extraData = {}) => {
     try {
       const res = await fetch(`${API_URL}/bookings/${id}/status`, {
         method: 'PUT',
@@ -75,9 +79,31 @@ const ProviderDashboard = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status, ...extraData })
       });
       if (res.ok) fetchJobs();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const rateCustomer = async (id, rating, comment) => {
+    try {
+      const res = await fetch(`${API_URL}/bookings/${id}/rate-customer`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ rating, comment })
+      });
+      if (res.ok) {
+        alert('Customer rated successfully!');
+        fetchJobs();
+      } else {
+        const data = await res.json();
+        alert(data.message || 'Failed to rate customer');
+      }
     } catch (err) {
       console.error(err);
     }
@@ -103,8 +129,10 @@ const ProviderDashboard = () => {
         phone: formData.phone,
         providerDetails: {
           hourlyRate: Number(formData.hourlyRate),
+          experienceYears: Number(formData.experienceYears) || 0,
           location: formData.location,
-          description: formData.description
+          description: formData.description,
+          upiId: formData.upiId
         }
       });
       setIsEditing(false);
@@ -133,6 +161,18 @@ const ProviderDashboard = () => {
             My Jobs
           </button>
           <button 
+            className={`btn ${activeTab === 'earnings' ? 'btn-primary' : 'btn-outline'}`} 
+            onClick={() => setActiveTab('earnings')}
+          >
+            Earnings
+          </button>
+          <button 
+            className={`btn ${activeTab === 'wallet' ? 'btn-primary' : 'btn-outline'}`} 
+            onClick={() => setActiveTab('wallet')}
+          >
+            Wallet
+          </button>
+          <button 
             className={`btn ${activeTab === 'profile' ? 'btn-primary' : 'btn-outline'}`} 
             onClick={() => setActiveTab('profile')}
           >
@@ -140,6 +180,53 @@ const ProviderDashboard = () => {
           </button>
         </div>
       </div>
+
+      {activeTab === 'earnings' && (
+        <EarningsDashboard bookings={jobs.filter(j => j.status === 'completed')} />
+      )}
+
+      {activeTab === 'wallet' && (
+        <div className="glass-panel fade-in" style={{ padding: '2rem', borderRadius: '1rem' }}>
+          <h2 style={{ marginBottom: '1.5rem' }}>Wallet & Payouts</h2>
+          
+          <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(56, 189, 248, 0.2)', marginBottom: '2rem' }}>
+            <h3 style={{ margin: 0, color: 'var(--text-muted)', fontSize: '1rem' }}>Available Balance</h3>
+            <p style={{ margin: '0.5rem 0 0 0', fontSize: '2.5rem', fontWeight: 700, color: '#38bdf8' }}>
+              ₹{jobs.filter(j => j.status === 'completed').reduce((sum, b) => sum + (Number(b.finalPrice) || 0), 0)}
+            </p>
+          </div>
+
+          <form onSubmit={handleProfileSubmit} style={{ maxWidth: '400px' }}>
+            <div className="form-group">
+              <label>Mapping UPI ID</label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input 
+                  type="text" 
+                  value={formData.upiId} 
+                  onChange={e => setFormData({...formData, upiId: e.target.value})} 
+                  placeholder="e.g., yourname@okhdfcbank" 
+                  className="form-control" 
+                />
+                <button type="submit" className="btn btn-outline" disabled={!isEditing && formData.upiId === user.providerDetails?.upiId}>
+                  Save
+                </button>
+              </div>
+              <small className="text-muted mt-1" style={{ display: 'block' }}>We will instantly process withdrawals to this UPI handle.</small>
+            </div>
+          </form>
+
+          <button 
+            onClick={() => {
+              if (!formData.upiId) return alert('Please save a valid UPI ID first!');
+              alert(`Success! Simulated instant payout initiated to ${formData.upiId}. Funds usually arrive in 1-2 minutes.`);
+            }}
+            className="btn btn-primary btn-lg mt-6"
+            style={{ width: '100%', maxWidth: '400px', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}
+          >
+             Withdraw instantly via UPI
+          </button>
+        </div>
+      )}
 
       {activeTab === 'jobs' && (
         <div className="jobs-section">
@@ -150,14 +237,14 @@ const ProviderDashboard = () => {
 
           <div className="jobs-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '3rem' }}>
             {newJobs.length > 0 ? newJobs.map(job => (
-              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} openChat={() => setActiveChat(job)} />
+              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} rateCustomer={rateCustomer} openChat={() => setActiveChat(job)} />
             )) : <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No new job requests</div>}
           </div>
 
           <h2 style={{ marginBottom: '1.5rem' }}>Previous / Accepted Orders</h2>
           <div className="jobs-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {pastJobs.length > 0 ? pastJobs.map(job => (
-              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} openChat={() => setActiveChat(job)} />
+              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} rateCustomer={rateCustomer} openChat={() => setActiveChat(job)} />
             )) : <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No previous orders found</div>}
           </div>
         </div>
@@ -185,9 +272,15 @@ const ProviderDashboard = () => {
                   <label>Phone Number</label>
                   <input type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required className="form-control" />
                 </div>
-                <div className="form-group">
-                  <label>Hourly Rate (₹)</label>
-                  <input type="number" value={formData.hourlyRate} onChange={e => setFormData({...formData, hourlyRate: e.target.value})} required className="form-control" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label>Hourly Rate (₹)</label>
+                    <input type="number" value={formData.hourlyRate} onChange={e => setFormData({...formData, hourlyRate: e.target.value})} required className="form-control" />
+                  </div>
+                  <div className="form-group">
+                    <label>Years of Exp.</label>
+                    <input type="number" value={formData.experienceYears} onChange={e => setFormData({...formData, experienceYears: e.target.value})} required className="form-control" min="0" />
+                  </div>
                 </div>
                 <div className="form-group">
                   <label>Location Area</label>
@@ -225,9 +318,15 @@ const ProviderDashboard = () => {
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Phone Number</p>
                 <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.phone}</p>
               </div>
-              <div>
-                <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Hourly Rate</p>
-                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>₹{user.providerDetails?.hourlyRate}</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                <div>
+                  <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Hourly Rate</p>
+                  <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>₹{user.providerDetails?.hourlyRate}</p>
+                </div>
+                <div>
+                  <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Years of Experience</p>
+                  <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.experienceYears} Years</p>
+                </div>
               </div>
               <div>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Location Area</p>
@@ -236,6 +335,26 @@ const ProviderDashboard = () => {
               <div style={{ gridColumn: '1 / -1' }}>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Bio / Description</p>
                 <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.description}</p>
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Verification Status</p>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <span className={user.emailVerified ? 'verified-badge large' : 'unverified-badge'}>
+                    ✉ Email {user.emailVerified ? '✓ Verified' : '✗ Not Verified'}
+                  </span>
+                  <span className={user.phoneVerified ? 'verified-badge large' : 'unverified-badge'}>
+                    📱 Phone {user.phoneVerified ? '✓ Verified' : '✗ Not Verified'}
+                  </span>
+                  {user.providerDetails?.aadhaarVerified ? (
+                    <span className="verified-badge large">
+                      🛡 Aadhaar Verified (XXXX-XXXX-{user.providerDetails?.aadhaarLastFour || '****'})
+                    </span>
+                  ) : (
+                    <span className="unverified-badge">
+                      ⚠ Aadhaar Not Verified
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -251,8 +370,58 @@ const ProviderDashboard = () => {
   );
 };
 
+const EarningsDashboard = ({ bookings }) => {
+  const totalEarned = bookings.reduce((sum, b) => sum + (Number(b.finalPrice) || 0), 0);
+  const thisMonth = new Date().getMonth();
+  const earnedThisMonth = bookings.filter(b => new Date(b.createdAt).getMonth() === thisMonth)
+                                  .reduce((sum, b) => sum + (Number(b.finalPrice) || 0), 0);
+
+  return (
+    <div className="glass-panel fade-in" style={{ padding: '2rem', borderRadius: '1rem' }}>
+      <h2 style={{ marginBottom: '1.5rem' }}>Earnings Overview</h2>
+      
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '3rem' }}>
+        <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+          <h3 style={{ margin: 0, color: 'var(--text-muted)', fontSize: '1rem' }}>Total Earnings</h3>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#10b981' }}>₹{totalEarned}</p>
+        </div>
+        <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+          <h3 style={{ margin: 0, color: 'var(--text-muted)', fontSize: '1rem' }}>Earned This Month</h3>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#38bdf8' }}>₹{earnedThisMonth}</p>
+        </div>
+      </div>
+
+      <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem' }}>Recent Transactions</h3>
+      {bookings.length > 0 ? (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--surface-border)', color: 'var(--text-muted)' }}>
+                <th style={{ padding: '0.75rem' }}>Date</th>
+                <th style={{ padding: '0.75rem' }}>Job Details</th>
+                <th style={{ padding: '0.75rem', textAlign: 'right' }}>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bookings.map(b => (
+                <tr key={b._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <td style={{ padding: '1rem 0.75rem' }}>{b.date}</td>
+                  <td style={{ padding: '1rem 0.75rem' }}>{b.description.substring(0,40)}...</td>
+                  <td style={{ padding: '1rem 0.75rem', textAlign: 'right', fontWeight: 600, color: '#10b981' }}>+ ₹{b.finalPrice || 0}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p style={{ color: 'var(--text-muted)' }}>No completed jobs to show earnings for yet.</p>
+      )}
+    </div>
+  );
+};
+
 // Helper component for rendering jobs
-const JobCard = ({ job, updateJobStatus, openChat }) => (
+const JobCard = ({ job, updateJobStatus, openChat, rateCustomer }) => (
   <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
@@ -261,7 +430,14 @@ const JobCard = ({ job, updateJobStatus, openChat }) => (
             <UserIcon size={20} color="var(--primary-color)" />
           </div>
           <div>
-            <h3 style={{ margin: 0 }}>{job.customerId?.name || 'Customer'}</h3>
+            <h3 style={{ margin: 0 }}>
+              {job.customerId?.name || 'Customer'}
+              {job.customerId?.customerDetails?.reviewsCount > 0 && (
+                <span style={{ fontSize: '0.8rem', marginLeft: '0.5rem', background: '#ffc107', color: '#000', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                  ⭐ {job.customerId?.customerDetails?.rating} 
+                </span>
+              )}
+            </h3>
             <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{job.customerId?.email} | <Phone size={12}/> {job.customerId?.phone}</p>
           </div>
         </div>
@@ -307,7 +483,10 @@ const JobCard = ({ job, updateJobStatus, openChat }) => (
         {job.status === 'accepted' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <button 
-              onClick={() => updateJobStatus(job._id, 'completed')}
+              onClick={() => {
+                const amt = window.prompt("Enter final amount earned (₹):");
+                if (amt !== null) updateJobStatus(job._id, 'completed', { finalPrice: amt || 0 });
+              }}
               className="btn btn-outline"
             >
               Mark as Completed
@@ -318,6 +497,31 @@ const JobCard = ({ job, updateJobStatus, openChat }) => (
             >
               <MessageSquare size={16} /> Message
             </button>
+          </div>
+        )}
+        {job.status === 'completed' && !job.customerReview?.rating && (
+          <div style={{ marginTop: '0.5rem' }}>
+            <button 
+              onClick={() => {
+                const rt = window.prompt("Rate customer from 1 to 5 stars:");
+                const num = Number(rt);
+                if (num >= 1 && num <= 5) {
+                   const comment = window.prompt("Any comment (optional)?");
+                   rateCustomer(job._id, num, comment || '');
+                } else if (rt) {
+                   alert("Please enter a valid rating between 1 and 5.");
+                }
+              }}
+              className="btn btn-outline btn-sm"
+              style={{ width: '100%', borderColor: 'var(--warning-color)', color: 'var(--warning-color)' }}
+            >
+              ⭐ Rate Customer
+            </button>
+          </div>
+        )}
+        {job.status === 'completed' && job.customerReview?.rating && (
+          <div style={{ marginTop: '0.5rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            You rated ⭐ {job.customerReview.rating}
           </div>
         )}
       </div>

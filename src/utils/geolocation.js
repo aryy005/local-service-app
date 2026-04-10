@@ -29,7 +29,11 @@ export const getCurrentLocationName = async () => {
             address.county || 
             "Current Location";
             
-          resolve(locationName);
+            resolve({
+              name: locationName,
+              lng: longitude,
+              lat: latitude
+            });
         } catch (error) {
           reject(error);
         }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, CheckCircle, ArrowLeft, Clock, Shield } from 'lucide-react';
+import { Star, MapPin, CheckCircle, ArrowLeft, Clock, Shield, ShieldCheck, AlertTriangle } from 'lucide-react';
 import BookingModal from '../components/BookingModal';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
@@ -13,6 +13,7 @@ const ProviderProfile = () => {
   const { user, token } = useAuth();
   const [provider, setProvider] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [portfolio, setPortfolio] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   
@@ -22,13 +23,15 @@ const ProviderProfile = () => {
   useEffect(() => {
     const fetchProviderData = async () => {
       try {
-        const [provRes, revRes] = await Promise.all([
+        const [provRes, revRes, portRes] = await Promise.all([
           fetch(`${API_URL}/providers/${id}`),
-          fetch(`${API_URL}/providers/${id}/reviews`)
+          fetch(`${API_URL}/providers/${id}/reviews`),
+          fetch(`${API_URL}/providers/${id}/portfolio`)
         ]);
         
         if (provRes.ok) setProvider(await provRes.json());
         if (revRes.ok) setReviews(await revRes.json());
+        if (portRes.ok) setPortfolio(await portRes.json());
       } catch (err) {
         console.error(err);
       } finally {
@@ -93,7 +96,14 @@ const ProviderProfile = () => {
             </div>
             
             <div className="profile-primary-info">
-              <h1>{provider.name}</h1>
+              <h1>
+                {provider.name}
+                {provider.providerDetails.aadhaarVerified && (
+                  <span className="verified-badge large" style={{ marginLeft: '0.75rem', verticalAlign: 'middle' }}>
+                    <ShieldCheck size={18} /> Aadhaar Verified
+                  </span>
+                )}
+              </h1>
               <div className="profile-meta">
                 <div className="meta-item rating">
                   <Star fill="var(--warning-color)" color="var(--warning-color)" size={18} />
@@ -103,6 +113,16 @@ const ProviderProfile = () => {
                   <MapPin size={18} />
                   {provider.providerDetails.location}
                 </div>
+                {provider.providerDetails.experienceYears > 0 && (
+                  <div className="meta-item location" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
+                    💼 <strong>{provider.providerDetails.experienceYears}</strong> Years Exp.
+                  </div>
+                )}
+                {provider.providerDetails.totalJobsCompleted > 0 && (
+                  <div className="meta-item location" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
+                    🏆 <strong>{provider.providerDetails.totalJobsCompleted}</strong> Jobs Done
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -124,16 +144,31 @@ const ProviderProfile = () => {
             </div>
           </div>
 
+          {portfolio && portfolio.length > 0 && (
+            <div className="glass-panel profile-section">
+              <h2>Past Work Gallery</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+                {portfolio.map((imgUrl, idx) => (
+                  <img key={idx} src={imgUrl} alt={`Completed Job ${idx}`} style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px' }} />
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="glass-panel profile-section">
             <h2>Reviews ({reviews.length})</h2>
             
             {user && user.role === 'customer' && (
-              <form onSubmit={handleReviewSubmit} className="mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
-                <h4 className="font-bold mb-2">Leave a Review</h4>
-                <div className="flex items-center space-x-2 mb-3">
-                  <span className="text-sm font-medium">Rating: </span>
+              <form onSubmit={handleReviewSubmit} style={{
+                marginBottom: '1.25rem', padding: '1rem',
+                background: 'var(--bg-secondary)', borderRadius: 'var(--border-radius-sm)',
+                border: '1px solid var(--surface-border)'
+              }}>
+                <h4 style={{ fontWeight: 700, marginBottom: '0.65rem', fontSize: '0.95rem' }}>Leave a Review</h4>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.65rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>Rating: </span>
                   <select 
-                    className="p-1 border rounded"
+                    style={{ width: 'auto', padding: '0.3rem 0.5rem', fontSize: '0.85rem' }}
                     value={newReview.rating} 
                     onChange={e => setNewReview({ ...newReview, rating: Number(e.target.value)})}
                   >
@@ -142,31 +177,35 @@ const ProviderProfile = () => {
                 </div>
                 <textarea 
                   required
-                  className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 mb-2"
+                  style={{ marginBottom: '0.65rem', minHeight: '70px', fontSize: '0.9rem' }}
                   placeholder="Share your experience..."
                   value={newReview.comment}
                   onChange={e => setNewReview({ ...newReview, comment: e.target.value })}
                 />
-                <button type="submit" disabled={submittingReview} className="btn btn-primary text-sm">
+                <button type="submit" disabled={submittingReview} className="btn btn-primary btn-sm">
                   {submittingReview ? 'Submitting...' : 'Submit Review'}
                 </button>
               </form>
             )}
 
-            <div className="reviews-list space-y-4">
+            <div className="reviews-list">
               {reviews.length === 0 ? (
-                <p className="text-muted">No reviews yet.</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No reviews yet.</p>
               ) : (
                 reviews.map(review => (
-                  <div key={review._id} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <div className="flex justify-between items-start mb-2">
-                      <strong className="text-gray-900 dark:text-white">{review.customer?.name || 'Customer'}</strong>
-                      <div className="flex items-center">
-                        <Star size={14} fill="var(--warning-color)" color="var(--warning-color)" />
-                        <span className="ml-1 text-sm font-bold">{review.rating}</span>
+                  <div key={review._id} style={{
+                    padding: '1rem', background: 'var(--bg-secondary)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    border: '1px solid var(--surface-border)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                      <strong style={{ fontSize: '0.9rem' }}>{review.customer?.name || 'Customer'}</strong>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                        <Star size={13} fill="#ffc107" color="#ffc107" />
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700 }}>{review.rating}</span>
                       </div>
                     </div>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm">{review.comment}</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: 1.5 }}>{review.comment}</p>
                   </div>
                 ))
               )}
@@ -188,8 +227,17 @@ const ProviderProfile = () => {
                 <span>Responds in ~1 hr</span>
               </div>
               <div className="feature-item">
-                <Shield size={16} />
-                <span>Verified Professional</span>
+                {provider.providerDetails.aadhaarVerified ? (
+                  <>
+                    <ShieldCheck size={16} color="#10b981" />
+                    <span style={{ color: '#10b981', fontWeight: 600 }}>Aadhaar Verified</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle size={16} color="#f59e0b" />
+                    <span style={{ color: '#f59e0b' }}>Not Verified</span>
+                  </>
+                )}
               </div>
             </div>
 

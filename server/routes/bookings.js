@@ -48,7 +48,7 @@ router.get('/', auth, async (req, res) => {
     } else {
       // Provider
       bookings = await Booking.find({ providerId: req.user.id })
-        .populate('customerId', ['name', 'phone', 'email'])
+        .populate('customerId', ['name', 'phone', 'email', 'customerDetails'])
         .sort({ date: -1 });
     }
     res.json(bookings);
@@ -66,7 +66,7 @@ router.put('/:id/status', auth, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update status' });
     }
 
-    const { status } = req.body;
+    const { status, workPhotos, finalPrice } = req.body;
     let booking = await Booking.findById(req.params.id);
 
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
@@ -75,9 +75,67 @@ router.put('/:id/status', auth, async (req, res) => {
     if (booking.providerId.toString() !== req.user.id) {
       return res.status(401).json({ message: 'Not authorized' });
     }
+    
+    const wasCompleted = booking.status === 'completed';
 
     booking.status = status;
+    if (workPhotos && Array.isArray(workPhotos)) {
+      booking.workPhotos = workPhotos;
+    }
+    if (finalPrice !== undefined) {
+      booking.finalPrice = Number(finalPrice);
+    }
     await booking.save();
+    
+    // If newly marked as completed, increment provider's stats
+    if (status === 'completed' && !wasCompleted) {
+      await User.findByIdAndUpdate(req.user.id, {
+        $inc: { 'providerDetails.totalJobsCompleted': 1 }
+      });
+    }
+
+    res.json(booking);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   POST api/bookings/:id/rate-customer
+// @desc    Provider rates customer after completion
+router.post('/:id/rate-customer', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'provider') {
+      return res.status(403).json({ message: 'Only providers can rate customers' });
+    }
+
+    const { rating, comment } = req.body;
+    let booking = await Booking.findById(req.params.id);
+
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    if (booking.providerId.toString() !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+    if (booking.status !== 'completed') return res.status(400).json({ message: 'Can only rate completed bookings' });
+    if (booking.customerReview && booking.customerReview.rating) {
+      return res.status(400).json({ message: 'Customer already rated for this booking' });
+    }
+
+    booking.customerReview = { rating: Number(rating), comment };
+    await booking.save();
+
+    // Recalculate customer overall rating
+    const allBookings = await Booking.find({ 
+      customerId: booking.customerId, 
+      'customerReview.rating': { $exists: true } 
+    });
+    
+    const sum = allBookings.reduce((acc, curr) => acc + curr.customerReview.rating, 0);
+    const avg = sum / allBookings.length;
+
+    await User.findByIdAndUpdate(booking.customerId, {
+      'customerDetails.rating': Number(avg.toFixed(1)),
+      'customerDetails.reviewsCount': allBookings.length
+    });
+
     res.json(booking);
   } catch (err) {
     console.error(err.message);

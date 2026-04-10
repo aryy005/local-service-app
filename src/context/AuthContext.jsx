@@ -10,6 +10,12 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [loading, setLoading] = useState(true);
+  
+  // Custom Global Location State (Default to null. Can be stored as { lng, lat, name })
+  const [userLocation, setUserLocation] = useState(() => {
+    const saved = localStorage.getItem('userLocation');
+    return saved ? JSON.parse(saved) : null;
+  });
 
   // Fetch user if token exists
   useEffect(() => {
@@ -100,8 +106,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
+  const saveLocation = (locationObj) => {
+    setUserLocation(locationObj);
+    localStorage.setItem('userLocation', JSON.stringify(locationObj));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateProfile, userLocation, saveLocation }}>
       {children}
     </AuthContext.Provider>
   );

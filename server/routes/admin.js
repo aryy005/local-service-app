@@ -12,29 +12,20 @@ const admin = async (req, res, next) => {
     }
     next();
   } catch (err) {
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 
-// @route   GET api/admin/stats
-// @desc    Get platform statistics and users
 router.get('/stats', [auth, admin], async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const totalProviders = await User.countDocuments({ role: 'provider' });
     const totalBookings = await Booking.countDocuments();
-    
     const users = await User.find().select('-password').sort({ createdAt: -1 }).limit(20);
-    
-    res.json({
-      totalUsers,
-      totalProviders,
-      totalBookings,
-      recentUsers: users
-    });
+    res.json({ totalUsers, totalProviders, totalBookings, recentUsers: users });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server Error' });
   }
 });
 

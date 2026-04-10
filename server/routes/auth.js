@@ -3,16 +3,36 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const { hashAadhaar, isValidAadhaar } = require('../services/verification');
 
 // @route   POST api/auth/register
 // @desc    Register a user
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, phone, password, role, providerDetails } = req.body;
+    const { name, email, phone, password, role, providerDetails, emailVerified, phoneVerified } = req.body;
 
     let user = await User.findOne({ email, role });
     if (user) {
       return res.status(400).json({ message: `User already exists as a ${role}` });
+    }
+
+    // For providers: validate and process Aadhaar data
+    let processedProviderDetails = role === 'provider' ? { ...providerDetails } : undefined;
+    
+    if (role === 'provider' && providerDetails) {
+      if (providerDetails.aadhaarNumber) {
+        const aadhaarClean = providerDetails.aadhaarNumber.replace(/\s/g, '');
+        if (!isValidAadhaar(aadhaarClean)) {
+          return res.status(400).json({ message: 'Invalid Aadhaar number. Must be 12 digits.' });
+        }
+        processedProviderDetails.aadhaarHash = hashAadhaar(aadhaarClean);
+        processedProviderDetails.aadhaarLastFour = aadhaarClean.slice(-4);
+        processedProviderDetails.aadhaarVerified = providerDetails.aadhaarVerified || false;
+        processedProviderDetails.aadhaarVerifiedAt = providerDetails.aadhaarVerified ? new Date() : undefined;
+        processedProviderDetails.aadhaarRefId = providerDetails.aadhaarRefId || '';
+      }
+      // Remove raw aadhaar number from stored data
+      delete processedProviderDetails.aadhaarNumber;
     }
 
     user = new User({
@@ -21,7 +41,11 @@ router.post('/register', async (req, res) => {
       phone,
       password,
       role,
-      providerDetails: role === 'provider' ? providerDetails : undefined
+      emailVerified: emailVerified || false,
+      emailVerifiedAt: emailVerified ? new Date() : undefined,
+      phoneVerified: phoneVerified || false,
+      phoneVerifiedAt: phoneVerified ? new Date() : undefined,
+      providerDetails: processedProviderDetails
     });
 
     await user.save();
@@ -33,7 +57,7 @@ router.post('/register', async (req, res) => {
     });
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: err.message || 'Server error' });
   }
 });
 
@@ -103,7 +127,7 @@ router.put('/me', auth, async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

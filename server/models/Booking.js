@@ -8,6 +8,12 @@ const bookingSchema = new mongoose.Schema({
   description: { type: String, required: true },
   serviceAddress: { type: String, required: true, default: 'Customer Location' }, // Added service address
   status: { type: String, enum: ['pending', 'accepted', 'declined', 'completed'], default: 'pending' },
+  workPhotos: [{ type: String }], // Array of image URLs for before/after portfolio
+  finalPrice: { type: Number, default: 0 }, // Actual amount earned
+  customerReview: {
+    rating: { type: Number },
+    comment: { type: String }
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Booking', bookingSchema);

@@ -1,22 +1,41 @@
 const SkeletonLoader = () => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 animate-pulse w-full max-w-sm">
-      <div className="flex items-center space-x-4">
-        <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 blur-[1px]"></div>
-        <div className="flex-1 space-y-2">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+    <div style={{
+      background: 'var(--card-bg)',
+      border: '1px solid var(--surface-border)',
+      borderRadius: 'var(--border-radius)',
+      padding: '1.25rem',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.85rem',
+      animation: 'pulse 1.8s ease-in-out infinite'
+    }}>
+      <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
+        <div style={{
+          width: 48, height: 48, borderRadius: '50%',
+          background: 'var(--bg-secondary)', flexShrink: 0
+        }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ height: 14, width: '60%', background: 'var(--bg-secondary)', borderRadius: 4, marginBottom: 6 }} />
+          <div style={{ height: 10, width: '40%', background: 'var(--bg-secondary)', borderRadius: 4 }} />
         </div>
       </div>
-      <div className="mt-6 space-y-3">
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+      <div style={{ height: 10, width: '90%', background: 'var(--bg-secondary)', borderRadius: 4 }} />
+      <div style={{ height: 10, width: '70%', background: 'var(--bg-secondary)', borderRadius: 4 }} />
+      <div style={{
+        height: 1, background: 'var(--surface-border)', marginTop: 4
+      }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ height: 14, width: 60, background: 'var(--bg-secondary)', borderRadius: 4 }} />
+        <div style={{ height: 14, width: 80, background: 'var(--bg-secondary)', borderRadius: 4 }} />
       </div>
-      <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/3"></div>
-      </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
     </div>
   );
 };

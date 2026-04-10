@@ -5,10 +5,32 @@ const Review = require('../models/Review');
 const auth = require('../middleware/auth');
 
 // @route   GET api/providers
-// @desc    Get all service providers
+// @desc    Get all service providers, optionally filtered by geospatial radius
 router.get('/', async (req, res) => {
   try {
-    const providers = await User.find({ role: 'provider' }).select('-password');
+    const { lng, lat, radius } = req.query;
+    
+    let query = { role: 'provider' };
+    
+    // If coordinates are provided, perform a $near query
+    if (lng && lat) {
+      const distanceInMeters = radius ? parseInt(radius) : 30000; // Default 30km
+      query['providerDetails.locationGeo'] = {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [parseFloat(lng), parseFloat(lat)]
+          },
+          $maxDistance: distanceInMeters
+        }
+      };
+    }
+
+    const providers = await User.find(query).select('-password');
+
+    // Mongoose $near automatically sorts by distance. 
+    // We can also calculate actual distance here if we switched to aggregation pipeline, 
+    // but $near is simpler for filtering + sorting.
     res.json(providers);
   } catch (err) {
     console.error(err.message);
@@ -81,6 +103,28 @@ router.get('/:id/reviews', async (req, res) => {
   try {
     const reviews = await Review.find({ provider: req.params.id }).populate('customer', 'name');
     res.json(reviews);
+  } catch (err) {
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   GET api/providers/:id/portfolio
+// @desc    Get work photos from provider's completed bookings
+router.get('/:id/portfolio', async (req, res) => {
+  try {
+    const bookings = await require('../models/Booking').find({
+      providerId: req.params.id,
+      status: 'completed',
+      workPhotos: { $exists: true, $not: { $size: 0 } }
+    });
+    
+    // Extract all photos into a flat array
+    let photos = [];
+    bookings.forEach(b => {
+      if (b.workPhotos) photos = photos.concat(b.workPhotos);
+    });
+    
+    res.json(photos);
   } catch (err) {
     res.status(500).send('Server Error');
   }

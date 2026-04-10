@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, User, Menu, Moon, Sun, LogOut, Navigation, X } from 'lucide-react';
+import { Search, MapPin, User, Menu, Moon, Sun, LogOut, Navigation, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { getCurrentLocationName } from '../utils/geolocation';
 import './Header.css';
 
 const Header = () => {
   const { theme, toggleTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, userLocation, saveLocation } = useAuth();
+  const { lang, setLang } = useLanguage();
   const navigate = useNavigate();
 
-  const [locationValue, setLocationValue] = useState("");
+  const [locationValue, setLocationValue] = useState(userLocation?.name || "");
   const [isLocating, setIsLocating] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -24,8 +26,9 @@ const Header = () => {
   const handleLocateMe = async () => {
     setIsLocating(true);
     try {
-      const location = await getCurrentLocationName();
-      setLocationValue(location);
+      const locationObj = await getCurrentLocationName();
+      saveLocation(locationObj);
+      setLocationValue(locationObj.name);
     } catch (err) {
       alert(err.message);
     } finally {
@@ -33,71 +36,71 @@ const Header = () => {
     }
   };
 
+  const getDashboardLink = () => {
+    if (!user) return '/auth/login';
+    if (user.role === 'admin') return '/admin-dashboard';
+    if (user.role === 'provider') return '/provider-dashboard';
+    return '/customer-dashboard';
+  };
+
   return (
-    <header className="header glass-panel">
+    <header className="header">
       <div className="container header-content">
+        {/* Logo */}
         <Link to="/" className="logo">
-          <span className="logo-icon">✨</span>
+          <div className="logo-mark">LP</div>
           <span className="logo-text">LocalPro</span>
         </Link>
         
-        <div className="search-bar">
-          <div className="search-input-group">
-            <Search size={18} className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="What service do you need?" 
-              className="search-input"
-            />
-          </div>
-          <div className="location-input-group" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <MapPin size={18} className="location-icon" />
-            <input 
-              type="text" 
-              placeholder="Your Location" 
-              className="location-input"
-              value={locationValue}
-              onChange={(e) => setLocationValue(e.target.value)}
-              style={{ paddingRight: '2rem' }}
-            />
-            <button 
-              type="button" 
-              onClick={handleLocateMe}
-              className={`locate-btn ${isLocating ? 'locating' : ''}`}
-              title="Locate Me"
-              disabled={isLocating}
-            >
-              <Navigation size={16} />
-            </button>
-          </div>
-          <button className="btn btn-primary search-btn">Search</button>
+        {/* Location selector (UC-style) */}
+        <div className="location-selector" onClick={handleLocateMe}>
+          <MapPin size={16} className="loc-icon" />
+          <span className="loc-text">{locationValue || 'Select City'}</span>
+          <ChevronDown size={14} />
         </div>
 
+        {/* Search bar */}
+        <div className="search-bar">
+          <Search size={18} className="search-icon" />
+          <input 
+            type="text" 
+            placeholder="Search for services" 
+            className="search-input"
+          />
+        </div>
+
+        {/* Navigation */}
         <nav className="desktop-nav">
+          <Link to="/search" className="nav-link">Services</Link>
+          
           <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme">
-            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
           </button>
           
-          <Link to="/search" className="nav-link">Browse Services</Link>
+          <select 
+            value={lang} 
+            onChange={(e) => setLang(e.target.value)}
+            style={{ background: 'transparent', color: 'inherit', border: '1px solid var(--surface-border)', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer', outline: 'none' }}
+          >
+            <option value="en" style={{color: 'black'}}>EN</option>
+            <option value="hi" style={{color: 'black'}}>HI</option>
+          </select>
           
           {user ? (
             <>
-              <Link to={user.role === 'provider' ? '/provider-dashboard' : '/customer-dashboard'} className="nav-link">
+              <Link to={getDashboardLink()} className="nav-link">
                 Dashboard
               </Link>
-              <button onClick={handleLogout} className="btn btn-outline login-btn" style={{ padding: '0.5rem 1rem' }}>
-                <LogOut size={18} />
-                <span>Sign Out</span>
+              <button onClick={handleLogout} className="btn btn-outline btn-sm">
+                <LogOut size={16} />
+                Logout
               </button>
             </>
           ) : (
             <>
-              <Link to="/auth/login" className="btn btn-outline login-btn">
-                <User size={18} />
-                <span>Sign In</span>
-              </Link>
-              <Link to="/auth/signup" className="btn btn-primary">
-                Sign Up
+              <Link to="/auth/login" className="nav-link">Login</Link>
+              <Link to="/auth/signup" className="btn btn-primary btn-sm">
+                Register
               </Link>
             </>
           )}
@@ -108,38 +111,39 @@ const Header = () => {
         </button>
       </div>
 
-      {/* Mobile Navigation Panel */}
+      {/* Mobile Navigation */}
       <div className={`mobile-nav-panel ${isMobileMenuOpen ? 'open' : ''}`}>
-         <Link to="/search" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Browse Services</Link>
-         <button className="mobile-nav-link text-left bg-transparent border-0 cursor-pointer" onClick={() => { toggleTheme(); setIsMobileMenuOpen(false); }}>
-           Toggle {theme === 'light' ? 'Dark' : 'Light'} Mode
-         </button>
-         
-         <div className="mobile-nav-actions">
-           {user ? (
-             <>
-               <Link to={user.role === 'provider' ? '/provider-dashboard' : '/customer-dashboard'} 
-                     className="btn btn-outline"
-                     onClick={() => setIsMobileMenuOpen(false)}>
-                 Dashboard
-               </Link>
-               <button onClick={handleLogout} className="btn btn-primary" style={{ padding: '0.75rem' }}>
-                 <LogOut size={18} />
-                 <span>Sign Out</span>
-               </button>
-             </>
-           ) : (
-             <>
-               <Link to="/auth/login" className="btn btn-outline" onClick={() => setIsMobileMenuOpen(false)}>
-                 <User size={18} />
-                 <span>Sign In</span>
-               </Link>
-               <Link to="/auth/signup" className="btn btn-primary" onClick={() => setIsMobileMenuOpen(false)}>
-                 Sign Up
-               </Link>
-             </>
-           )}
-         </div>
+        <div className="mobile-search">
+          <Search size={18} />
+          <input type="text" placeholder="Search for services" />
+        </div>
+        <Link to="/search" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Services</Link>
+        <button className="mobile-nav-link" onClick={() => { toggleTheme(); setIsMobileMenuOpen(false); }}
+          style={{ background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: 'inherit', font: 'inherit' }}>
+          {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+        </button>
+        
+        <div className="mobile-nav-actions">
+          {user ? (
+            <>
+              <Link to={getDashboardLink()} className="btn btn-outline w-full" onClick={() => setIsMobileMenuOpen(false)}>
+                Dashboard
+              </Link>
+              <button onClick={handleLogout} className="btn btn-primary w-full">
+                <LogOut size={16} /> Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/auth/login" className="btn btn-outline w-full" onClick={() => setIsMobileMenuOpen(false)}>
+                Login
+              </Link>
+              <Link to="/auth/signup" className="btn btn-primary w-full" onClick={() => setIsMobileMenuOpen(false)}>
+                Register
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );

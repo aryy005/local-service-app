@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
-import { Users, UserCheck, CalendarCheck, MapPin, User as UserIcon, Briefcase } from 'lucide-react';
+import { Users, UserCheck, CalendarCheck, MapPin, User as UserIcon, Briefcase, ShieldCheck, Mail, Phone } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { token, user } = useAuth();
@@ -88,7 +88,7 @@ const AdminDashboard = () => {
               <thead className="sticky top-0 bg-white dark:bg-gray-900 shadow-sm z-10">
                 <tr>
                   <th className="p-4 font-bold text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Customer Info</th>
-                  <th className="p-4 font-bold text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Location/City</th>
+                  <th className="p-4 font-bold text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Verified</th>
                   <th className="p-4 font-bold text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Joined Date</th>
                 </tr>
               </thead>
@@ -99,12 +99,17 @@ const AdminDashboard = () => {
                       <div className="flex flex-col">
                         <span className="font-semibold dark:text-white">{u.name}</span>
                         <span className="text-xs text-gray-500">{u.email}</span>
+                        <span className="text-xs text-gray-500">{u.phone}</span>
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center space-x-1 text-gray-600 dark:text-gray-400">
-                        <MapPin size={14} className="text-indigo-400" />
-                        <span className="text-sm">Not Specified</span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`inline-flex items-center space-x-1 text-xs font-semibold px-2 py-0.5 rounded-full ${u.emailVerified ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                          <Mail size={12} /><span>{u.emailVerified ? 'Email ✓' : 'Email ✗'}</span>
+                        </span>
+                        <span className={`inline-flex items-center space-x-1 text-xs font-semibold px-2 py-0.5 rounded-full ${u.phoneVerified ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                          <Phone size={12} /><span>{u.phoneVerified ? 'Phone ✓' : 'Phone ✗'}</span>
+                        </span>
                       </div>
                     </td>
                     <td className="p-4 text-gray-500 dark:text-gray-400 text-sm font-medium">
@@ -133,6 +138,7 @@ const AdminDashboard = () => {
                 <tr>
                   <th className="p-4 font-bold text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Provider Info</th>
                   <th className="p-4 font-bold text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">City / Operating Area</th>
+                  <th className="p-4 font-bold text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Aadhaar Status</th>
                   <th className="p-4 font-bold text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Joined Date</th>
                 </tr>
               </thead>
@@ -155,13 +161,25 @@ const AdminDashboard = () => {
                         <span className="text-sm font-medium">{extractedCity}</span>
                       </div>
                     </td>
+                    <td className="p-4">
+                      {u.providerDetails?.aadhaarVerified ? (
+                        <span className="inline-flex items-center space-x-1 text-xs font-semibold px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">
+                          <ShieldCheck size={14} />
+                          <span>Verified (****{u.providerDetails?.aadhaarLastFour || ''})</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center space-x-1 text-xs font-semibold px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400">
+                          <span>Not Verified</span>
+                        </span>
+                      )}
+                    </td>
                     <td className="p-4 text-gray-500 dark:text-gray-400 text-sm font-medium">
                       {new Date(u.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                   </tr>
                 )}) : (
                   <tr>
-                    <td colSpan="3" className="p-8 text-center text-gray-500 italic">No providers found.</td>
+                    <td colSpan="4" className="p-8 text-center text-gray-500 italic">No providers found.</td>
                   </tr>
                 )}
               </tbody>

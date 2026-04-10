@@ -18,7 +18,7 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-grow container z-10 py-8">
+      <main className="flex-grow container z-10" style={{ paddingTop: '1.5rem', paddingBottom: '2rem' }}>
         <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Home />} />
