@@ -10,14 +10,14 @@ const userSchema = new mongoose.Schema({
   
   // Provider specific fields
   providerDetails: {
-    category: { type: String },
+    category: { type: String }, // e.g. 'cat-1'
     hourlyRate: { type: Number },
     location: { type: String },
     description: { type: String },
     skills: [{ type: String }],
     rating: { type: Number, default: 0 },
     reviewsCount: { type: Number, default: 0 },
-    avatarUrl: { type: String, default: '' }
+    avatarUrl: { type: String, default: 'https://images.unsplash.com/photo-1544723795-3cj5a4a5t6f1?auto=format&fit=crop&q=80&w=150&h=150' }
   }
 }, { timestamps: true });
 
