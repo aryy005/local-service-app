@@ -47,6 +47,11 @@ app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/messages', require('./routes/messages'));
 
+// ─── Health Check (used by UptimeRobot / self-ping to prevent cold starts) ───
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
+});
+
 const PORT = process.env.PORT || 5000;
 
 const connectDB = async () => {
@@ -65,7 +70,10 @@ const connectDB = async () => {
     await mongoose.connect(uri);
     console.log('MongoDB Connected!');
     await seedDatabase();
-    server.listen(PORT, () => console.log('Server started on port ' + PORT));
+    server.listen(PORT, () => {
+      console.log('Server started on port ' + PORT);
+      startKeepAlive();
+    });
   } catch (err) {
     console.error('Failed to connect to MongoDB', err);
     process.exit(1);
@@ -175,4 +183,31 @@ async function seedDatabase() {
   }
 }
 
+// ─── Keep-Alive: Prevent Render free-tier cold starts ────────────────────────
+// Pings the /health endpoint every 14 minutes so Render never spins down.
+// RENDER_EXTERNAL_URL is auto-set by Render in production; ignored locally.
+function startKeepAlive() {
+  const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
+  if (!RENDER_URL) {
+    console.log('[Keep-Alive] Not on Render — self-ping disabled.');
+    return;
+  }
+
+  const PING_INTERVAL_MS = 14 * 60 * 1000; // 14 minutes
+  const healthUrl = `${RENDER_URL}/health`;
+
+  setInterval(async () => {
+    try {
+      const res = await fetch(healthUrl);
+      const data = await res.json();
+      console.log(`[Keep-Alive] Pinged ${healthUrl} → status: ${data.status}, uptime: ${Math.floor(data.uptime)}s`);
+    } catch (err) {
+      console.error('[Keep-Alive] Ping failed:', err.message);
+    }
+  }, PING_INTERVAL_MS);
+
+  console.log(`[Keep-Alive] Self-ping active → ${healthUrl} every 14 min`);
+}
+
 connectDB();
+
