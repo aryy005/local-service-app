@@ -222,7 +222,7 @@ const Register = () => {
     <div className="auth-page fade-in">
       <div className="auth-card glass-panel" style={{ maxWidth: formData.role === 'provider' ? '860px' : '540px' }}>
         <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Join LocalPro — verify your identity to get started</p>
+        <p className="auth-subtitle">Join NearPro — verify your identity to get started</p>
         
         {error && <div className="error-alert">{error}</div>}
 

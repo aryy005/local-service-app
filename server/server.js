@@ -74,17 +74,17 @@ const connectDB = async () => {
 
 async function seedDatabase() {
   const User = require('./models/User');
-  await User.deleteOne({ email: 'admin@localpro.com', role: 'admin' });
+  await User.deleteOne({ email: 'admin@nearpro.com', role: 'admin' });
   await User.create({
     name: 'System Admin',
-    email: 'admin@localpro.com',
+    email: 'admin@nearpro.com',
     password: 'password123',
     phone: '999-999-9999',
     role: 'admin'
   });
-  console.log('Admin seeded: admin@localpro.com / password123');
+  console.log('Admin seeded: admin@nearpro.com / password123');
 
-  await User.deleteMany({ role: 'provider', email: { $ne: 'admin@localpro.com' } });
+  await User.deleteMany({ role: 'provider', email: { $ne: 'admin@nearpro.com' } });
   
   const providerCount = await User.countDocuments({ role: 'provider' });
   if (providerCount === 0) {

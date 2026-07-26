@@ -21,8 +21,8 @@ const Footer = () => {
               width: '28px', height: '28px', background: 'var(--primary-color)', color: 'white',
               borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontWeight: '800', fontSize: '0.65rem'
-            }}>LP</div>
-            <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>LocalPro</span>
+            }}>NP</div>
+            <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>NearPro</span>
           </div>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
             Your neighborhood's trusted service marketplace. Verified professionals, fair prices.
@@ -70,7 +70,7 @@ const Footer = () => {
         gap: '0.5rem',
       }}>
         <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-          © {new Date().getFullYear()} LocalPro. All rights reserved.
+          © {new Date().getFullYear()} NearPro. All rights reserved.
         </p>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <a href="#" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Privacy</a>

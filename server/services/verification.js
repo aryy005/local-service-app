@@ -86,11 +86,11 @@ async function sendEmailOTP(email) {
       await transporter.sendMail({
         from: process.env.SMTP_FROM || process.env.SMTP_USER,
         to: email,
-        subject: 'LocalPro - Email Verification OTP',
+        subject: 'NearPro - Email Verification OTP',
         html: `
           <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
             <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 32px 24px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">LocalPro</h1>
+              <h1 style="color: white; margin: 0; font-size: 24px;">NearPro</h1>
               <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 14px;">Email Verification</p>
             </div>
             <div style="padding: 32px 24px;">

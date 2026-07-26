@@ -48,8 +48,8 @@ const Header = () => {
       <div className="container header-content">
         {/* Logo */}
         <Link to="/" className="logo">
-          <div className="logo-mark">LP</div>
-          <span className="logo-text">LocalPro</span>
+          <div className="logo-mark">NP</div>
+          <span className="logo-text">NearPro</span>
         </Link>
         
         {/* Location selector (UC-style) */}
