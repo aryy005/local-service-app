@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const http = require('http');
+const https = require('https');
 const { Server } = require('socket.io');
 
 const app = express();
@@ -196,14 +197,14 @@ function startKeepAlive() {
   const PING_INTERVAL_MS = 14 * 60 * 1000; // 14 minutes
   const healthUrl = `${RENDER_URL}/health`;
 
-  setInterval(async () => {
-    try {
-      const res = await fetch(healthUrl);
-      const data = await res.json();
-      console.log(`[Keep-Alive] Pinged ${healthUrl} → status: ${data.status}, uptime: ${Math.floor(data.uptime)}s`);
-    } catch (err) {
+  setInterval(() => {
+    const client = healthUrl.startsWith('https') ? https : http;
+    client.get(healthUrl, (res) => {
+      console.log(`[Keep-Alive] Pinged ${healthUrl} → HTTP ${res.statusCode}`);
+      res.resume(); // drain response to free memory
+    }).on('error', (err) => {
       console.error('[Keep-Alive] Ping failed:', err.message);
-    }
+    });
   }, PING_INTERVAL_MS);
 
   console.log(`[Keep-Alive] Self-ping active → ${healthUrl} every 14 min`);
