@@ -5,9 +5,14 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: String, default: '' },
-  password: { type: String, required: true },
+  password: { 
+    type: String, 
+    required: function() { return this.authProvider === 'local'; } 
+  },
   role: { type: String, enum: ['customer', 'provider', 'admin'], required: true },
-  
+  googleId: { type: String },
+  authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
+
   // Verification Status (applicable to all users)
   emailVerified: { type: Boolean, default: false },
   emailVerifiedAt: { type: Date },
@@ -53,7 +58,7 @@ userSchema.index({ 'providerDetails.locationGeo': '2dsphere' });
 
 // Hash password before saving
 userSchema.pre('save', async function() {
-  if (!this.isModified('password')) return;
+  if (!this.isModified('password') || !this.password) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });

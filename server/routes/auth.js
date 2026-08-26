@@ -1,9 +1,74 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const { hashAadhaar, isValidAadhaar } = require('../services/verification');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// @route   POST api/auth/google
+// @desc    Authenticate with Google OAuth 2.0 Token
+router.post('/google', async (req, res) => {
+  try {
+    const { credential, role = 'customer' } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ message: 'Google credential token is required' });
+    }
+
+    let payload;
+    if (process.env.GOOGLE_CLIENT_ID) {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID
+      });
+      payload = ticket.getPayload();
+    } else {
+      const base64Url = credential.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+      payload = JSON.parse(jsonPayload);
+    }
+
+    const { email, name, sub: googleId, picture } = payload;
+
+    let user = await User.findOne({ email, role });
+
+    if (user) {
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.authProvider = 'google';
+        user.emailVerified = true;
+        await user.save();
+      }
+    } else {
+      user = new User({
+        name: name || 'Google User',
+        email,
+        role,
+        googleId,
+        authProvider: 'google',
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+        providerDetails: role === 'provider' ? {
+          avatarUrl: picture || ''
+        } : undefined
+      });
+      await user.save();
+    }
+
+    const jwtPayload = { user: { id: user.id, role: user.role } };
+    jwt.sign(jwtPayload, process.env.JWT_SECRET || 'secret123', { expiresIn: '5h' }, (err, token) => {
+      if (err) throw err;
+      res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    });
+  } catch (err) {
+    console.error('Google Auth Error:', err.message);
+    res.status(500).json({ message: 'Google authentication failed' });
+  }
+});
 
 // @route   POST api/auth/register
 // @desc    Register a user

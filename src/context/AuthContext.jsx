@@ -84,6 +84,26 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const googleLogin = async (credential, role = 'customer') => {
+    const res = await fetch(`${API_URL}/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential, role })
+    });
+    
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error(data.message || 'Google login failed');
+      throw new Error(data.message || 'Google login failed');
+    }
+    
+    setToken(data.token);
+    setUser(data.user);
+    localStorage.setItem('token', data.token);
+    toast.success('Welcome back!');
+    return data;
+  };
+
   const updateProfile = async (profileData) => {
     const res = await fetch(`${API_URL}/auth/me`, {
       method: 'PUT',
@@ -112,7 +132,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateProfile, userLocation, saveLocation }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, googleLogin, logout, updateProfile, userLocation, saveLocation }}>
       {children}
     </AuthContext.Provider>
   );

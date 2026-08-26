@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aryan Malik | Full Stack Developer</title>
+    <meta name="description" content="Portfolio of Aryan Malik, Full Stack Developer specializing in Node.js, Express, React, and MERN Stack.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet"/>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23000'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='%23fff' font-family='system-ui' font-weight='800'>A</text></svg>">
+
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+    <!-- Loader -->
+    <div id="loader">
+        <div id="loader-percent">0%</div>
+        <div class="loader-label">Initializing</div>
+    </div>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-logo">ARYAN.M</div>
+        <div class="nav-links">
+            <a href="#about">ABOUT</a>
+            <a href="#works">WORKS</a>
+            <a href="#skills">SKILLS</a>
+            <a href="#contact">CONTACT</a>
+        </div>
+        <div class="nav-status">
+            <span class="status-dot"></span>
+            AVAILABLE FOR WORK
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero">
+        <div class="hero-bg-text">DEV</div>
+        <div class="hero-grid">
+            <div class="hero-left">
+                <p class="hero-sub hero-reveal">Hello, I am</p>
+                <h1 class="hero-name">
+                    <div class="overflow-hidden"><span class="block hero-reveal">ARYAN</span></div>
+                    <div class="overflow-hidden"><span class="block hero-reveal outline-text">MALIK</span></div>
+                </h1>
+                <div class="hero-badge hero-reveal">FULL STACK<br>DEVELOPER</div>
+                <div class="typewriter-wrap">
+                    <span class="tw-dot"></span>
+                    <span id="typewriter"></span>
+                </div>
+                <div class="hero-ctas hero-reveal">
+                    <a href="#contact" class="btn btn-dark">START A PROJECT</a>
+                    <a href="#about" class="btn btn-outline">VIEW PROFILE</a>
+                    <a href="https://github.com/aryy005" target="_blank" class="btn btn-outline">
+                        <i class="ri-github-fill"></i> GITHUB
+                    </a>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div class="hero-img-wrap hero-reveal">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600" alt="Aryan Malik" class="hero-img">
+                    <div class="hero-img-label">SCROLL TO EXPLORE</div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <!-- Marquee -->
+    <div class="marquee-outer">
+        <div class="marquee-inner">
+            <span class="marquee-text">NODE.JS • REACT • EXPRESS • SPRING BOOT • JAVASCRIPT • MERN • JAVA • SQL • PROBLEM SOLVER • </span>
+            <span class="marquee-text">NODE.JS • REACT • EXPRESS • SPRING BOOT • JAVASCRIPT • MERN • JAVA • SQL • PROBLEM SOLVER • </span>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <section id="about">
+        <div class="section-container">
+            <div class="section-tag">ABOUT_ME</div>
+            <h2 class="section-title">SOFTWARE<br>ENGINEER<br><span class="gradient-text">PORTFOLIO</span></h2>
+
+            <div class="about-grid">
+                <!-- Left: Info Cards -->
+                <div class="about-cards">
+                    <div class="card card-light" data-gsap="fade-up">
+                        <div class="card-header">
+                            <div class="card-icon"><i class="ri-user-3-line"></i></div>
+                            <span class="card-tag">INTRODUCTION</span>
+                        </div>
+                        <p class="card-text">Computer Science Engineering student at <strong>Chandigarh University</strong> specializing in Full Stack Web Development. Experienced with <strong>React, Node.js, Express, Java/Spring Boot</strong>, and Databases.</p>
+                    </div>
+
+                    <div class="card card-dark" data-gsap="fade-up">
+                        <div class="card-header">
+                            <div class="card-icon icon-light"><i class="ri-server-line"></i></div>
+                            <span class="card-tag tag-light">ENGINEERING FOCUS</span>
+                        </div>
+                        <div class="focus-grid">
+                            <div class="focus-item">Full Stack MERN applications</div>
+                            <div class="focus-item">REST API design & JWT auth</div>
+                            <div class="focus-item">NoSQL & Relational DBs</div>
+                            <div class="focus-item">State management (Redux)</div>
+                            <div class="focus-item">Clean component architecture</div>
+                            <div class="focus-item">Responsive animations</div>
+                        </div>
+                    </div>
+
+                    <div class="card-row">
+                        <div class="card card-light small" data-gsap="fade-up">
+                            <div class="card-header">
+                                <div class="card-icon"><i class="ri-brain-line"></i></div>
+                                <span class="card-tag">ALGORITHMS</span>
+                            </div>
+                            <ul class="card-list">
+                                <li>Data Structures & Algorithms</li>
+                                <li>Object-Oriented Programming</li>
+                                <li>Efficient design patterns</li>
+                            </ul>
+                        </div>
+                        <div class="card card-light small" data-gsap="fade-up">
+                            <div class="card-header">
+                                <div class="card-icon"><i class="ri-graduation-cap-line"></i></div>
+                                <span class="card-tag">EDUCATION</span>
+                            </div>
+                            <ul class="card-list">
+                                <li><strong>B.E. Computer Science</strong></li>
+                                <li>Chandigarh University</li>
+                                <li>2024 – 2028</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card card-dark" data-gsap="fade-up">
+                        <div class="card-header">
+                            <div class="card-icon icon-light"><i class="ri-rocket-2-line"></i></div>
+                            <span class="card-tag tag-light">CAREER DIRECTION</span>
+                        </div>
+                        <p class="card-text light">Focused on becoming an expert <strong class="text-white">Full Stack Engineer</strong>, crafting highly responsive frontends while architecting resilient backend systems.</p>
+                        <div class="stats-row">
+                            <div class="stat"><div class="stat-num">6+</div><div class="stat-label">PROJECTS</div></div>
+                            <div class="stat"><div class="stat-num">13</div><div class="stat-label">GIT REPOS</div></div>
+                            <div class="stat"><div class="stat-num">MERN</div><div class="stat-label">STACK</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Image Grid -->
+                <div class="about-imgs" data-gsap="scale-in">
+                    <div class="img-col tall">
+                        <div class="img-card">
+                            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600" alt="Aryan Malik" class="img-fill">
+                            <div class="img-overlay">
+                                <span class="img-label">ARYAN MALIK</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="img-col">
+                        <div class="img-card">
+                            <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=600" alt="Coding" class="img-fill">
+                            <div class="img-overlay"><span class="img-label">CODING</span></div>
+                        </div>
+                        <div class="img-card">
+                            <img src="https://images.unsplash.com/photo-1521791136368-1a8519007b57?auto=format&fit=crop&q=80&w=600" alt="LocalPro" class="img-fill">
+                            <div class="img-overlay"><span class="img-label">LOCALPRO</span></div>
+                        </div>
+                        <div class="img-card">
+                            <img src="https://images.unsplash.com/photo-1618401471353-b98aedd07871?auto=format&fit=crop&q=80&w=600" alt="Open Source" class="img-fill">
+                            <div class="img-overlay"><span class="img-label">OPEN SOURCE</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Life Chronometer -->
+    <section id="chronometer">
+        <div class="chrono-bg"></div>
+        <div class="section-container text-center">
+            <div class="chrono-label">System Runtime</div>
+            <h2 class="chrono-title">LIFE CHRONOMETER</h2>
+            <div class="chrono-grid">
+                <div class="chrono-cell"><div class="chrono-num" id="years">00</div><div class="chrono-name">Years</div></div>
+                <div class="chrono-cell"><div class="chrono-num" id="months">00</div><div class="chrono-name">Months</div></div>
+                <div class="chrono-cell"><div class="chrono-num" id="days">00</div><div class="chrono-name">Days</div></div>
+                <div class="chrono-cell"><div class="chrono-num" id="hours">00</div><div class="chrono-name">Hours</div></div>
+                <div class="chrono-cell"><div class="chrono-num" id="minutes">00</div><div class="chrono-name">Minutes</div></div>
+                <div class="chrono-cell white"><div class="chrono-num" id="seconds">00</div><div class="chrono-name dark">Seconds</div><div id="sec-bar"></div></div>
+            </div>
+            <div class="chrono-origin">ORIGIN: 2006-01-23 &nbsp;|&nbsp; CHANDIGARH UNIVERSITY, PUNJAB, INDIA</div>
+        </div>
+    </section>
+
+    <!-- Works Section -->
+    <section id="works">
+        <div class="works-header">
+            <h2 class="works-bg-title">WORKS</h2>
+        </div>
+        <div class="works-scroll-container" id="works-container">
+            <div class="works-track" id="works-track">
+
+                <!-- Project 1: LocalPro -->
+                <div class="work-card">
+                    <div class="work-card-shadow"></div>
+                    <div class="work-card-front">
+                        <div class="work-img">
+                            <img src="https://images.unsplash.com/photo-1521791136368-1a8519007b57?auto=format&fit=crop&q=80&w=600" alt="LocalPro">
+                            <span class="work-badge">FULL STACK MERN</span>
+                        </div>
+                        <div class="work-info">
+                            <h3 class="work-title">LocalPro</h3>
+                            <p class="work-desc">A two-sided local services marketplace supporting dual auth roles, booking workflows, reverse geocoding API tracking, and clean dark/light UI.</p>
+                            <div class="work-tags">
+                                <span>React</span><span>Node.js</span><span>MongoDB</span><span>JWT</span><span>Geolocation</span>
+                            </div>
+                        </div>
+                        <div class="work-footer">
+                            <span class="work-num">01</span>
+                            <a href="https://github.com/aryy005/local-service-app" target="_blank" class="work-link">Repository <i class="ri-external-link-line"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 2: Smart-Bank -->
+                <div class="work-card offset">
+                    <div class="work-card-shadow"></div>
+                    <div class="work-card-front">
+                        <div class="work-img">
+                            <img src="https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?auto=format&fit=crop&q=80&w=600" alt="Smart-Bank">
+                            <span class="work-badge">JAVASCRIPT</span>
+                        </div>
+                        <div class="work-info">
+                            <h3 class="work-title">Smart-Bank</h3>
+                            <p class="work-desc">A modern banking management app to view balances, track incoming/outgoing funds, and manage transaction tables with custom sorting options.</p>
+                            <div class="work-tags">
+                                <span>JavaScript</span><span>HTML5</span><span>CSS Variables</span><span>DOM</span>
+                            </div>
+                        </div>
+                        <div class="work-footer">
+                            <span class="work-num">02</span>
+                            <a href="https://github.com/aryy005/Smart-Bank" target="_blank" class="work-link">Repository <i class="ri-external-link-line"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 3: budget-box -->
+                <div class="work-card dark-card">
+                    <div class="work-card-shadow dark"></div>
+                    <div class="work-card-front dark">
+                        <div class="work-img">
+                            <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600" alt="budget-box">
+                            <span class="work-badge white-badge">TYPESCRIPT</span>
+                        </div>
+                        <div class="work-info">
+                            <h3 class="work-title">budget-box</h3>
+                            <p class="work-desc">Personal finance management tool enabling users to define budget limits, monitor expenses in real-time, and view details by category with visual warnings.</p>
+                            <div class="work-tags dark-tags">
+                                <span>TypeScript</span><span>React</span><span>Charts</span><span>Finance</span>
+                            </div>
+                        </div>
+                        <div class="work-footer dark-footer">
+                            <span class="work-num">03</span>
+                            <a href="https://github.com/aryy005/budget-box" target="_blank" class="work-link white-link">Repository <i class="ri-external-link-line"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 4: finance-dashboard -->
+                <div class="work-card offset">
+                    <div class="work-card-shadow"></div>
+                    <div class="work-card-front">
+                        <div class="work-img">
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600" alt="finance-dashboard">
+                            <span class="work-badge">JAVASCRIPT</span>
+                        </div>
+                        <div class="work-info">
+                            <h3 class="work-title">finance-dashboard</h3>
+                            <p class="work-desc">A responsive finance management board offering interactive analysis of monthly savings, cash inflows, and user balance statistics.</p>
+                            <div class="work-tags">
+                                <span>JavaScript</span><span>HTML/CSS</span><span>Data Display</span>
+                            </div>
+                        </div>
+                        <div class="work-footer">
+                            <span class="work-num">04</span>
+                            <a href="https://github.com/aryy005/finance-dashboard" target="_blank" class="work-link">Repository <i class="ri-external-link-line"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 5: CipherSQLStudio -->
+                <div class="work-card dark-card">
+                    <div class="work-card-shadow dark"></div>
+                    <div class="work-card-front dark">
+                        <div class="work-img">
+                            <img src="https://images.unsplash.com/photo-1544383835-bda2bc66a55d?auto=format&fit=crop&q=80&w=600" alt="CipherSQLStudio">
+                            <span class="work-badge white-badge">JAVASCRIPT</span>
+                        </div>
+                        <div class="work-info">
+                            <h3 class="work-title">CipherSQLStudio</h3>
+                            <p class="work-desc">An educational web sandbox for running and testing SQL query strings. Ideal for learning schema layouts and practicing SQL operations.</p>
+                            <div class="work-tags dark-tags">
+                                <span>JavaScript</span><span>SQL Practice</span><span>Frontend Editor</span>
+                            </div>
+                        </div>
+                        <div class="work-footer dark-footer">
+                            <span class="work-num">05</span>
+                            <a href="https://github.com/aryy005/-CipherSchools" target="_blank" class="work-link white-link">Repository <i class="ri-external-link-line"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="works-end">
+                    <a href="https://github.com/aryy005" target="_blank" class="view-all-btn">VIEW ALL <i class="ri-arrow-right-line"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills">
+        <div class="section-container">
+            <div class="section-tag">EXPERTISE</div>
+            <h2 class="section-title center">SKILLS &<br>EXPERTISE</h2>
+
+            <div class="skills-grid">
+                <div class="skill-card" data-gsap="fade-up">
+                    <i class="ri-code-line skill-icon"></i>
+                    <h3>Languages</h3>
+                    <ul>
+                        <li>JavaScript (ES6+)</li>
+                        <li>TypeScript</li>
+                        <li>Java</li>
+                        <li>SQL</li>
+                        <li>HTML5 / CSS3</li>
+                    </ul>
+                </div>
+                <div class="skill-card" data-gsap="fade-up">
+                    <i class="ri-layout-2-fill skill-icon"></i>
+                    <h3>Frontend</h3>
+                    <ul>
+                        <li>React 18 / 19</li>
+                        <li>Vite</li>
+                        <li>Tailwind CSS</li>
+                        <li>Vanilla CSS / Variables</li>
+                        <li>GSAP Animations</li>
+                    </ul>
+                </div>
+                <div class="skill-card" data-gsap="fade-up">
+                    <i class="ri-server-line skill-icon"></i>
+                    <h3>Backend</h3>
+                    <ul>
+                        <li>Node.js / Express.js</li>
+                        <li>Java / Spring Boot</li>
+                        <li>REST API Design</li>
+                        <li>JWT Authentication</li>
+                        <li>Bcrypt Encryption</li>
+                    </ul>
+                </div>
+                <div class="skill-card" data-gsap="fade-up">
+                    <i class="ri-database-2-line skill-icon"></i>
+                    <h3>Database</h3>
+                    <ul>
+                        <li>MongoDB / Mongoose</li>
+                        <li>PostgreSQL</li>
+                        <li>MySQL</li>
+                    </ul>
+                </div>
+                <div class="skill-card" data-gsap="fade-up">
+                    <i class="ri-tools-line skill-icon"></i>
+                    <h3>Tools</h3>
+                    <ul>
+                        <li>Git / GitHub</li>
+                        <li>VS Code</li>
+                        <li>Postman</li>
+                        <li>npm / yarn</li>
+                    </ul>
+                </div>
+                <div class="skill-card featured" data-gsap="fade-up">
+                    <i class="ri-award-line skill-icon"></i>
+                    <h3>Practices</h3>
+                    <ul>
+                        <li>Clean Code</li>
+                        <li>Component Architecture</li>
+                        <li>Agile Development</li>
+                        <li>Problem Solving</li>
+                        <li>System Design</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact">
+        <div class="contact-bg"></div>
+        <div class="section-container contact-inner">
+            <h2 class="contact-title">GET IN<br>TOUCH</h2>
+            <a href="mailto:23bcs11865@cuchd.in" class="contact-email-btn">
+                <i class="ri-mail-send-line"></i> EMAIL ARYAN
+            </a>
+            <div class="contact-socials">
+                <a href="https://github.com/aryy005" target="_blank" class="social-btn"><i class="ri-github-fill"></i></a>
+                <a href="mailto:23bcs11865@cuchd.in" class="social-btn"><i class="ri-mail-fill"></i></a>
+                <a href="https://github.com/aryy005/local-service-app" target="_blank" class="social-btn"><i class="ri-code-box-line"></i></a>
+            </div>
+            <div class="contact-footer">
+                <p>&copy; 2026 ARYAN MALIK</p>
+                <p>FULL STACK WEB DEVELOPER</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+    // ─── CHRONOMETER ───────────────────────────────────────────
+    function updateChronometer() {
+        const birth = new Date('2006-01-23T00:00:00');
+        const now = new Date();
+
+        let years = now.getFullYear() - birth.getFullYear();
+        let months = now.getMonth() - birth.getMonth();
+        let days = now.getDate() - birth.getDate();
+
+        if (days < 0) {
+            months--;
+            const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+            days += prevMonth.getDate();
+        }
+        if (months < 0) { years--; months += 12; }
+
+        const pad = (n) => String(n).padStart(2, '0');
+        document.getElementById('years').textContent = pad(years);
+        document.getElementById('months').textContent = pad(months);
+        document.getElementById('days').textContent = pad(days);
+        document.getElementById('hours').textContent = pad(now.getHours());
+        document.getElementById('minutes').textContent = pad(now.getMinutes());
+        document.getElementById('seconds').textContent = pad(now.getSeconds());
+
+        const secBar = document.getElementById('sec-bar');
+        if (secBar) {
+            const pct = (now.getSeconds() / 60) * 100;
+            secBar.style.width = pct + '%';
+        }
+    }
+    updateChronometer();
+    setInterval(updateChronometer, 1000);
+
+    // ─── MAIN INIT ──────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // ── Loader animation ──
+        const loader = document.getElementById('loader');
+        const loaderPercent = document.getElementById('loader-percent');
+
+        function hideLoader() {
+            if (loader) {
+                loader.style.transition = 'opacity 0.5s ease, transform 0.6s cubic-bezier(0.76, 0, 0.24, 1)';
+                loader.style.opacity = '0';
+                loader.style.transform = 'translateY(-100%)';
+                setTimeout(() => { loader.style.display = 'none'; }, 700);
+            }
+        }
+
+        if (loaderPercent) {
+            let count = 0;
+            const interval = setInterval(() => {
+                count += Math.floor(Math.random() * 8) + 3;
+                if (count >= 100) {
+                    count = 100;
+                    clearInterval(interval);
+                    loaderPercent.textContent = '100%';
+                    setTimeout(hideLoader, 300);
+                } else {
+                    loaderPercent.textContent = count + '%';
+                }
+            }, 60);
+        } else {
+            hideLoader();
+        }
+
+        // ── Custom cursor ──
+        const dot = document.querySelector('.cursor-dot');
+        const ring = document.querySelector('.cursor-ring');
+        let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            if (dot) { dot.style.left = mouseX + 'px'; dot.style.top = mouseY + 'px'; }
+        });
+
+        function animateRing() {
+            ringX += (mouseX - ringX) * 0.15;
+            ringY += (mouseY - ringY) * 0.15;
+            if (ring) { ring.style.left = ringX + 'px'; ring.style.top = ringY + 'px'; }
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        // ── GSAP (if available) ──
+        if (typeof gsap !== 'undefined') {
+            gsap.registerPlugin(ScrollTrigger, TextPlugin);
+
+            // Navbar reveal
+            gsap.to('#navbar', { opacity: 1, duration: 0.8, delay: 2.2 });
+
+            // Scroll-triggered fade-ups
+            document.querySelectorAll('[data-gsap="fade-up"]').forEach(el => {
+                gsap.fromTo(el, { opacity: 0, y: 50 }, {
+                    opacity: 1, y: 0, duration: 0.9,
+                    scrollTrigger: { trigger: el, start: 'top 85%' }
+                });
+            });
+
+            document.querySelectorAll('[data-gsap="scale-in"]').forEach(el => {
+                gsap.fromTo(el, { opacity: 0, scale: 0.92 }, {
+                    opacity: 1, scale: 1, duration: 1,
+                    scrollTrigger: { trigger: el, start: 'top 80%' }
+                });
+            });
+
+            // Section titles
+            gsap.utils.toArray('.section-title').forEach(el => {
+                gsap.fromTo(el, { opacity: 0, y: 60 }, {
+                    opacity: 1, y: 0, duration: 1,
+                    scrollTrigger: { trigger: el, start: 'top 85%' }
+                });
+            });
+
+            // Skill cards stagger
+            gsap.fromTo('.skill-card', { opacity: 0, y: 40 }, {
+                opacity: 1, y: 0, stagger: 0.12, duration: 0.8,
+                scrollTrigger: { trigger: '.skills-grid', start: 'top 80%' }
+            });
+
+            // Horizontal scroll works
+            const track = document.getElementById('works-track');
+            if (track) {
+                const totalScroll = track.scrollWidth - window.innerWidth;
+                gsap.to(track, {
+                    x: -totalScroll,
+                    ease: 'none',
+                    scrollTrigger: {
+                        trigger: '#works',
+                        start: 'top top',
+                        end: () => '+=' + totalScroll,
+                        scrub: 1.2,
+                        pin: true,
+                        anticipatePin: 1
+                    }
+                });
+            }
+        } else {
+            // No GSAP – still show everything
+            document.getElementById('navbar').style.opacity = '1';
+            document.querySelectorAll('[data-gsap]').forEach(el => el.style.opacity = '1');
+            document.querySelectorAll('.section-title, .skill-card').forEach(el => el.style.opacity = '1');
+        }
+
+        // ── Typewriter ──
+        const roles = [
+            'Full Stack Developer (Node.js & React)',
+            'Software Engineering Student',
+            'Problem Solver & Tech Enthusiast',
+            'MERN Stack Developer'
+        ];
+        let roleIndex = 0;
+        const tw = document.getElementById('typewriter');
+
+        function typeRole(text, i, callback) {
+            if (!tw) return;
+            if (i < text.length) {
+                tw.textContent = text.slice(0, i + 1);
+                setTimeout(() => typeRole(text, i + 1, callback), 48);
+            } else {
+                setTimeout(callback, 1800);
+            }
+        }
+
+        function eraseRole(callback) {
+            if (!tw) return;
+            const current = tw.textContent;
+            if (current.length > 0) {
+                tw.textContent = current.slice(0, -1);
+                setTimeout(() => eraseRole(callback), 25);
+            } else {
+                callback();
+            }
+        }
+
+        function nextRole() {
+            if (!tw) return;
+            typeRole(roles[roleIndex % roles.length], 0, () => {
+                eraseRole(() => {
+                    roleIndex++;
+                    setTimeout(nextRole, 300);
+                });
+            });
+        }
+
+        setTimeout(nextRole, 2600);
+
+        // ── Navbar scroll effect ──
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (nav) {
+                if (window.scrollY > 60) {
+                    nav.classList.add('scrolled');
+                } else {
+                    nav.classList.remove('scrolled');
+                }
+            }
+        });
+
+        // ── Smooth anchor scrolling ──
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                const target = document.querySelector(a.getAttribute('href'));
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+    });
+    </script>
+</body>
+</html>

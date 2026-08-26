@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { Navigation, Shield, CheckCircle, AlertCircle, Loader, Mail, Phone, ShieldCheck } from 'lucide-react';
 import { getCurrentLocationName } from '../utils/geolocation';
@@ -43,8 +44,31 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('');
+    setLoading(true);
+    try {
+      const data = await googleLogin(credentialResponse.credential, formData.role);
+      if (data.user.role === 'admin') {
+        navigate('/admin-dashboard');
+      } else if (data.user.role === 'provider') {
+        navigate('/provider-dashboard');
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google Sign-Up failed or was closed. Please try again.');
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -458,6 +482,21 @@ const Register = () => {
             </p>
           )}
         </form>
+
+        <div className="google-auth-container mt-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', width: '100%', margin: '0.5rem 0' }}>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.2)' }}></div>
+            <span style={{ padding: '0 0.75rem', fontSize: '0.85rem', opacity: 0.7 }}>OR</span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.2)' }}></div>
+          </div>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            theme="filled_blue"
+            shape="pill"
+            text="signup_with"
+          />
+        </div>
         
         <p className="auth-redirect mt-6">
           Already have an account? <Link to="/auth/login">Sign in</Link>
