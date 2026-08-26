@@ -6,6 +6,22 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+const parseJsonResponse = async (res, defaultErrorMsg = 'Server error') => {
+  const contentType = res.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error(data.message || defaultErrorMsg);
+      throw new Error(data.message || defaultErrorMsg);
+    }
+    return data;
+  } else {
+    const err = `Server returned non-JSON response (${res.status}). Please set VITE_API_URL to your live Render backend URL in Vercel.`;
+    toast.error(err);
+    throw new Error(err);
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
@@ -28,11 +44,11 @@ export const AuthProvider = ({ children }) => {
         const res = await fetch(`${API_URL}/auth/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (res.ok) {
+        const contentType = res.headers.get('content-type');
+        if (res.ok && contentType && contentType.includes('application/json')) {
           const data = await res.json();
           setUser(data);
         } else {
-          toast.error("Session expired. Please log in again.");
           logout();
         }
       } catch (err) {
@@ -51,12 +67,7 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ email, password, role })
     });
     
-    const data = await res.json();
-    if (!res.ok) {
-      toast.error(data.message || 'Login failed');
-      throw new Error(data.message || 'Login failed');
-    }
-    
+    const data = await parseJsonResponse(res, 'Login failed');
     setToken(data.token);
     setUser(data.user);
     localStorage.setItem('token', data.token);
@@ -71,12 +82,7 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify(userData)
     });
     
-    const data = await res.json();
-    if (!res.ok) {
-      toast.error(data.message || 'Registration failed');
-      throw new Error(data.message || 'Registration failed');
-    }
-    
+    const data = await parseJsonResponse(res, 'Registration failed');
     setToken(data.token);
     setUser(data.user);
     localStorage.setItem('token', data.token);
@@ -91,12 +97,7 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ credential, role })
     });
     
-    const data = await res.json();
-    if (!res.ok) {
-      toast.error(data.message || 'Google login failed');
-      throw new Error(data.message || 'Google login failed');
-    }
-    
+    const data = await parseJsonResponse(res, 'Google login failed');
     setToken(data.token);
     setUser(data.user);
     localStorage.setItem('token', data.token);
@@ -114,8 +115,7 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify(profileData)
     });
     
-    if (!res.ok) throw new Error('Failed to update profile');
-    const updatedUser = await res.json();
+    const updatedUser = await parseJsonResponse(res, 'Failed to update profile');
     setUser(updatedUser);
     return updatedUser;
   };
