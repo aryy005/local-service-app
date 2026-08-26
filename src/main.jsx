@@ -8,7 +8,7 @@ import { LanguageProvider } from './context/LanguageContext'
 import App from './App.jsx'
 import './index.css'
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '454025786765-lhtp6vo2pij3npdu06ras8f95i5ftn3o.apps.googleusercontent.com';
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '454025786765-mg52gos5u2cob80rr5m1ltpb19r1i4fq.apps.googleusercontent.com';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
