@@ -164,7 +164,25 @@ async function sendPhoneOTP(phone) {
   const key = `phone:${validation.normalized}`;
   storeOTP(key, otp);
 
-  // Try MSG91 if configured
+  // ── 1. Try Fast2SMS (popular Indian SMS gateway) ──
+  if (process.env.FAST2SMS_API_KEY) {
+    try {
+      const response = await fetch(`https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS_API_KEY}&route=otp&variables_values=${otp}&flash=0&numbers=${validation.digits}`, {
+        method: 'GET',
+        headers: { 'cache-control': 'no-cache' }
+      });
+      const data = await response.json();
+      if (data.return) {
+        console.log(`[PHONE OTP] Real SMS sent via Fast2SMS to ${validation.normalized}`);
+        return { sent: true, demo: false, normalized: validation.normalized };
+      }
+      console.error('[PHONE OTP] Fast2SMS error:', data);
+    } catch (err) {
+      console.error('[PHONE OTP] Fast2SMS failed:', err.message);
+    }
+  }
+
+  // ── 2. Try MSG91 ──
   if (process.env.MSG91_AUTH_KEY && process.env.MSG91_TEMPLATE_ID) {
     try {
       const response = await fetch('https://control.msg91.com/api/v5/otp', {
@@ -181,7 +199,7 @@ async function sendPhoneOTP(phone) {
       });
       const data = await response.json();
       if (data.type === 'success') {
-        console.log(`[PHONE OTP] Sent via MSG91 to ${validation.normalized}`);
+        console.log(`[PHONE OTP] Real SMS sent via MSG91 to ${validation.normalized}`);
         return { sent: true, demo: false, normalized: validation.normalized };
       }
       console.error('[PHONE OTP] MSG91 error:', data);
@@ -190,7 +208,7 @@ async function sendPhoneOTP(phone) {
     }
   }
 
-  // Demo mode
+  // ── 3. Fallback Demo Mode (Logs OTP to server output when no SMS gateway key is configured) ──
   console.log(`[PHONE OTP] Demo mode - OTP for ${validation.normalized}: ${otp}`);
   return { sent: true, demo: true, demo_otp: otp, normalized: validation.normalized };
 }
