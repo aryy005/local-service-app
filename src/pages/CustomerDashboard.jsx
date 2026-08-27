@@ -138,6 +138,23 @@ const CustomerDashboard = () => {
         </div>
       </div>
 
+      {/* ── Phone Verification Banner for Customers ── */}
+      {!user?.phoneVerified && (
+        <div style={{ background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '1rem', padding: '1.25rem 1.5rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h3 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-main)', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              📱 Add & Verify Your Phone Number
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+              Verify your mobile number via OTP so service providers can reach you for bookings.
+            </p>
+          </div>
+          <button className="btn btn-primary btn-sm" onClick={() => setActiveTab('profile')}>
+            Verify Phone Number
+          </button>
+        </div>
+      )}
+
       {activeTab === 'orders' && (
         <div className="bookings-layout" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
           {bookings && bookings.length > 0 ? bookings.map(booking => (
