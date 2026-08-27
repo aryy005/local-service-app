@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, User, Menu, Moon, Sun, LogOut, Navigation, X, ChevronDown } from 'lucide-react';
+import { Search, MapPin, User, Menu, Moon, Sun, LogOut, Navigation, X, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -16,9 +16,24 @@ const Header = () => {
   const [locationValue, setLocationValue] = useState(userLocation?.name || "");
   const [isLocating, setIsLocating] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const profileRef = useRef(null);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     logout();
+    setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
     navigate('/');
   };
@@ -87,15 +102,49 @@ const Header = () => {
           </select>
           
           {user ? (
-            <>
-              <Link to={getDashboardLink()} className="nav-link">
-                Dashboard
-              </Link>
-              <button onClick={handleLogout} className="btn btn-outline btn-sm">
-                <LogOut size={16} />
-                Logout
+            <div className="profile-dropdown-container" ref={profileRef}>
+              <button 
+                type="button" 
+                className="profile-trigger-btn"
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+              >
+                <div className="profile-avatar">
+                  {user.name ? user.name.charAt(0).toUpperCase() : <User size={16} />}
+                </div>
+                <span className="profile-trigger-name">{user.name || 'Profile'}</span>
+                <ChevronDown size={14} className={`dropdown-chevron ${isProfileOpen ? 'open' : ''}`} />
               </button>
-            </>
+
+              {isProfileOpen && (
+                <div className="profile-dropdown-menu">
+                  <div className="profile-dropdown-header">
+                    <div className="profile-user-name">{user.name}</div>
+                    <div className="profile-user-email">{user.email}</div>
+                    <span className="profile-role-badge">{user.role}</span>
+                  </div>
+
+                  <div className="profile-dropdown-divider"></div>
+
+                  <Link 
+                    to={getDashboardLink()} 
+                    className="profile-dropdown-item"
+                    onClick={() => setIsProfileOpen(false)}
+                  >
+                    <LayoutDashboard size={16} />
+                    <span>Profile & Dashboard</span>
+                  </Link>
+
+                  <button 
+                    type="button"
+                    className="profile-dropdown-item logout-item"
+                    onClick={handleLogout}
+                  >
+                    <LogOut size={16} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <Link to="/auth/login" className="nav-link">Login</Link>
@@ -125,14 +174,23 @@ const Header = () => {
         
         <div className="mobile-nav-actions">
           {user ? (
-            <>
-              <Link to={getDashboardLink()} className="btn btn-outline w-full" onClick={() => setIsMobileMenuOpen(false)}>
-                Dashboard
+            <div className="mobile-profile-card">
+              <div className="mobile-profile-info">
+                <div className="profile-avatar">
+                  {user.name ? user.name.charAt(0).toUpperCase() : <User size={16} />}
+                </div>
+                <div>
+                  <div className="profile-user-name">{user.name}</div>
+                  <div className="profile-user-email">{user.email}</div>
+                </div>
+              </div>
+              <Link to={getDashboardLink()} className="btn btn-outline w-full mt-2" onClick={() => setIsMobileMenuOpen(false)}>
+                <LayoutDashboard size={16} /> Profile & Dashboard
               </Link>
-              <button onClick={handleLogout} className="btn btn-primary w-full">
+              <button onClick={handleLogout} className="btn btn-primary w-full mt-2">
                 <LogOut size={16} /> Logout
               </button>
-            </>
+            </div>
           ) : (
             <>
               <Link to="/auth/login" className="btn btn-outline w-full" onClick={() => setIsMobileMenuOpen(false)}>

@@ -6,10 +6,8 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const { hashAadhaar, isValidAadhaar } = require('../services/verification');
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
 // @route   POST api/auth/google
-// @desc    Authenticate with Google OAuth 2.0 Token
+// @desc    Authenticate user with Google OAuth 2.0 Credential Token
 router.post('/google', async (req, res) => {
   try {
     const { credential, role = 'customer' } = req.body;
@@ -19,54 +17,96 @@ router.post('/google', async (req, res) => {
     }
 
     let payload;
-    if (process.env.GOOGLE_CLIENT_ID) {
-      const ticket = await googleClient.verifyIdToken({
-        idToken: credential,
-        audience: process.env.GOOGLE_CLIENT_ID
-      });
-      payload = ticket.getPayload();
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+
+    if (clientId) {
+      const client = new OAuth2Client(clientId);
+      try {
+        const ticket = await client.verifyIdToken({
+          idToken: credential,
+          audience: clientId,
+        });
+        payload = ticket.getPayload();
+      } catch (verifyErr) {
+        console.error('Google ID token verification failed:', verifyErr.message);
+        return res.status(400).json({ message: 'Invalid or expired Google token. Please sign in again.' });
+      }
     } else {
-      const base64Url = credential.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-      payload = JSON.parse(jsonPayload);
+      // Fallback decode for local testing when GOOGLE_CLIENT_ID is not configured in env
+      try {
+        const base64Url = credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        payload = JSON.parse(jsonPayload);
+      } catch (parseErr) {
+        return res.status(400).json({ message: 'Failed to parse Google credential token' });
+      }
+    }
+
+    if (!payload || !payload.email) {
+      return res.status(400).json({ message: 'Invalid token payload: Email missing' });
     }
 
     const { email, name, sub: googleId, picture } = payload;
+    const normalizedRole = ['customer', 'provider', 'admin'].includes(role) ? role : 'customer';
 
-    let user = await User.findOne({ email, role });
+    // Find existing user by email and role
+    let user = await User.findOne({ email, role: normalizedRole });
 
     if (user) {
+      // Link Google ID if not already linked
       if (!user.googleId) {
         user.googleId = googleId;
-        user.authProvider = 'google';
-        user.emailVerified = true;
-        await user.save();
       }
+      user.emailVerified = true;
+      if (!user.emailVerifiedAt) {
+        user.emailVerifiedAt = new Date();
+      }
+      await user.save();
     } else {
+      // Create new user account with Google profile
       user = new User({
         name: name || 'Google User',
         email,
-        role,
+        role: normalizedRole,
         googleId,
         authProvider: 'google',
         emailVerified: true,
         emailVerifiedAt: new Date(),
-        providerDetails: role === 'provider' ? {
+        providerDetails: normalizedRole === 'provider' ? {
           avatarUrl: picture || ''
         } : undefined
       });
       await user.save();
     }
 
+    // Sign Application JWT
     const jwtPayload = { user: { id: user.id, role: user.role } };
-    jwt.sign(jwtPayload, process.env.JWT_SECRET || 'secret123', { expiresIn: '5h' }, (err, token) => {
-      if (err) throw err;
-      res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
-    });
+    jwt.sign(
+      jwtPayload,
+      process.env.JWT_SECRET || 'secret123',
+      { expiresIn: '5h' },
+      (err, token) => {
+        if (err) throw err;
+        res.json({
+          token,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+          }
+        });
+      }
+    );
   } catch (err) {
-    console.error('Google Auth Error:', err.message);
-    res.status(500).json({ message: 'Google authentication failed' });
+    console.error('Google Auth Error:', err);
+    res.status(500).json({ message: 'Google authentication failed on server' });
   }
 });
 
