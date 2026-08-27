@@ -169,36 +169,62 @@ async function sendPhoneOTP(phone, channel = 'sms') {
     // Meta WhatsApp Business Cloud API
     if (process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_ID) {
       try {
-        const response = await fetch(`https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_ID}/messages`, {
+        const templateName = process.env.WHATSAPP_TEMPLATE_NAME || 'hello_world';
+        
+        let payload = {
+          messaging_product: 'whatsapp',
+          to: validation.normalized.replace('+', ''),
+          type: 'template',
+          template: {
+            name: templateName,
+            language: { code: 'en_US' }
+          }
+        };
+
+        // If template has parameters (non-default hello_world)
+        if (templateName !== 'hello_world') {
+          payload.template.components = [
+            {
+              type: 'body',
+              parameters: [{ type: 'text', text: otp }]
+            }
+          ];
+        }
+
+        let response = await fetch(`https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_ID}/messages`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${process.env.WHATSAPP_TOKEN}`
           },
-          body: JSON.stringify({
-            messaging_product: 'whatsapp',
-            to: validation.normalized.replace('+', ''),
-            type: 'template',
-            template: {
-              name: process.env.WHATSAPP_TEMPLATE_NAME || 'verification_code',
-              language: { code: 'en_US' },
-              components: [
-                {
-                  type: 'body',
-                  parameters: [{ type: 'text', text: otp }]
-                }
-              ]
-            }
-          })
+          body: JSON.stringify(payload)
         });
-        const data = await response.json();
+        
+        let data = await response.json();
+
+        // If custom template failed, retry with Meta's default test template 'hello_world'
+        if (!data.messages && templateName !== 'hello_world') {
+          console.log('[WHATSAPP OTP] Custom template failed, trying Meta default hello_world template...');
+          payload.template = { name: 'hello_world', language: { code: 'en_US' } };
+          response = await fetch(`https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_ID}/messages`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.WHATSAPP_TOKEN}`
+            },
+            body: JSON.stringify(payload)
+          });
+          data = await response.json();
+        }
+
         if (data.messages) {
           console.log(`[WHATSAPP OTP] Real OTP sent via Meta WhatsApp Cloud API to ${validation.normalized}`);
           return { sent: true, demo: false, channel: 'whatsapp', normalized: validation.normalized };
+        } else {
+          console.error('[WHATSAPP OTP] Meta Cloud API error details:', JSON.stringify(data));
         }
-        console.error('[WHATSAPP OTP] Meta Cloud API error:', data);
       } catch (err) {
-        console.error('[WHATSAPP OTP] Meta failed:', err.message);
+        console.error('[WHATSAPP OTP] Meta request failed:', err.message);
       }
     }
 
