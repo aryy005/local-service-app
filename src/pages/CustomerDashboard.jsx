@@ -23,6 +23,14 @@ const CustomerDashboard = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ name: '', phone: '' });
 
+  // Inline Phone Verification State
+  const [phoneInput, setPhoneInput] = useState('');
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  const [phoneOtp, setPhoneOtp] = useState('');
+  const [phoneDemoOtp, setPhoneDemoOtp] = useState('');
+  const [phoneLoading, setPhoneLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+
   useEffect(() => {
     if (!user) {
       navigate('/auth/login');
@@ -36,6 +44,7 @@ const CustomerDashboard = () => {
 
     if (user) {
       setFormData({ name: user.name || '', phone: user.phone || '' });
+      setPhoneInput(user.phone || '');
     }
 
     const fetchBookings = async () => {
@@ -53,6 +62,39 @@ const CustomerDashboard = () => {
     };
     fetchBookings();
   }, [user, token, navigate]);
+
+  const handleSendPhoneOtp = async () => {
+    if (!phoneInput) { setPhoneError('Enter your mobile number'); return; }
+    setPhoneLoading(true); setPhoneError('');
+    try {
+      const res = await fetch(`${API_URL}/verify/phone/send-otp`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phoneInput })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      setPhoneOtpSent(true);
+      if (data.demo_otp) setPhoneDemoOtp(data.demo_otp);
+    } catch (err) { setPhoneError(err.message); }
+    finally { setPhoneLoading(false); }
+  };
+
+  const handleVerifyPhoneOtp = async () => {
+    if (phoneOtp.length < 6) { setPhoneError('Enter 6-digit OTP'); return; }
+    setPhoneLoading(true); setPhoneError('');
+    try {
+      const res = await fetch(`${API_URL}/verify/phone/verify-otp`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phoneInput, otp: phoneOtp })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      await updateProfile({ phone: phoneInput, phoneVerified: true });
+      setPhoneOtpSent(false);
+      alert('Phone number verified successfully!');
+    } catch (err) { setPhoneError(err.message); }
+    finally { setPhoneLoading(false); }
+  };
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
@@ -192,6 +234,58 @@ const CustomerDashboard = () => {
               <div>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Phone Number</p>
                 <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.phone || 'Not provided'}</p>
+              </div>
+
+              <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--surface-border)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+                <p className="text-muted" style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.75rem' }}>Verification Status</p>
+                
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+                  <span className={user.emailVerified ? 'verified-badge large' : 'unverified-badge'}>
+                    ✉ Email {user.emailVerified ? '✓ Verified' : '✗ Not Verified'}
+                  </span>
+                  <span className={user.phoneVerified ? 'verified-badge large' : 'unverified-badge'}>
+                    📱 Phone {user.phoneVerified ? '✓ Verified' : '✗ Not Verified'}
+                  </span>
+                </div>
+
+                {!user.phoneVerified && (
+                  <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--surface-border)' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0' }}>📱 Verify Mobile Number (+91)</h4>
+                    {phoneError && <div style={{ color: '#ef4444', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{phoneError}</div>}
+                    
+                    {!phoneOtpSent ? (
+                      <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '400px' }}>
+                        <input 
+                          type="tel" 
+                          value={phoneInput} 
+                          onChange={(e) => setPhoneInput(e.target.value)} 
+                          placeholder="+91 98765 43210"
+                          style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--surface-border)', background: 'var(--bg-color)', color: 'var(--text-main)' }}
+                        />
+                        <button type="button" className="btn btn-primary btn-sm" onClick={handleSendPhoneOtp} disabled={phoneLoading}>
+                          {phoneLoading ? 'Sending...' : 'Send OTP'}
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '400px', flexDirection: 'column' }}>
+                        {phoneDemoOtp && <span style={{ fontSize: '0.82rem', color: '#10b981' }}>Demo OTP: <b>{phoneDemoOtp}</b></span>}
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input 
+                            type="text" 
+                            value={phoneOtp} 
+                            onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} 
+                            placeholder="Enter 6-digit OTP"
+                            maxLength="6"
+                            style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--surface-border)', background: 'var(--bg-color)', color: 'var(--text-main)' }}
+                          />
+                          <button type="button" className="btn btn-primary btn-sm" onClick={handleVerifyPhoneOtp} disabled={phoneLoading}>
+                            {phoneLoading ? 'Verifying...' : 'Verify OTP'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

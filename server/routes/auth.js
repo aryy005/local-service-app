@@ -111,46 +111,37 @@ router.post('/google', async (req, res) => {
 });
 
 // @route   POST api/auth/register
-// @desc    Register a user
+// @desc    Register a user with basic info (Instant Sign-Up)
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, phone, password, role, providerDetails, emailVerified, phoneVerified } = req.body;
+    const { name, email, password, role = 'customer' } = req.body;
 
-    let user = await User.findOne({ email, role });
-    if (user) {
-      return res.status(400).json({ message: `User already exists as a ${role}` });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required' });
     }
 
-    // For providers: validate and process Aadhaar data
-    let processedProviderDetails = role === 'provider' ? { ...providerDetails } : undefined;
-    
-    if (role === 'provider' && providerDetails) {
-      if (providerDetails.aadhaarNumber) {
-        const aadhaarClean = providerDetails.aadhaarNumber.replace(/\s/g, '');
-        if (!isValidAadhaar(aadhaarClean)) {
-          return res.status(400).json({ message: 'Invalid Aadhaar number. Must be 12 digits.' });
-        }
-        processedProviderDetails.aadhaarHash = hashAadhaar(aadhaarClean);
-        processedProviderDetails.aadhaarLastFour = aadhaarClean.slice(-4);
-        processedProviderDetails.aadhaarVerified = providerDetails.aadhaarVerified || false;
-        processedProviderDetails.aadhaarVerifiedAt = providerDetails.aadhaarVerified ? new Date() : undefined;
-        processedProviderDetails.aadhaarRefId = providerDetails.aadhaarRefId || '';
-      }
-      // Remove raw aadhaar number from stored data
-      delete processedProviderDetails.aadhaarNumber;
+    const normalizedRole = ['customer', 'provider', 'admin'].includes(role) ? role : 'customer';
+
+    let user = await User.findOne({ email, role: normalizedRole });
+    if (user) {
+      return res.status(400).json({ message: `User already exists as a ${normalizedRole}` });
     }
 
     user = new User({
       name,
       email,
-      phone,
       password,
-      role,
-      emailVerified: emailVerified || false,
-      emailVerifiedAt: emailVerified ? new Date() : undefined,
-      phoneVerified: phoneVerified || false,
-      phoneVerifiedAt: phoneVerified ? new Date() : undefined,
-      providerDetails: processedProviderDetails
+      role: normalizedRole,
+      authProvider: 'local',
+      emailVerified: false,
+      phoneVerified: false,
+      providerDetails: normalizedRole === 'provider' ? {
+        rating: 0,
+        reviewsCount: 0,
+        experienceYears: 0,
+        totalJobsCompleted: 0,
+        aadhaarVerified: false
+      } : undefined
     });
 
     await user.save();
@@ -158,11 +149,14 @@ router.post('/register', async (req, res) => {
     const payload = { user: { id: user.id, role: user.role } };
     jwt.sign(payload, process.env.JWT_SECRET || 'secret123', { expiresIn: '5h' }, (err, token) => {
       if (err) throw err;
-      res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+      res.json({
+        token,
+        user: { id: user.id, name: user.name, email: user.email, role: user.role }
+      });
     });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: err.message || 'Server error' });
+    console.error('Registration Error:', err.message);
+    res.status(500).json({ message: err.message || 'Server error during registration' });
   }
 });
 
@@ -210,16 +204,24 @@ router.get('/me', auth, async (req, res) => {
 });
 
 // @route   PUT api/auth/me
-// @desc    Update user profile
+// @desc    Update user profile and verification status
 router.put('/me', auth, async (req, res) => {
   try {
-    const { name, phone, providerDetails } = req.body;
+    const { name, phone, emailVerified, phoneVerified, providerDetails } = req.body;
     let user = await User.findById(req.user.id);
     
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    user.name = name || user.name;
-    user.phone = phone || user.phone;
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    if (typeof emailVerified === 'boolean') {
+      user.emailVerified = emailVerified;
+      if (emailVerified && !user.emailVerifiedAt) user.emailVerifiedAt = new Date();
+    }
+    if (typeof phoneVerified === 'boolean') {
+      user.phoneVerified = phoneVerified;
+      if (phoneVerified && !user.phoneVerifiedAt) user.phoneVerifiedAt = new Date();
+    }
     
     if (user.role === 'provider' && providerDetails) {
       user.providerDetails = {
@@ -231,8 +233,8 @@ router.put('/me', auth, async (req, res) => {
     await user.save();
     res.json(user);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Profile update error:', err.message);
+    res.status(500).json({ message: 'Server error updating profile' });
   }
 });
 

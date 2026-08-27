@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, Phone, MapPin } from 'lucide-react';
+import { Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, Phone, MapPin, Shield, CheckCircle, AlertCircle, Loader, ShieldCheck } from 'lucide-react';
 import { getCurrentLocationName } from '../utils/geolocation';
 import { API_URL } from '../config';
 import ChatModal from '../components/ChatModal';
@@ -12,7 +12,7 @@ const ProviderDashboard = () => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('jobs'); // 'jobs' | 'profile'
+  const [activeTab, setActiveTab] = useState('jobs'); // 'jobs' | 'profile' | 'earnings' | 'wallet'
   const [activeChat, setActiveChat] = useState(null);
 
   // Profile Edit State
@@ -21,12 +21,104 @@ const ProviderDashboard = () => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    category: '',
     hourlyRate: '',
     experienceYears: '',
     location: '',
     description: '',
     upiId: ''
   });
+
+  // ─── Dashboard Inline Verification Handlers ───
+  const [phoneInput, setPhoneInput] = useState(user?.phone || '');
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  const [phoneOtp, setPhoneOtp] = useState('');
+  const [phoneDemoOtp, setPhoneDemoOtp] = useState('');
+  const [phoneLoading, setPhoneLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+
+  const [aadhaarInput, setAadhaarInput] = useState('');
+  const [aadhaarStep, setAadhaarStep] = useState('input');
+  const [aadhaarOtp, setAadhaarOtp] = useState('');
+  const [aadhaarClientId, setAadhaarClientId] = useState('');
+  const [aadhaarDemoOtp, setAadhaarDemoOtp] = useState('');
+  const [aadhaarLoading, setAadhaarLoading] = useState(false);
+  const [aadhaarError, setAadhaarError] = useState('');
+
+  const handleSendPhoneOtp = async () => {
+    if (!phoneInput) { setPhoneError('Enter your mobile number'); return; }
+    setPhoneLoading(true); setPhoneError('');
+    try {
+      const res = await fetch(`${API_URL}/verify/phone/send-otp`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phoneInput })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      setPhoneOtpSent(true);
+      if (data.demo_otp) setPhoneDemoOtp(data.demo_otp);
+    } catch (err) { setPhoneError(err.message); }
+    finally { setPhoneLoading(false); }
+  };
+
+  const handleVerifyPhoneOtp = async () => {
+    if (phoneOtp.length < 6) { setPhoneError('Enter the 6-digit OTP'); return; }
+    setPhoneLoading(true); setPhoneError('');
+    try {
+      const res = await fetch(`${API_URL}/verify/phone/verify-otp`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phoneInput, otp: phoneOtp })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      await updateProfile({ phone: phoneInput, phoneVerified: true });
+      setPhoneOtpSent(false);
+      alert('Phone number verified successfully!');
+    } catch (err) { setPhoneError(err.message); }
+    finally { setPhoneLoading(false); }
+  };
+
+  const handleSendAadhaarOtp = async () => {
+    const aadhaarClean = aadhaarInput.replace(/\s/g, '');
+    if (aadhaarClean.length !== 12) { setAadhaarError('Enter a valid 12-digit Aadhaar number'); return; }
+    setAadhaarLoading(true); setAadhaarError('');
+    try {
+      const res = await fetch(`${API_URL}/verify/aadhaar/send-otp`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aadhaarNumber: aadhaarClean })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      setAadhaarClientId(data.clientId || '');
+      setAadhaarStep('otp');
+      if (data.demo_otp) setAadhaarDemoOtp(data.demo_otp);
+    } catch (err) { setAadhaarError(err.message); }
+    finally { setAadhaarLoading(false); }
+  };
+
+  const handleVerifyAadhaarOtp = async () => {
+    if (aadhaarOtp.length < 6) { setAadhaarError('Enter the 6-digit OTP'); return; }
+    setAadhaarLoading(true); setAadhaarError('');
+    try {
+      const aadhaarClean = aadhaarInput.replace(/\s/g, '');
+      const res = await fetch(`${API_URL}/verify/aadhaar/verify-otp`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aadhaarNumber: aadhaarClean, otp: aadhaarOtp, clientId: aadhaarClientId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      await updateProfile({
+        providerDetails: {
+          aadhaarVerified: true,
+          aadhaarLastFour: data.aadhaarLastFour || aadhaarClean.slice(-4),
+          aadhaarRefId: data.refId || ''
+        }
+      });
+      setAadhaarStep('verified');
+      alert('Aadhaar verified successfully via UIDAI!');
+    } catch (err) { setAadhaarError(err.message); }
+    finally { setAadhaarLoading(false); }
+  };
 
   const fetchJobs = async () => {
     try {
@@ -181,6 +273,32 @@ const ProviderDashboard = () => {
         </div>
       </div>
 
+      {/* ─── Profile & Verification Status Banner ─── */}
+      {(!user?.phoneVerified || !user?.providerDetails?.aadhaarVerified) && (
+        <div style={{ background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '1rem', padding: '1.25rem 1.5rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <Shield size={20} color="#eab308" />
+            <h3 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.05rem' }}>Complete Your Identity Verification</h3>
+          </div>
+          <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+            Verify your Phone Number and Aadhaar UIDAI to activate your service profile and receive job requests.
+          </p>
+
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            {!user?.phoneVerified && (
+              <button className="btn btn-outline btn-sm" onClick={() => setActiveTab('profile')}>
+                📱 Verify Phone Number
+              </button>
+            )}
+            {!user?.providerDetails?.aadhaarVerified && (
+              <button className="btn btn-primary btn-sm" onClick={() => setActiveTab('profile')}>
+                🛡 Verify Aadhaar (UIDAI)
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {activeTab === 'earnings' && (
         <EarningsDashboard bookings={jobs.filter(j => j.status === 'completed')} />
       )}
@@ -316,29 +434,32 @@ const ProviderDashboard = () => {
               </div>
               <div>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Phone Number</p>
-                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.phone}</p>
+                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.phone || 'Not provided'}</p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                 <div>
                   <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Hourly Rate</p>
-                  <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>₹{user.providerDetails?.hourlyRate}</p>
+                  <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>₹{user.providerDetails?.hourlyRate || '0'}</p>
                 </div>
                 <div>
                   <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Years of Experience</p>
-                  <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.experienceYears} Years</p>
+                  <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.experienceYears || '0'} Years</p>
                 </div>
               </div>
               <div>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Location Area</p>
-                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.location}</p>
+                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.location || 'Not set'}</p>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Bio / Description</p>
-                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.description}</p>
+                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.description || 'No description added yet.'}</p>
               </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Verification Status</p>
-                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+
+              {/* ── Verification Badges & Actions ── */}
+              <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--surface-border)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+                <p className="text-muted" style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.75rem' }}>Verification Status</p>
+                
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
                   <span className={user.emailVerified ? 'verified-badge large' : 'unverified-badge'}>
                     ✉ Email {user.emailVerified ? '✓ Verified' : '✗ Not Verified'}
                   </span>
@@ -355,6 +476,89 @@ const ProviderDashboard = () => {
                     </span>
                   )}
                 </div>
+
+                {/* ── Interactive Phone Verification Card ── */}
+                {!user.phoneVerified && (
+                  <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: '0.75rem', marginBottom: '1.25rem', border: '1px solid var(--surface-border)' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0' }}>📱 Verify Phone Number (+91)</h4>
+                    {phoneError && <div style={{ color: '#ef4444', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{phoneError}</div>}
+                    
+                    {!phoneOtpSent ? (
+                      <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '400px' }}>
+                        <input 
+                          type="tel" 
+                          value={phoneInput} 
+                          onChange={(e) => setPhoneInput(e.target.value)} 
+                          placeholder="+91 98765 43210"
+                          style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--surface-border)', background: 'var(--bg-color)', color: 'var(--text-main)' }}
+                        />
+                        <button type="button" className="btn btn-primary btn-sm" onClick={handleSendPhoneOtp} disabled={phoneLoading}>
+                          {phoneLoading ? 'Sending...' : 'Send OTP'}
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '400px', flexDirection: 'column' }}>
+                        {phoneDemoOtp && <span style={{ fontSize: '0.82rem', color: '#10b981' }}>Demo OTP: <b>{phoneDemoOtp}</b></span>}
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input 
+                            type="text" 
+                            value={phoneOtp} 
+                            onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} 
+                            placeholder="Enter 6-digit OTP"
+                            maxLength="6"
+                            style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--surface-border)', background: 'var(--bg-color)', color: 'var(--text-main)' }}
+                          />
+                          <button type="button" className="btn btn-primary btn-sm" onClick={handleVerifyPhoneOtp} disabled={phoneLoading}>
+                            {phoneLoading ? 'Verifying...' : 'Verify OTP'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Interactive Aadhaar Verification Card ── */}
+                {!user.providerDetails?.aadhaarVerified && (
+                  <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--surface-border)' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0' }}>🛡 Verify Aadhaar via UIDAI e-KYC</h4>
+                    {aadhaarError && <div style={{ color: '#ef4444', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{aadhaarError}</div>}
+
+                    {aadhaarStep === 'input' && (
+                      <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '420px' }}>
+                        <input 
+                          type="text" 
+                          value={aadhaarInput} 
+                          onChange={(e) => setAadhaarInput(e.target.value.replace(/\D/g, '').slice(0, 12))} 
+                          placeholder="12-digit Aadhaar Number"
+                          maxLength="12"
+                          style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--surface-border)', background: 'var(--bg-color)', color: 'var(--text-main)' }}
+                        />
+                        <button type="button" className="btn btn-primary btn-sm" onClick={handleSendAadhaarOtp} disabled={aadhaarLoading}>
+                          {aadhaarLoading ? 'Requesting UIDAI...' : 'Send UIDAI OTP'}
+                        </button>
+                      </div>
+                    )}
+
+                    {aadhaarStep === 'otp' && (
+                      <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '420px', flexDirection: 'column' }}>
+                        {aadhaarDemoOtp && <span style={{ fontSize: '0.82rem', color: '#10b981' }}>Demo OTP: <b>{aadhaarDemoOtp}</b></span>}
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input 
+                            type="text" 
+                            value={aadhaarOtp} 
+                            onChange={(e) => setAadhaarOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} 
+                            placeholder="Enter 6-digit UIDAI OTP"
+                            maxLength="6"
+                            style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--surface-border)', background: 'var(--bg-color)', color: 'var(--text-main)' }}
+                          />
+                          <button type="button" className="btn btn-primary btn-sm" onClick={handleVerifyAadhaarOtp} disabled={aadhaarLoading}>
+                            {aadhaarLoading ? 'Verifying UIDAI...' : 'Verify OTP'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
