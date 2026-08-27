@@ -76,10 +76,10 @@ router.post('/email/verify-otp', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════
 
 // @route   POST api/verify/phone/send-otp
-// @desc    Send OTP to Indian mobile number (+91)
+// @desc    Send OTP to Indian mobile number (+91) via SMS or WhatsApp
 router.post('/phone/send-otp', async (req, res) => {
   try {
-    const { phone } = req.body;
+    const { phone, channel = 'sms' } = req.body;
 
     if (!phone) {
       return res.status(400).json({ message: 'Phone number is required.' });
@@ -91,15 +91,16 @@ router.post('/phone/send-otp', async (req, res) => {
       return res.status(400).json({ message: validation.error });
     }
 
-    const result = await sendPhoneOTP(phone);
+    const result = await sendPhoneOTP(phone, channel);
 
     if (!result.sent) {
       return res.status(400).json({ message: result.error });
     }
 
     const response = {
-      message: `OTP sent to ${result.normalized}`,
-      normalized: result.normalized
+      message: `OTP sent via ${result.channel || channel} to ${result.normalized}`,
+      normalized: result.normalized,
+      channel: result.channel || channel
     };
 
     if (result.demo) {

@@ -154,7 +154,7 @@ function validateIndianPhone(phone) {
   return { valid: true, normalized: `+91${digits}`, digits };
 }
 
-async function sendPhoneOTP(phone) {
+async function sendPhoneOTP(phone, channel = 'sms') {
   const validation = validateIndianPhone(phone);
   if (!validation.valid) {
     return { sent: false, error: validation.error };
@@ -164,7 +164,77 @@ async function sendPhoneOTP(phone) {
   const key = `phone:${validation.normalized}`;
   storeOTP(key, otp);
 
-  // ── 1. Try Fast2SMS (popular Indian SMS gateway) ──
+  // ── 1. WhatsApp Delivery Channel (Meta Cloud API or Twilio WhatsApp) ──
+  if (channel === 'whatsapp' || process.env.WHATSAPP_TOKEN || process.env.TWILIO_ACCOUNT_SID) {
+    // Meta WhatsApp Business Cloud API
+    if (process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_ID) {
+      try {
+        const response = await fetch(`https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_ID}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.WHATSAPP_TOKEN}`
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: validation.normalized.replace('+', ''),
+            type: 'template',
+            template: {
+              name: process.env.WHATSAPP_TEMPLATE_NAME || 'verification_code',
+              language: { code: 'en_US' },
+              components: [
+                {
+                  type: 'body',
+                  parameters: [{ type: 'text', text: otp }]
+                }
+              ]
+            }
+          })
+        });
+        const data = await response.json();
+        if (data.messages) {
+          console.log(`[WHATSAPP OTP] Real OTP sent via Meta WhatsApp Cloud API to ${validation.normalized}`);
+          return { sent: true, demo: false, channel: 'whatsapp', normalized: validation.normalized };
+        }
+        console.error('[WHATSAPP OTP] Meta Cloud API error:', data);
+      } catch (err) {
+        console.error('[WHATSAPP OTP] Meta failed:', err.message);
+      }
+    }
+
+    // Twilio WhatsApp API
+    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+      try {
+        const sid = process.env.TWILIO_ACCOUNT_SID;
+        const auth = Buffer.from(`${sid}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64');
+        const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886';
+        
+        const params = new URLSearchParams();
+        params.append('From', fromNumber.startsWith('whatsapp:') ? fromNumber : `whatsapp:${fromNumber}`);
+        params.append('To', `whatsapp:${validation.normalized}`);
+        params.append('Body', `Your NearPro verification code is: ${otp}`);
+
+        const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: params
+        });
+        const data = await response.json();
+        if (data.sid) {
+          console.log(`[WHATSAPP OTP] Real OTP sent via Twilio WhatsApp to ${validation.normalized}`);
+          return { sent: true, demo: false, channel: 'whatsapp', normalized: validation.normalized };
+        }
+        console.error('[WHATSAPP OTP] Twilio error:', data);
+      } catch (err) {
+        console.error('[WHATSAPP OTP] Twilio failed:', err.message);
+      }
+    }
+  }
+
+  // ── 2. SMS Delivery Channel (Fast2SMS / MSG91) ──
   if (process.env.FAST2SMS_API_KEY) {
     try {
       const response = await fetch(`https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS_API_KEY}&route=otp&variables_values=${otp}&flash=0&numbers=${validation.digits}`, {
@@ -174,7 +244,7 @@ async function sendPhoneOTP(phone) {
       const data = await response.json();
       if (data.return) {
         console.log(`[PHONE OTP] Real SMS sent via Fast2SMS to ${validation.normalized}`);
-        return { sent: true, demo: false, normalized: validation.normalized };
+        return { sent: true, demo: false, channel: 'sms', normalized: validation.normalized };
       }
       console.error('[PHONE OTP] Fast2SMS error:', data);
     } catch (err) {
@@ -182,7 +252,6 @@ async function sendPhoneOTP(phone) {
     }
   }
 
-  // ── 2. Try MSG91 ──
   if (process.env.MSG91_AUTH_KEY && process.env.MSG91_TEMPLATE_ID) {
     try {
       const response = await fetch('https://control.msg91.com/api/v5/otp', {
@@ -200,7 +269,7 @@ async function sendPhoneOTP(phone) {
       const data = await response.json();
       if (data.type === 'success') {
         console.log(`[PHONE OTP] Real SMS sent via MSG91 to ${validation.normalized}`);
-        return { sent: true, demo: false, normalized: validation.normalized };
+        return { sent: true, demo: false, channel: 'sms', normalized: validation.normalized };
       }
       console.error('[PHONE OTP] MSG91 error:', data);
     } catch (err) {
@@ -208,9 +277,9 @@ async function sendPhoneOTP(phone) {
     }
   }
 
-  // ── 3. Fallback Demo Mode (Logs OTP to server output when no SMS gateway key is configured) ──
-  console.log(`[PHONE OTP] Demo mode - OTP for ${validation.normalized}: ${otp}`);
-  return { sent: true, demo: true, demo_otp: otp, normalized: validation.normalized };
+  // ── 3. Fallback Demo Mode ──
+  console.log(`[PHONE OTP] Demo mode - OTP for ${validation.normalized}: ${otp} (Channel: ${channel})`);
+  return { sent: true, demo: true, demo_otp: otp, channel, normalized: validation.normalized };
 }
 
 function verifyPhoneOTP(phone, otp) {

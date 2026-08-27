@@ -45,13 +45,13 @@ const ProviderDashboard = () => {
   const [aadhaarLoading, setAadhaarLoading] = useState(false);
   const [aadhaarError, setAadhaarError] = useState('');
 
-  const handleSendPhoneOtp = async () => {
+  const handleSendPhoneOtp = async (channel = 'sms') => {
     if (!phoneInput) { setPhoneError('Enter your mobile number'); return; }
     setPhoneLoading(true); setPhoneError('');
     try {
       const res = await fetch(`${API_URL}/verify/phone/send-otp`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phoneInput })
+        body: JSON.stringify({ phone: phoneInput, channel })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -484,16 +484,19 @@ const ProviderDashboard = () => {
                     {phoneError && <div style={{ color: '#ef4444', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{phoneError}</div>}
                     
                     {!phoneOtpSent ? (
-                      <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '400px' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '480px', flexWrap: 'wrap' }}>
                         <input 
                           type="tel" 
                           value={phoneInput} 
                           onChange={(e) => setPhoneInput(e.target.value)} 
                           placeholder="+91 98765 43210"
-                          style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--surface-border)', background: 'var(--bg-color)', color: 'var(--text-main)' }}
+                          style={{ flex: 1, minWidth: '180px', padding: '0.5rem 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--surface-border)', background: 'var(--bg-color)', color: 'var(--text-main)' }}
                         />
-                        <button type="button" className="btn btn-primary btn-sm" onClick={handleSendPhoneOtp} disabled={phoneLoading}>
-                          {phoneLoading ? 'Sending...' : 'Send OTP'}
+                        <button type="button" className="btn btn-outline btn-sm" onClick={() => handleSendPhoneOtp('sms')} disabled={phoneLoading}>
+                          📱 SMS OTP
+                        </button>
+                        <button type="button" className="btn btn-primary btn-sm" onClick={() => handleSendPhoneOtp('whatsapp')} disabled={phoneLoading} style={{ background: '#25D366', borderColor: '#25D366' }}>
+                          💬 WhatsApp OTP
                         </button>
                       </div>
                     ) : (
