@@ -87,13 +87,15 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
         
         {/* Header */}
         <div className="tracker-header">
-          <h2>
-            <Navigation style={{ color: '#6366F1' }} size={22} />
-            Service Tracker
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-              (ID: #{booking._id?.slice(-6)})
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Navigation style={{ color: '#6366F1' }} size={22} />
+              Service Tracker
+            </h2>
+            <span style={{ fontSize: '0.85rem', color: '#6366f1', fontWeight: 800, background: 'rgba(99, 102, 241, 0.1)', padding: '0.15rem 0.6rem', borderRadius: '0.4rem', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+              Order ID: {booking.orderId || ('ORD-' + booking._id?.slice(-6).toUpperCase())}
             </span>
-          </h2>
+          </div>
           <button className="payment-modal-close" onClick={onClose}>&times;</button>
         </div>
 

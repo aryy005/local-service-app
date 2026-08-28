@@ -199,6 +199,12 @@ const BookingModal = ({ provider, onClose }) => {
             <p>Your service booking request has been sent to <strong>{provider.name}</strong>.</p>
             
             <div className="booking-summary glass-panel mt-4">
+              <div className="summary-item" style={{ borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
+                <span className="label" style={{ fontWeight: 700, color: '#6366f1' }}>Unique Order ID:</span>
+                <span style={{ fontWeight: 800, color: '#6366f1', fontSize: '1rem' }}>
+                  {createdBooking?.orderId || ('ORD-' + createdBooking?._id?.slice(-6).toUpperCase())}
+                </span>
+              </div>
               <div className="summary-item">
                 <span className="label">Date & Slot:</span>
                 <span style={{ textTransform: 'capitalize' }}>{formData.date} ({formData.timePreference})</span>

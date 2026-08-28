@@ -677,6 +677,11 @@ const EarningsDashboard = ({ bookings }) => {
 // Helper component for rendering jobs
 const JobCard = ({ job, updateJobStatus, openChat, rateCustomer, openTracker, openInvoice }) => (
   <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem' }}>
+    <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <span style={{ fontWeight: 800, color: '#6366f1', fontSize: '0.85rem', background: 'rgba(99, 102, 241, 0.1)', padding: '0.2rem 0.6rem', borderRadius: '0.4rem', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+        Order ID: {job.orderId || ('ORD-' + job._id?.slice(-6).toUpperCase())}
+      </span>
+    </div>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>

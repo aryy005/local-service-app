@@ -165,24 +165,31 @@ const CustomerDashboard = () => {
         <div className="bookings-layout" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
           {bookings && bookings.length > 0 ? bookings.map(booking => (
             <div key={booking._id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <span style={{ 
-                  fontWeight: 600, 
-                  textTransform: 'capitalize',
-                  color: booking.status === 'pending' ? 'var(--warning-color)' : booking.status === 'accepted' ? 'var(--accent-color)' : booking.status === 'completed' ? 'var(--primary-color)' : 'var(--text-muted)'
-                }}>{booking.status}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <span style={{ fontWeight: 800, color: '#6366f1', fontSize: '0.88rem', background: 'rgba(99, 102, 241, 0.1)', padding: '0.2rem 0.5rem', borderRadius: '0.4rem', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                  ID: {booking.orderId || ('ORD-' + booking._id?.slice(-6).toUpperCase())}
+                </span>
                 
-                {/* Payment Badge */}
-                {booking.paymentStatus === 'paid' ? (
-                  <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <CheckCircle size={12} /> Paid (₹{booking.paidAmount || booking.finalPrice})
-                  </span>
-                ) : (
-                  <span style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700 }}>
-                    Unpaid: ₹{booking.finalPrice || booking.providerId?.providerDetails?.hourlyRate || 25}
-                  </span>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ 
+                    fontWeight: 600, 
+                    textTransform: 'capitalize',
+                    color: booking.status === 'pending' ? 'var(--warning-color)' : booking.status === 'accepted' ? 'var(--accent-color)' : booking.status === 'completed' ? 'var(--primary-color)' : 'var(--text-muted)'
+                  }}>{booking.status}</span>
+                  
+                  {/* Payment Badge */}
+                  {booking.paymentStatus === 'paid' ? (
+                    <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <CheckCircle size={12} /> Paid (₹{booking.paidAmount || booking.finalPrice})
+                    </span>
+                  ) : (
+                    <span style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700 }}>
+                      Unpaid: ₹{booking.finalPrice || booking.providerId?.providerDetails?.hourlyRate || 25}
+                    </span>
+                  )}
+                </div>
               </div>
+              
               <h3 style={{ marginBottom: '0.25rem' }}>{booking.providerId?.name || 'Unknown Provider'}</h3>
               <p style={{ margin: '0 0 1rem 0', color: 'var(--text-muted)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Phone size={14}/> {booking.providerId?.phone || 'No phone provided'}

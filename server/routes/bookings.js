@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Booking = require('../models/Booking');
 const User = require('../models/User');
+const Counter = require('../models/Counter');
 const auth = require('../middleware/auth');
 
 // @route   POST api/bookings
@@ -19,7 +20,18 @@ router.post('/', auth, async (req, res) => {
       return res.status(404).json({ message: 'Provider not found' });
     }
 
+    // Atomic sequential order number generation (guaranteed unique & non-repeating)
+    const counter = await Counter.findByIdAndUpdate(
+      { _id: 'orderId' },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
+    const generatedOrderId = `ORD-${counter.seq}`;
+
     const newBooking = new Booking({
+      orderId: generatedOrderId,
+      orderNumber: counter.seq,
       customerId: req.user.id,
       providerId,
       date,
@@ -29,7 +41,7 @@ router.post('/', auth, async (req, res) => {
       serviceStage: 'requested',
       stageHistory: [{
         stage: 'requested',
-        title: 'Booking Placed',
+        title: `Order ${generatedOrderId} Placed`,
         description: 'Customer created the service request.',
         timestamp: new Date()
       }]
@@ -38,8 +50,8 @@ router.post('/', auth, async (req, res) => {
     const booking = await newBooking.save();
     res.json(booking);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('Booking Error:', err.message);
+    res.status(500).send('Server Error creating booking');
   }
 });
 

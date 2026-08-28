@@ -33,6 +33,9 @@ const InvoiceModal = ({ booking, onClose }) => {
             </div>
             <div className="invoice-title-block">
               <h2>TAX INVOICE</h2>
+              <div style={{ fontSize: '0.85rem', color: '#6366f1', fontWeight: 800 }}>
+                Order ID: {booking.orderId || ('ORD-' + booking._id?.slice(-6).toUpperCase())}
+              </div>
               <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
                 Invoice #: <strong>INV-{booking.paymentId || booking._id?.slice(-8)}</strong>
               </div>
