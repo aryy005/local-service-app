@@ -27,7 +27,7 @@ const Login = () => {
       } else if (data.user.role === 'provider') {
         navigate('/provider-dashboard');
       } else {
-        navigate('/');
+        navigate('/customer-dashboard');
       }
     } catch (err) {
       setError(err.message);
@@ -46,7 +46,7 @@ const Login = () => {
       } else if (data.user.role === 'provider') {
         navigate('/provider-dashboard');
       } else {
-        navigate('/');
+        navigate('/customer-dashboard');
       }
     } catch (err) {
       setError(err.message);
@@ -81,13 +81,6 @@ const Login = () => {
             onClick={() => setFormData({...formData, role: 'provider'})}
           >
             Provider
-          </button>
-          <button 
-            type="button"
-            className={`role-btn ${formData.role === 'admin' ? 'active' : ''}`}
-            onClick={() => setFormData({...formData, role: 'admin'})}
-          >
-            Admin
           </button>
         </div>
 

@@ -31,7 +31,7 @@ const BookingModal = ({ provider, onClose }) => {
     setIsLocating(true);
     try {
       const location = await getCurrentLocationName();
-      setFormData({ ...formData, serviceAddress: location });
+      setFormData({ ...formData, serviceAddress: location.name || location });
     } catch (err) {
       alert(err.message);
     } finally {

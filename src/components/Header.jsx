@@ -17,6 +17,7 @@ const Header = () => {
   const [isLocating, setIsLocating] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const profileRef = useRef(null);
 
@@ -88,12 +89,20 @@ const Header = () => {
             </div>
 
             {/* Search bar */}
-            <div className="search-bar">
-              <Search size={18} className="search-icon" />
+            <div className="search-bar" onClick={() => { if (searchQuery.trim()) navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`); }}>
+              <Search size={18} className="search-icon" style={{ cursor: 'pointer' }} />
               <input 
                 type="text" 
                 placeholder="Search for services" 
                 className="search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                  }
+                }}
               />
             </div>
           </>

@@ -18,7 +18,7 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const res = await login(email, password);
+      const res = await login(email, password, 'admin');
       if (res && res.user) {
         if (res.user.role !== 'admin') {
           setError('Access Denied. This security portal is strictly restricted to Super Administrators.');

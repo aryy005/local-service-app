@@ -36,7 +36,7 @@ function App() {
             <Route 
               path="/customer-dashboard" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireRole="customer">
                   <CustomerDashboard />
                 </ProtectedRoute>
               } 
