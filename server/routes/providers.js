@@ -5,12 +5,22 @@ const Review = require('../models/Review');
 const auth = require('../middleware/auth');
 
 // @route   GET api/providers
-// @desc    Get all service providers, optionally filtered by geospatial radius
+// @desc    Get service providers filtered by city or geospatial radius
 router.get('/', async (req, res) => {
   try {
-    const { lng, lat, radius } = req.query;
+    const { lng, lat, radius, city } = req.query;
     
     let query = { role: 'provider' };
+
+    // If city is specified, filter strictly by city
+    if (city && city.trim() !== '') {
+      const cityRegex = new RegExp(city.trim(), 'i');
+      query.$or = [
+        { city: cityRegex },
+        { 'addressDetails.city': cityRegex },
+        { 'providerDetails.location': cityRegex }
+      ];
+    }
     
     // If coordinates are provided, perform a $near query
     if (lng && lat) {
@@ -27,10 +37,6 @@ router.get('/', async (req, res) => {
     }
 
     const providers = await User.find(query).select('-password');
-
-    // Mongoose $near automatically sorts by distance. 
-    // We can also calculate actual distance here if we switched to aggregation pipeline, 
-    // but $near is simpler for filtering + sorting.
     res.json(providers);
   } catch (err) {
     console.error(err.message);

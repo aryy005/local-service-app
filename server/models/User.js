@@ -13,6 +13,15 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String },
   authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
 
+  // Detailed address & location precision for all users
+  city: { type: String, default: '' },
+  addressDetails: {
+    street: { type: String, default: '' },
+    city: { type: String, default: '' },
+    state: { type: String, default: '' },
+    pincode: { type: String, default: '' }
+  },
+
   // Verification Status (applicable to all users)
   emailVerified: { type: Boolean, default: false },
   emailVerifiedAt: { type: Date },

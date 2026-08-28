@@ -36,8 +36,18 @@ const Home = () => {
     fetchProviders();
   }, [user, navigate]);
 
+  // Filter providers by user's registered city if logged in
+  const userCity = user?.city || user?.addressDetails?.city;
+  let cityFilteredProviders = providersList;
+  if (userCity && userCity.trim() !== '') {
+    cityFilteredProviders = providersList.filter(p => {
+      const pCity = (p.city || p.addressDetails?.city || p.providerDetails?.location || '').toLowerCase();
+      return pCity.includes(userCity.trim().toLowerCase());
+    });
+  }
+
   // Get top 3 providers for the highlighted section
-  const topProviders = providersList.sort((a, b) => (b.providerDetails?.rating || 0) - (a.providerDetails?.rating || 0)).slice(0, 3);
+  const topProviders = cityFilteredProviders.sort((a, b) => (b.providerDetails?.rating || 0) - (a.providerDetails?.rating || 0)).slice(0, 3);
 
   const getIcon = (iconName) => {
     const IconComponent = Icons[iconName] || Icons.HelpCircle;
@@ -173,7 +183,17 @@ const Home = () => {
               <ProviderCard key={provider.id} provider={provider} />
             ))
           ) : (
-            <p style={{ color: 'var(--text-muted)' }}>No providers available yet. Be the first to register!</p>
+            <div className="glass-panel p-6 text-center" style={{ borderLeft: '4px solid #f59e0b', borderRadius: '1rem', width: '100%', gridColumn: '1 / -1' }}>
+              <p style={{ fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.5rem 0', fontSize: '1.05rem' }}>
+                📍 Service is not available in your city{userCity ? ` (${userCity})` : ''}, it will be active soon
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 1rem 0' }}>
+                We are rapidly expanding to your location!
+              </p>
+              <Link to="/search" className="btn btn-outline btn-sm">
+                Explore Available Cities
+              </Link>
+            </div>
           )}
         </div>
       </section>

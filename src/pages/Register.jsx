@@ -14,7 +14,10 @@ const Register = () => {
     role: 'customer',
     category: 'cat-5', // Default: Electrician
     hourlyRate: 25,
-    location: ''
+    street: '',
+    city: '',
+    state: '',
+    pincode: ''
   });
 
   const [error, setError] = useState('');
@@ -55,8 +58,8 @@ const Register = () => {
     e.preventDefault();
     setError('');
 
-    if (!formData.name || !formData.email || !formData.password) {
-      setError('Please fill in all required fields');
+    if (!formData.name || !formData.email || !formData.password || !formData.city || !formData.state || !formData.pincode) {
+      setError('Please fill in all required fields including City, State, and Pincode');
       return;
     }
 
@@ -70,7 +73,11 @@ const Register = () => {
         role: formData.role,
         category: formData.category,
         hourlyRate: Number(formData.hourlyRate),
-        location: formData.location
+        street: formData.street,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        location: `${formData.street ? formData.street + ', ' : ''}${formData.city}, ${formData.state} - ${formData.pincode}`
       });
 
       if (data.user.role === 'provider') {
@@ -151,6 +158,62 @@ const Register = () => {
             />
           </div>
 
+          {/* Location Precision Address Block (For both Customer and Provider) */}
+          <div style={{ marginTop: '1rem', marginBottom: '1rem', borderTop: '1px solid var(--surface-border)', paddingTop: '1rem' }}>
+            <h4 style={{ margin: '0 0 0.75rem 0', color: '#6366f1', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              📍 Location & Address Precision
+            </h4>
+            
+            <div className="form-group mb-3">
+              <label>Street Address / House / Flat / Street No.</label>
+              <input 
+                type="text" 
+                name="street" 
+                value={formData.street} 
+                onChange={handleChange} 
+                placeholder="e.g. Flat 402, Model Town, GT Road"
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+              <div className="form-group">
+                <label>City *</label>
+                <input 
+                  type="text" 
+                  name="city" 
+                  value={formData.city} 
+                  onChange={handleChange} 
+                  required 
+                  placeholder="e.g. Ludhiana"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>State *</label>
+                <input 
+                  type="text" 
+                  name="state" 
+                  value={formData.state} 
+                  onChange={handleChange} 
+                  required 
+                  placeholder="e.g. Punjab"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Pincode *</label>
+                <input 
+                  type="text" 
+                  name="pincode" 
+                  value={formData.pincode} 
+                  onChange={handleChange} 
+                  required 
+                  placeholder="e.g. 141001"
+                />
+              </div>
+            </div>
+          </div>
+
           {formData.role === 'provider' && (
             <>
               <div className="form-group">
@@ -179,30 +242,17 @@ const Register = () => {
                 </select>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <label>Hourly Rate (₹/hr)</label>
-                  <input 
-                    type="number" 
-                    name="hourlyRate" 
-                    value={formData.hourlyRate} 
-                    onChange={handleChange} 
-                    required 
-                    min="1"
-                    placeholder="e.g. 25"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Service Area / Location</label>
-                  <input 
-                    type="text" 
-                    name="location" 
-                    value={formData.location} 
-                    onChange={handleChange} 
-                    placeholder="e.g. Downtown"
-                  />
-                </div>
+              <div className="form-group">
+                <label>Hourly Rate (₹/hr)</label>
+                <input 
+                  type="number" 
+                  name="hourlyRate" 
+                  value={formData.hourlyRate} 
+                  onChange={handleChange} 
+                  required 
+                  min="1"
+                  placeholder="e.g. 25"
+                />
               </div>
             </>
           )}

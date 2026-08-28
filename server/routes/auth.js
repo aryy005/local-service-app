@@ -111,10 +111,10 @@ router.post('/google', async (req, res) => {
 });
 
 // @route   POST api/auth/register
-// @desc    Register a user with basic info (Instant Sign-Up)
+// @desc    Register a user with location precision address details (Instant Sign-Up)
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, role = 'customer', category, hourlyRate, location, description, phone } = req.body;
+    const { name, email, password, role = 'customer', category, hourlyRate, location, description, phone, street, city, state, pincode } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
@@ -127,6 +127,8 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: `User already exists as a ${normalizedRole}` });
     }
 
+    const formattedLocation = location || [street, city, state, pincode].filter(Boolean).join(', ') || 'City Center';
+
     user = new User({
       name,
       email,
@@ -134,12 +136,19 @@ router.post('/register', async (req, res) => {
       password,
       role: normalizedRole,
       authProvider: 'local',
+      city: (city || location || '').trim(),
+      addressDetails: {
+        street: street || '',
+        city: (city || location || '').trim(),
+        state: state || '',
+        pincode: pincode || ''
+      },
       emailVerified: false,
       phoneVerified: false,
       providerDetails: normalizedRole === 'provider' ? {
         category: category || 'cat-5',
         hourlyRate: Number(hourlyRate) || 20,
-        location: location || 'City Center',
+        location: formattedLocation,
         description: description || `Professional ${category || 'service'} provider dedicated to quality work.`,
         rating: 5.0,
         reviewsCount: 0,
@@ -156,7 +165,7 @@ router.post('/register', async (req, res) => {
       if (err) throw err;
       res.json({
         token,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role }
+        user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city, addressDetails: user.addressDetails }
       });
     });
   } catch (err) {
