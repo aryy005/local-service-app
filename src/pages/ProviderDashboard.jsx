@@ -179,9 +179,41 @@ const ProviderDashboard = () => {
         },
         body: JSON.stringify({ status, ...extraData })
       });
-      if (res.ok) fetchJobs();
+      if (res.ok) {
+        fetchJobs();
+      } else {
+        const errData = await res.json();
+        alert(errData.message || 'Failed to update job status');
+      }
     } catch (err) {
       console.error(err);
+      alert('Error updating status');
+    }
+  };
+
+  const advanceJobStage = async (id, stage, extraData = {}) => {
+    try {
+      const res = await fetch(`${API_URL}/bookings/${id}/stage`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ stage, ...extraData })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setJobs(prev => prev.map(j => j._id === updated._id ? updated : j));
+        if (activeTrackerBooking && activeTrackerBooking._id === updated._id) {
+          setActiveTrackerBooking(updated);
+        }
+      } else {
+        const errData = await res.json();
+        alert(errData.message || 'Failed to advance service stage');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error advancing stage');
     }
   };
 
@@ -362,14 +394,32 @@ const ProviderDashboard = () => {
 
           <div className="jobs-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '3rem' }}>
             {newJobs.length > 0 ? newJobs.map(job => (
-              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} rateCustomer={rateCustomer} openChat={() => setActiveChat(job)} openTracker={() => setActiveTrackerBooking(job)} openInvoice={() => setActiveInvoiceBooking(job)} />
+              <JobCard 
+                key={job._id} 
+                job={job} 
+                updateJobStatus={updateJobStatus} 
+                advanceJobStage={advanceJobStage}
+                rateCustomer={rateCustomer} 
+                openChat={() => setActiveChat(job)} 
+                openTracker={() => setActiveTrackerBooking(job)} 
+                openInvoice={() => setActiveInvoiceBooking(job)} 
+              />
             )) : <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No new job requests</div>}
           </div>
 
           <h2 style={{ marginBottom: '1.5rem' }}>Previous / Accepted Orders</h2>
           <div className="jobs-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {pastJobs.length > 0 ? pastJobs.map(job => (
-              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} rateCustomer={rateCustomer} openChat={() => setActiveChat(job)} openTracker={() => setActiveTrackerBooking(job)} openInvoice={() => setActiveInvoiceBooking(job)} />
+              <JobCard 
+                key={job._id} 
+                job={job} 
+                updateJobStatus={updateJobStatus} 
+                advanceJobStage={advanceJobStage}
+                rateCustomer={rateCustomer} 
+                openChat={() => setActiveChat(job)} 
+                openTracker={() => setActiveTrackerBooking(job)} 
+                openInvoice={() => setActiveInvoiceBooking(job)} 
+              />
             )) : <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No previous orders found</div>}
           </div>
         </div>
@@ -605,6 +655,27 @@ const ProviderDashboard = () => {
         booking={activeChat} 
         onClose={() => setActiveChat(null)} 
       />
+
+      {/* Root Mounted Service Tracker Modal */}
+      {activeTrackerBooking && (
+        <ServiceTrackerModal 
+          booking={activeTrackerBooking}
+          onClose={() => setActiveTrackerBooking(null)}
+          onUpdateBooking={(updated) => {
+            setActiveTrackerBooking(updated);
+            setJobs(prev => prev.map(j => j._id === updated._id ? updated : j));
+          }}
+          onOpenInvoice={(b) => setActiveInvoiceBooking(b)}
+        />
+      )}
+
+      {/* Root Mounted Invoice Modal */}
+      {activeInvoiceBooking && (
+        <InvoiceModal 
+          booking={activeInvoiceBooking}
+          onClose={() => setActiveInvoiceBooking(null)}
+        />
+      )}
     </div>
   );
 };
@@ -655,180 +726,222 @@ const EarningsDashboard = ({ bookings }) => {
       ) : (
         <p style={{ color: 'var(--text-muted)' }}>No completed jobs to show earnings for yet.</p>
       )}
-
-      {activeTrackerBooking && (
-        <ServiceTrackerModal 
-          booking={activeTrackerBooking}
-          onClose={() => setActiveTrackerBooking(null)}
-          onUpdateBooking={(updated) => {
-            setActiveTrackerBooking(updated);
-            setJobs(prev => prev.map(j => j._id === updated._id ? updated : j));
-          }}
-          onOpenInvoice={(b) => setActiveInvoiceBooking(b)}
-        />
-      )}
-
-      {activeInvoiceBooking && (
-        <InvoiceModal 
-          booking={activeInvoiceBooking}
-          onClose={() => setActiveInvoiceBooking(null)}
-        />
-      )}
     </div>
   );
 };
 
 // Helper component for rendering jobs
-const JobCard = ({ job, updateJobStatus, openChat, rateCustomer, openTracker, openInvoice }) => (
-  <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem' }}>
-    <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-      <span style={{ fontWeight: 800, color: '#6366f1', fontSize: '0.85rem', background: 'rgba(99, 102, 241, 0.1)', padding: '0.2rem 0.6rem', borderRadius: '0.4rem', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-        Order ID: {job.orderId || ('ORD-' + job._id?.slice(-6).toUpperCase())}
-      </span>
-    </div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--surface-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <UserIcon size={20} color="var(--primary-color)" />
-          </div>
-          <div>
-            <h3 style={{ margin: 0 }}>
-              {job.customerId?.name || 'Customer'}
-              {job.customerId?.customerDetails?.reviewsCount > 0 && (
-                <span style={{ fontSize: '0.8rem', marginLeft: '0.5rem', background: '#ffc107', color: '#000', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
-                  ⭐ {job.customerId?.customerDetails?.rating} 
-                </span>
-              )}
-            </h3>
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{job.customerId?.email} | <Phone size={12}/> {job.customerId?.phone}</p>
-          </div>
-        </div>
-        
-        <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}><Calendar size={18} color="var(--primary-color)" /> {job.date}</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}><Clock size={18} color="var(--primary-color)"/> {job.timePreference}</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}><MapPin size={18} color="var(--primary-color)"/> {job.serviceAddress}</span>
-        </div>
-        
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1rem', borderRadius: '0.5rem', borderLeft: '3px solid var(--primary-color)' }}>
-          <p style={{ margin: 0 }}>"{job.description}"</p>
-        </div>
-      </div>
-      <div style={{ textAlign: 'right' }}>
-        <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
-          <div style={{ fontWeight: 600, color: job.status === 'pending' ? 'var(--warning-color)' : job.status === 'accepted' ? 'var(--accent-color)' : 'var(--text-muted)', textTransform: 'capitalize' }}>
-            {job.status}
-          </div>
-          {job.paymentStatus === 'paid' ? (
-            <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700 }}>
-              ✓ Paid (₹{job.paidAmount || job.finalPrice})
-            </span>
-          ) : job.status === 'completed' || (job.finalPrice && job.finalPrice > 0) ? (
-            <span style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700 }}>
-              ⚠️ Payment Pending (₹{job.finalPrice})
-            </span>
-          ) : null}
-        </div>
-        
-        <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column', marginBottom: '0.5rem' }}>
-          <button 
-            onClick={openTracker}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'linear-gradient(135deg, #6366F1, #4F46E5)', color: 'white', border: 'none', padding: '0.55rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}
-          >
-            <Navigation size={15} /> Manage Progress 📍
-          </button>
+const JobCard = ({ job, updateJobStatus, advanceJobStage, openChat, rateCustomer, openTracker, openInvoice }) => {
+  const currentStage = job.serviceStage || (job.status === 'completed' ? 'completed' : job.status === 'accepted' ? 'accepted' : 'requested');
 
-          {(job.paymentStatus === 'paid' || job.status === 'completed') && (
-            <button 
-              onClick={openInvoice}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: '#10B981', border: '1px solid #10B981', padding: '0.55rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
-            >
-              <FileText size={15} /> View Receipt & Invoice 📄
-            </button>
-          )}
+  return (
+    <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem' }}>
+      <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <span style={{ fontWeight: 800, color: '#6366f1', fontSize: '0.85rem', background: 'rgba(99, 102, 241, 0.1)', padding: '0.2rem 0.6rem', borderRadius: '0.4rem', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+          Order ID: {job.orderId || ('ORD-' + job._id?.slice(-6).toUpperCase())}
+        </span>
+
+        {/* Live Stage Pill */}
+        <span style={{ 
+          fontSize: '0.8rem', 
+          fontWeight: 700, 
+          padding: '0.2rem 0.6rem', 
+          borderRadius: '1rem',
+          background: currentStage === 'in_transit' ? '#EFF6FF' : currentStage === 'in_progress' ? '#FFFBEB' : currentStage === 'completed' ? '#ECFDF5' : 'rgba(99, 102, 241, 0.08)',
+          color: currentStage === 'in_transit' ? '#2563EB' : currentStage === 'in_progress' ? '#D97706' : currentStage === 'completed' ? '#059669' : '#6366F1',
+          border: `1px solid ${currentStage === 'in_transit' ? '#BFDBFE' : currentStage === 'in_progress' ? '#FDE68A' : currentStage === 'completed' ? '#A7F3D0' : '#C7D2FE'}`
+        }}>
+          {currentStage === 'in_transit' ? '🚗 On The Way' : currentStage === 'in_progress' ? '🔧 Work In Progress' : currentStage === 'completed' ? '✅ Completed' : currentStage === 'accepted' ? '👍 Booking Accepted' : '📌 Requested'}
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem' }}>
+        <div style={{ flex: 1, minWidth: '280px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--surface-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <UserIcon size={20} color="var(--primary-color)" />
+            </div>
+            <div>
+              <h3 style={{ margin: 0 }}>
+                {job.customerId?.name || 'Customer'}
+                {job.customerId?.customerDetails?.reviewsCount > 0 && (
+                  <span style={{ fontSize: '0.8rem', marginLeft: '0.5rem', background: '#ffc107', color: '#000', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                    ⭐ {job.customerId?.customerDetails?.rating} 
+                  </span>
+                )}
+              </h3>
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{job.customerId?.email} | <Phone size={12}/> {job.customerId?.phone || 'No phone'}</p>
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}><Calendar size={18} color="var(--primary-color)" /> {job.date}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}><Clock size={18} color="var(--primary-color)"/> {job.timePreference}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}><MapPin size={18} color="var(--primary-color)"/> {job.serviceAddress}</span>
+          </div>
+          
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1rem', borderRadius: '0.5rem', borderLeft: '3px solid var(--primary-color)' }}>
+            <p style={{ margin: 0 }}>"{job.description}"</p>
+          </div>
         </div>
-        
-        {job.status === 'pending' && (
-          <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
+
+        <div style={{ textAlign: 'right', minWidth: '220px' }}>
+          <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
+            <div style={{ fontWeight: 600, color: job.status === 'pending' ? 'var(--warning-color)' : job.status === 'accepted' ? 'var(--accent-color)' : 'var(--text-muted)', textTransform: 'capitalize' }}>
+              Status: {job.status}
+            </div>
+            {job.paymentStatus === 'paid' ? (
+              <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700 }}>
+                ✓ Paid (₹{job.paidAmount || job.finalPrice})
+              </span>
+            ) : job.status === 'completed' || (job.finalPrice && job.finalPrice > 0) ? (
+              <span style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700 }}>
+                ⚠️ Payment Pending (₹{job.finalPrice})
+              </span>
+            ) : null}
+          </div>
+          
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column', marginBottom: '0.5rem' }}>
+            {/* Live GPS Tracker Button */}
             <button 
-              onClick={() => updateJobStatus(job._id, 'accepted')}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'var(--accent-color)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+              onClick={openTracker}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'linear-gradient(135deg, #6366F1, #4F46E5)', color: 'white', border: 'none', padding: '0.65rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem' }}
             >
-              <Check size={16} /> Accept Job
+              <Navigation size={16} /> Manage Live Status & GPS 📍
             </button>
+
+            {/* 1-Click Status Advancement */}
+            {job.status === 'accepted' && (
+              <>
+                {(!job.serviceStage || job.serviceStage === 'accepted') && (
+                  <button 
+                    onClick={() => advanceJobStage(job._id, 'in_transit')}
+                    className="btn btn-primary btn-sm"
+                    style={{ background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontWeight: 700 }}
+                  >
+                    🚗 Mark "I'm On The Way"
+                  </button>
+                )}
+
+                {job.serviceStage === 'in_transit' && (
+                  <button 
+                    onClick={() => advanceJobStage(job._id, 'in_progress')}
+                    className="btn btn-primary btn-sm"
+                    style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', fontWeight: 700 }}
+                  >
+                    🔧 Mark "Work Started"
+                  </button>
+                )}
+
+                {job.serviceStage === 'in_progress' && (
+                  <button 
+                    onClick={() => {
+                      const amt = window.prompt("Enter final bill amount earned (₹):", job.finalPrice || job.providerId?.providerDetails?.hourlyRate || 25);
+                      if (amt !== null) advanceJobStage(job._id, 'completed', { finalPrice: Number(amt) || 0 });
+                    }}
+                    className="btn btn-primary btn-sm"
+                    style={{ background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontWeight: 700 }}
+                  >
+                    ✅ Complete Service & Bill
+                  </button>
+                )}
+              </>
+            )}
+
+            {(job.paymentStatus === 'paid' || job.status === 'completed') && (
+              <button 
+                onClick={openInvoice}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: '#10B981', border: '1px solid #10B981', padding: '0.55rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+              >
+                <FileText size={15} /> View Receipt & Invoice 📄
+              </button>
+            )}
+          </div>
+          
+          {job.status === 'pending' && (
+            <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
+              <button 
+                onClick={() => updateJobStatus(job._id, 'accepted')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'var(--accent-color)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+              >
+                <Check size={16} /> Accept Job
+              </button>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button 
+                  onClick={openChat}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', background: 'transparent', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+                >
+                  <MessageSquare size={14} /> Message
+                </button>
+                <button 
+                  onClick={() => {
+                    const msg = formatWhatsAppBookingMessage(job, true);
+                    openWhatsAppChat(job.customerId?.phone, msg);
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', background: '#25D366', color: 'white', border: 'none', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}
+                >
+                  <MessageCircle size={14} /> WhatsApp
+                </button>
+              </div>
+              <button 
+                onClick={() => updateJobStatus(job._id, 'declined')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--text-muted)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem' }}
+              >
+                <X size={16} /> Decline
+              </button>
+            </div>
+          )}
+
+          {job.status === 'accepted' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
               <button 
                 onClick={openChat}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', background: 'transparent', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
               >
-                <MessageSquare size={14} /> Message
+                <MessageSquare size={16} /> Message
               </button>
               <button 
                 onClick={() => {
                   const msg = formatWhatsAppBookingMessage(job, true);
                   openWhatsAppChat(job.customerId?.phone, msg);
                 }}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', background: '#25D366', color: 'white', border: 'none', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', background: '#25D366', color: 'white', border: 'none', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}
               >
                 <MessageCircle size={14} /> WhatsApp
               </button>
             </div>
-            <button 
-              onClick={() => updateJobStatus(job._id, 'declined')}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--text-muted)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem' }}
-            >
-              <X size={16} /> Decline
-            </button>
-          </div>
-        )}
-        {job.status === 'accepted' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <button 
-              onClick={() => {
-                const amt = window.prompt("Enter final amount earned (₹):");
-                if (amt !== null) updateJobStatus(job._id, 'completed', { finalPrice: amt || 0 });
-              }}
-              className="btn btn-outline"
-            >
-              Mark as Completed
-            </button>
-            <button 
-              onClick={openChat}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
-            >
-              <MessageSquare size={16} /> Message
-            </button>
-          </div>
-        )}
-        {job.status === 'completed' && !job.customerReview?.rating && (
-          <div style={{ marginTop: '0.5rem' }}>
-            <button 
-              onClick={() => {
-                const rt = window.prompt("Rate customer from 1 to 5 stars:");
-                const num = Number(rt);
-                if (num >= 1 && num <= 5) {
-                   const comment = window.prompt("Any comment (optional)?");
-                   rateCustomer(job._id, num, comment || '');
-                } else if (rt) {
-                   alert("Please enter a valid rating between 1 and 5.");
-                }
-              }}
-              className="btn btn-outline btn-sm"
-              style={{ width: '100%', borderColor: 'var(--warning-color)', color: 'var(--warning-color)' }}
-            >
-              ⭐ Rate Customer
-            </button>
-          </div>
-        )}
-        {job.status === 'completed' && job.customerReview?.rating && (
-          <div style={{ marginTop: '0.5rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            You rated ⭐ {job.customerReview.rating}
-          </div>
-        )}
+          )}
+
+          {job.status === 'completed' && !job.customerReview?.rating && (
+            <div style={{ marginTop: '0.5rem' }}>
+              <button 
+                onClick={() => {
+                  const rt = window.prompt("Rate customer from 1 to 5 stars:");
+                  const num = Number(rt);
+                  if (num >= 1 && num <= 5) {
+                     const comment = window.prompt("Any comment (optional)?");
+                     rateCustomer(job._id, num, comment || '');
+                  } else if (rt) {
+                     alert("Please enter a valid rating between 1 and 5.");
+                  }
+                }}
+                className="btn btn-outline btn-sm"
+                style={{ width: '100%', borderColor: 'var(--warning-color)', color: 'var(--warning-color)' }}
+              >
+                ⭐ Rate Customer
+              </button>
+            </div>
+          )}
+          {job.status === 'completed' && job.customerReview?.rating && (
+            <div style={{ marginTop: '0.5rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              You rated ⭐ {job.customerReview.rating}
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default ProviderDashboard;

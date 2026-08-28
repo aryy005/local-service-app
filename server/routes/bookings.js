@@ -86,9 +86,13 @@ router.put('/:id/stage', auth, async (req, res) => {
 
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
 
-    // Verify ownership
-    const isProvider = booking.providerId.toString() === req.user.id;
-    const isCustomer = booking.customerId.toString() === req.user.id;
+    // Verify ownership safely (handling ObjectId or populated object)
+    const providerIdStr = (booking.providerId?._id || booking.providerId)?.toString();
+    const customerIdStr = (booking.customerId?._id || booking.customerId)?.toString();
+    const userIdStr = req.user.id.toString();
+
+    const isProvider = providerIdStr === userIdStr;
+    const isCustomer = customerIdStr === userIdStr;
 
     if (!isProvider && !isCustomer && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to update this booking' });
@@ -99,7 +103,7 @@ router.put('/:id/stage', auth, async (req, res) => {
     }
 
     if (stage !== 'cancelled' && !isProvider && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Only provider can advance service stages' });
+      return res.status(403).json({ message: 'Only the assigned provider or admin can advance service stages' });
     }
 
     const wasCompleted = booking.status === 'completed';
@@ -121,12 +125,16 @@ router.put('/:id/stage', auth, async (req, res) => {
     booking.serviceStage = stage;
     booking.status = currentMeta.status;
 
-    if (finalPrice !== undefined && finalPrice !== null) {
+    if (finalPrice !== undefined && finalPrice !== null && !isNaN(finalPrice)) {
       booking.finalPrice = Number(finalPrice);
     }
 
     if (workPhotos && Array.isArray(workPhotos)) {
       booking.workPhotos = workPhotos;
+    }
+
+    if (!Array.isArray(booking.stageHistory)) {
+      booking.stageHistory = [];
     }
 
     // Append to stageHistory audit log
@@ -160,17 +168,16 @@ router.put('/:id/stage', auth, async (req, res) => {
 // @desc    Update booking status (Provider only for accept/decline)
 router.put('/:id/status', auth, async (req, res) => {
   try {
-    if (req.user.role !== 'provider') {
-      return res.status(403).json({ message: 'Not authorized to update status' });
-    }
-
     const { status, workPhotos, finalPrice } = req.body;
     let booking = await Booking.findById(req.params.id);
 
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
 
-    if (booking.providerId.toString() !== req.user.id) {
-      return res.status(401).json({ message: 'Not authorized' });
+    const providerIdStr = (booking.providerId?._id || booking.providerId)?.toString();
+    const userIdStr = req.user.id.toString();
+
+    if (providerIdStr !== userIdStr && req.user.role !== 'admin') {
+      return res.status(401).json({ message: 'Not authorized to update this booking' });
     }
     
     const wasCompleted = booking.status === 'completed';
@@ -183,8 +190,12 @@ router.put('/:id/status', auth, async (req, res) => {
     if (workPhotos && Array.isArray(workPhotos)) {
       booking.workPhotos = workPhotos;
     }
-    if (finalPrice !== undefined) {
+    if (finalPrice !== undefined && !isNaN(finalPrice)) {
       booking.finalPrice = Number(finalPrice);
+    }
+
+    if (!Array.isArray(booking.stageHistory)) {
+      booking.stageHistory = [];
     }
 
     booking.stageHistory.push({
@@ -202,10 +213,14 @@ router.put('/:id/status', auth, async (req, res) => {
       });
     }
 
-    res.json(booking);
+    const populatedBooking = await Booking.findById(booking._id)
+      .populate('customerId', 'name phone email customerDetails')
+      .populate('providerId', 'name phone providerDetails');
+
+    res.json(populatedBooking);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('Status Update Error:', err.message);
+    res.status(500).json({ message: 'Server Error updating booking status' });
   }
 });
 
