@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, Phone, MapPin, Shield, CheckCircle, AlertCircle, Loader, ShieldCheck, FileText, MessageSquare } from 'lucide-react';
+import { Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, Phone, MapPin, Shield, CheckCircle, AlertCircle, Loader, ShieldCheck, FileText, MessageSquare, MessageCircle } from 'lucide-react';
 import { getCurrentLocationName } from '../utils/geolocation';
 import { API_URL } from '../config';
 import { categories } from '../data/mockData';
 import ChatModal from '../components/ChatModal';
 import ServiceTrackerModal from '../components/ServiceTrackerModal';
 import InvoiceModal from '../components/InvoiceModal';
+import { openWhatsAppChat, formatWhatsAppBookingMessage } from '../utils/whatsapp';
 
 const ProviderDashboard = () => {
   const { user, token, updateProfile } = useAuth();
@@ -753,15 +754,26 @@ const JobCard = ({ job, updateJobStatus, openChat, rateCustomer, openTracker, op
             >
               <Check size={16} /> Accept Job
             </button>
-            <button 
-              onClick={openChat}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
-            >
-              <MessageSquare size={16} /> Message
-            </button>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button 
+                onClick={openChat}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', background: 'transparent', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+              >
+                <MessageSquare size={14} /> Message
+              </button>
+              <button 
+                onClick={() => {
+                  const msg = formatWhatsAppBookingMessage(job, true);
+                  openWhatsAppChat(job.customerId?.phone, msg);
+                }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', background: '#25D366', color: 'white', border: 'none', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}
+              >
+                <MessageCircle size={14} /> WhatsApp
+              </button>
+            </div>
             <button 
               onClick={() => updateJobStatus(job._id, 'declined')}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--text-muted)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--text-muted)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem' }}
             >
               <X size={16} /> Decline
             </button>

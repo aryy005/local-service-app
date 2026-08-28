@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { 
   Check, Clock, MapPin, Phone, MessageSquare, 
   CreditCard, FileText, CheckCircle, Navigation, ShieldCheck, 
-  Loader2, AlertCircle, Sparkles, X, ChevronRight, Camera
+  Loader2, AlertCircle, Sparkles, X, ChevronRight, Camera, MessageCircle
 } from 'lucide-react';
 import { API_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
+import { playNotificationSound } from '../utils/soundNotifications';
+import { openWhatsAppChat, formatWhatsAppBookingMessage } from '../utils/whatsapp';
+import LiveTrackingMap from './LiveTrackingMap';
 import './ServiceTrackerModal.css';
 
 const STAGES = [
@@ -72,6 +75,9 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
 
       const updated = await res.json();
       if (!res.ok) throw new Error(updated.message || 'Failed to update stage');
+
+      // Play sound chime on stage progression
+      playNotificationSound('stage_update');
 
       if (onUpdateBooking) onUpdateBooking(updated);
     } catch (err) {
@@ -160,6 +166,15 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
             </div>
           )}
 
+          {/* Render Live GPS Map Tracking when Provider is On The Way */}
+          {currentStageKey === 'in_transit' && (
+            <LiveTrackingMap 
+              providerName={booking.providerId?.name}
+              serviceAddress={booking.serviceAddress}
+              etaMinutes={12}
+            />
+          )}
+
           {/* Service & Person Info Box */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
             <div style={{ background: 'var(--surface-bg, #f8fafc)', border: '1px solid var(--surface-border)', padding: '1rem', borderRadius: '0.75rem' }}>
@@ -172,6 +187,16 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
               <div style={{ color: 'var(--text-muted)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 <Phone size={13} /> {isProvider ? booking.customerId?.phone : booking.providerId?.phone || 'N/A'}
               </div>
+              <button
+                style={{ background: '#25D366', color: 'white', border: 'none', padding: '0.35rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.78rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', marginTop: '0.5rem' }}
+                onClick={() => {
+                  const targetPhone = isProvider ? booking.customerId?.phone : booking.providerId?.phone;
+                  const msg = formatWhatsAppBookingMessage(booking, isProvider);
+                  openWhatsAppChat(targetPhone, msg);
+                }}
+              >
+                <MessageCircle size={14} /> WhatsApp Chat
+              </button>
             </div>
 
             <div style={{ background: 'var(--surface-bg, #f8fafc)', border: '1px solid var(--surface-border)', padding: '1rem', borderRadius: '0.75rem' }}>

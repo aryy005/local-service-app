@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Edit2, Save, Phone, MessageSquare, CreditCard, FileText, CheckCircle, Navigation } from 'lucide-react';
+import { Calendar, Clock, Edit2, Save, Phone, MessageSquare, CreditCard, FileText, CheckCircle, Navigation, MessageCircle, Star, Heart } from 'lucide-react';
 import { API_URL } from '../config';
 import ChatModal from '../components/ChatModal';
 import BookingModal from '../components/BookingModal';
@@ -9,6 +9,8 @@ import AIDiagnosisModal from '../components/AIDiagnosisModal';
 import PaymentModal from '../components/PaymentModal';
 import InvoiceModal from '../components/InvoiceModal';
 import ServiceTrackerModal from '../components/ServiceTrackerModal';
+import ReviewTipModal from '../components/ReviewTipModal';
+import { openWhatsAppChat, formatWhatsAppBookingMessage } from '../utils/whatsapp';
 import { useLanguage } from '../context/LanguageContext';
 
 const CustomerDashboard = () => {
@@ -24,6 +26,7 @@ const CustomerDashboard = () => {
   const [activePaymentBooking, setActivePaymentBooking] = useState(null);
   const [activeInvoiceBooking, setActiveInvoiceBooking] = useState(null);
   const [activeTrackerBooking, setActiveTrackerBooking] = useState(null);
+  const [activeReviewBooking, setActiveReviewBooking] = useState(null);
 
   // Profile Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -231,6 +234,17 @@ const CustomerDashboard = () => {
                   </button>
                 )}
 
+                {/* Rate & Tip Button when Completed or Paid */}
+                {(booking.paymentStatus === 'paid' || booking.status === 'completed') && (
+                  <button 
+                    onClick={() => setActiveReviewBooking(booking)}
+                    className="btn btn-outline btn-sm" 
+                    style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', borderColor: '#f59e0b', color: '#f59e0b', fontWeight: 700 }}
+                  >
+                    <Star size={16} className="fill-amber-400 text-amber-400" /> Rate & Tip Professional
+                  </button>
+                )}
+
                 {booking.status === 'completed' && (
                   <button 
                     onClick={() => setActiveBookingProvider(booking.providerId)}
@@ -240,13 +254,26 @@ const CustomerDashboard = () => {
                     {t('bookAgain')}
                   </button>
                 )}
-                <button 
-                  onClick={() => setActiveChat(booking)}
-                  className="btn btn-outline btn-sm" 
-                  style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}
-                >
-                  <MessageSquare size={16} /> {t('messageProvider')}
-                </button>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <button 
+                    onClick={() => setActiveChat(booking)}
+                    className="btn btn-outline btn-sm" 
+                    style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.35rem' }}
+                  >
+                    <MessageSquare size={14} /> Message
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const msg = formatWhatsAppBookingMessage(booking, false);
+                      openWhatsAppChat(booking.providerId?.phone, msg);
+                    }}
+                    className="btn btn-sm" 
+                    style={{ background: '#25D366', color: 'white', border: 'none', fontWeight: 700, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.35rem' }}
+                  >
+                    <MessageCircle size={14} /> WhatsApp
+                  </button>
+                </div>
               </div>
               <div style={{ background: 'var(--surface-color)', padding: '1rem', borderRadius: '0.5rem' }}>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>"{booking.description}"</p>
@@ -402,10 +429,20 @@ const CustomerDashboard = () => {
           onClose={() => setActiveTrackerBooking(null)}
           onUpdateBooking={(updated) => {
             setActiveTrackerBooking(updated);
-            setBookings(prev => prev.map(b => b._id === updated._id ? updated : b));
+            setBookings(prev => prev.map(b => b._id === updated._id ? { ...b, ...updated } : b));
           }}
           onOpenPayment={(b) => setActivePaymentBooking(b)}
           onOpenInvoice={(b) => setActiveInvoiceBooking(b)}
+        />
+      )}
+      {activeReviewBooking && (
+        <ReviewTipModal
+          booking={activeReviewBooking}
+          token={token}
+          onClose={() => setActiveReviewBooking(null)}
+          onReviewSubmitted={(bookingId, reviewData) => {
+            setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, customerReview: reviewData } : b));
+          }}
         />
       )}
     </div>

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ShieldCheck, CreditCard, QrCode, Building, Wallet, Banknote, CheckCircle, Loader2, Lock, ArrowRight } from 'lucide-react';
+import { ShieldCheck, CreditCard, QrCode, Building, Wallet, Banknote, CheckCircle, Loader2, Lock, ArrowRight, ExternalLink } from 'lucide-react';
 import { API_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
+import { playNotificationSound } from '../utils/soundNotifications';
 import './PaymentModal.css';
 
 const PaymentModal = ({ booking, onClose, onSuccess }) => {
@@ -75,7 +76,6 @@ const PaymentModal = ({ booking, onClose, onSuccess }) => {
     setIsProcessing(true);
 
     try {
-      // Validate inputs based on active tab
       if (activeTab === 'card') {
         if (cardNumber.replace(/\s/g, '').length < 16) throw new Error('Enter a valid 16-digit card number');
         if (cardExpiry.length < 5) throw new Error('Enter a valid expiry date (MM/YY)');
@@ -85,8 +85,7 @@ const PaymentModal = ({ booking, onClose, onSuccess }) => {
         if (!selectedUpiApp && !upiId) throw new Error('Please select a UPI App or enter UPI ID');
       }
 
-      // Simulate network processing delay for realistic UX
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1400));
 
       const transactionId = 'TXN_' + Date.now() + '_' + Math.floor(1000 + Math.random() * 9000);
 
@@ -107,6 +106,9 @@ const PaymentModal = ({ booking, onClose, onSuccess }) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Payment verification failed');
 
+      // Play payment success chime
+      playNotificationSound('payment_success');
+
       setPaymentSuccess({
         transactionId: data.booking.paymentId,
         amount: data.booking.paidAmount,
@@ -123,6 +125,11 @@ const PaymentModal = ({ booking, onClose, onSuccess }) => {
   };
 
   if (!booking) return null;
+
+  const totalPayable = order?.breakdown?.totalAmount || booking.paidAmount || booking.finalPrice || 25;
+  const orderRefId = booking.orderId || ('ORD-' + booking._id?.slice(-6).toUpperCase());
+  const upiIntentUrl = `upi://pay?pa=localfixr@upi&pn=LocalFixr%20Technologies&am=${totalPayable}&tn=Order%20${orderRefId}&cu=INR`;
+  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiIntentUrl)}`;
 
   return (
     <div className="payment-modal-overlay">
@@ -214,7 +221,7 @@ const PaymentModal = ({ booking, onClose, onSuccess }) => {
                   className={`payment-tab-btn ${activeTab === 'upi' ? 'active' : ''}`}
                   onClick={() => setActiveTab('upi')}
                 >
-                  <QrCode size={16} /> UPI / QR
+                  <QrCode size={16} /> UPI / QR Code
                 </button>
                 <button 
                   className={`payment-tab-btn ${activeTab === 'card' ? 'active' : ''}`}
@@ -242,28 +249,37 @@ const PaymentModal = ({ booking, onClose, onSuccess }) => {
                 </button>
               </div>
 
-              {/* Tab 1: UPI & QR Code */}
+              {/* Tab 1: Dynamic Scannable UPI & QR Code */}
               {activeTab === 'upi' && (
                 <div>
-                  <div className="qr-container">
-                    <div className="qr-box">
-                      <svg width="140" height="140" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="100" height="100" fill="white" />
-                        <path d="M10 10H40V40H10V10ZM20 20V30H30V20H20Z" fill="#0F172A" />
-                        <path d="M60 10H90V40H60V10ZM70 20V30H80V20H70Z" fill="#0F172A" />
-                        <path d="M10 60H40V90H10V60ZM20 70V80H30V70H20Z" fill="#0F172A" />
-                        <rect x="50" y="50" width="15" height="15" fill="#6366F1" />
-                        <rect x="70" y="50" width="20" height="10" fill="#0F172A" />
-                        <rect x="50" y="70" width="10" height="20" fill="#0F172A" />
-                        <rect x="70" y="70" width="20" height="20" fill="#6366F1" />
-                      </svg>
+                  <div className="qr-container" style={{ textAlign: 'center', padding: '1rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'inline-block', padding: '0.75rem', background: 'white', borderRadius: '0.75rem', border: '1px solid #cbd5e1', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                      <img 
+                        src={qrImageSrc} 
+                        alt="Dynamic UPI QR Code" 
+                        style={{ width: '160px', height: '160px', borderRadius: '4px' }}
+                      />
                     </div>
-                    <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      Scan QR code using any UPI App (GPay, PhonePe, Paytm, BHIM)
-                    </p>
+                    <div style={{ marginTop: '0.65rem' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4f46e5', display: 'block' }}>
+                        Scan & Pay ₹{totalPayable} with Any UPI App
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                        VPA: localfixr@upi • Ref: #{orderRefId}
+                      </span>
+                    </div>
+
+                    <a 
+                      href={upiIntentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ marginTop: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', fontWeight: 700, color: '#4f46e5', background: 'rgba(79, 70, 229, 0.1)', padding: '0.4rem 0.85rem', borderRadius: '2rem', textDecoration: 'none' }}
+                    >
+                      <ExternalLink size={14} /> Open UPI App Directly
+                    </a>
                   </div>
 
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginTop: '1rem' }}>
                     <label>Or Enter Virtual Payment Address (VPA / UPI ID)</label>
                     <input 
                       type="text" 
