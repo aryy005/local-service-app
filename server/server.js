@@ -54,10 +54,8 @@ app.use('/api/payments', require('./routes/payments'));
 const distPath = path.join(__dirname, '../dist');
 if (require('fs').existsSync(distPath)) {
   app.use(express.static(distPath));
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(distPath, 'index.html'));
-    }
+  app.get(/^\/(?!api).*/, (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
   });
 }
 
