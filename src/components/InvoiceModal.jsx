@@ -106,7 +106,7 @@ const InvoiceModal = ({ booking, onClose }) => {
           {/* Footer Note */}
           <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: '#94a3b8' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <ShieldCheck size={16} style={{ color: '#10b981' }} /> Verified Tax Invoice • LocalPro Marketplace
+              <ShieldCheck size={16} style={{ color: '#10b981' }} /> Verified Tax Invoice & Work Completion Receipt • LocalFixr Marketplace
             </div>
             <div>Transaction ID: {booking.paymentId || 'N/A'}</div>
           </div>

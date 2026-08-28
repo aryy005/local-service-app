@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, Phone, MapPin, Shield, CheckCircle, AlertCircle, Loader, ShieldCheck } from 'lucide-react';
+import { Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, Phone, MapPin, Shield, CheckCircle, AlertCircle, Loader, ShieldCheck, FileText, MessageSquare } from 'lucide-react';
 import { getCurrentLocationName } from '../utils/geolocation';
 import { API_URL } from '../config';
 import { categories } from '../data/mockData';
 import ChatModal from '../components/ChatModal';
 import ServiceTrackerModal from '../components/ServiceTrackerModal';
-import { MessageSquare } from 'lucide-react';
+import InvoiceModal from '../components/InvoiceModal';
 
 const ProviderDashboard = () => {
   const { user, token, updateProfile } = useAuth();
@@ -17,6 +17,7 @@ const ProviderDashboard = () => {
   const [activeTab, setActiveTab] = useState('jobs'); // 'jobs' | 'profile' | 'earnings' | 'wallet'
   const [activeChat, setActiveChat] = useState(null);
   const [activeTrackerBooking, setActiveTrackerBooking] = useState(null);
+  const [activeInvoiceBooking, setActiveInvoiceBooking] = useState(null);
 
   // Profile Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -360,14 +361,14 @@ const ProviderDashboard = () => {
 
           <div className="jobs-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '3rem' }}>
             {newJobs.length > 0 ? newJobs.map(job => (
-              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} rateCustomer={rateCustomer} openChat={() => setActiveChat(job)} openTracker={() => setActiveTrackerBooking(job)} />
+              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} rateCustomer={rateCustomer} openChat={() => setActiveChat(job)} openTracker={() => setActiveTrackerBooking(job)} openInvoice={() => setActiveInvoiceBooking(job)} />
             )) : <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No new job requests</div>}
           </div>
 
           <h2 style={{ marginBottom: '1.5rem' }}>Previous / Accepted Orders</h2>
           <div className="jobs-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {pastJobs.length > 0 ? pastJobs.map(job => (
-              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} rateCustomer={rateCustomer} openChat={() => setActiveChat(job)} openTracker={() => setActiveTrackerBooking(job)} />
+              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} rateCustomer={rateCustomer} openChat={() => setActiveChat(job)} openTracker={() => setActiveTrackerBooking(job)} openInvoice={() => setActiveInvoiceBooking(job)} />
             )) : <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No previous orders found</div>}
           </div>
         </div>
@@ -659,6 +660,14 @@ const EarningsDashboard = ({ bookings }) => {
             setActiveTrackerBooking(updated);
             setJobs(prev => prev.map(j => j._id === updated._id ? updated : j));
           }}
+          onOpenInvoice={(b) => setActiveInvoiceBooking(b)}
+        />
+      )}
+
+      {activeInvoiceBooking && (
+        <InvoiceModal 
+          booking={activeInvoiceBooking}
+          onClose={() => setActiveInvoiceBooking(null)}
         />
       )}
     </div>
@@ -666,7 +675,7 @@ const EarningsDashboard = ({ bookings }) => {
 };
 
 // Helper component for rendering jobs
-const JobCard = ({ job, updateJobStatus, openChat, rateCustomer, openTracker }) => (
+const JobCard = ({ job, updateJobStatus, openChat, rateCustomer, openTracker, openInvoice }) => (
   <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
@@ -720,6 +729,15 @@ const JobCard = ({ job, updateJobStatus, openChat, rateCustomer, openTracker }) 
           >
             <Navigation size={15} /> Manage Progress 📍
           </button>
+
+          {(job.paymentStatus === 'paid' || job.status === 'completed') && (
+            <button 
+              onClick={openInvoice}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', color: '#10B981', border: '1px solid #10B981', padding: '0.55rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+            >
+              <FileText size={15} /> View Receipt & Invoice 📄
+            </button>
+          )}
         </div>
         
         {job.status === 'pending' && (

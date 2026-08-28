@@ -277,10 +277,17 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
                   </div>
                 )}
 
-                {currentStageKey === 'paid' && (
-                  <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#047857', padding: '0.85rem', borderRadius: '0.75rem', textAlign: 'center', fontSize: '0.9rem', fontWeight: 700 }}>
-                    ✓ Service Paid & Closed (₹{booking.paidAmount || booking.finalPrice}). Total earned added to your wallet!
-                  </div>
+                {(currentStageKey === 'paid' || booking.paymentStatus === 'paid' || booking.status === 'completed') && (
+                  <button 
+                    className="provider-action-btn"
+                    style={{ background: 'transparent', border: '1px solid #10B981', color: '#10B981' }}
+                    onClick={() => {
+                      onClose();
+                      if (onOpenInvoice) onOpenInvoice(booking);
+                    }}
+                  >
+                    <FileText size={18} /> View Payment Receipt & Work Summary 📄
+                  </button>
                 )}
               </div>
             ) : (
