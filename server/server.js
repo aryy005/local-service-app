@@ -12,6 +12,7 @@ const io = new Server(server, {
 });
 
 io.on('connection', (socket) => {
+  // ── Chat Events ──────────────────────────────────────────────────────────
   socket.on('join_chat', (bookingId) => socket.join(bookingId));
   socket.on('send_message', async (data) => {
     const Message = require('./models/Message');
@@ -29,6 +30,29 @@ io.on('connection', (socket) => {
       console.error('Socket message error:', err);
     }
   });
+
+  // ── Live GPS Tracking Events ──────────────────────────────────────────────
+  // Customer joins the tracking room for a booking to receive live location
+  socket.on('join_tracking_room', (bookingId) => {
+    socket.join(`track-${bookingId}`);
+    console.log(`Socket ${socket.id} joined tracking room track-${bookingId}`);
+  });
+
+  // Provider emits their GPS coordinates; server relays to all in the room
+  socket.on('provider_location', ({ bookingId, lat, lng, accuracy }) => {
+    io.to(`track-${bookingId}`).emit('provider_location_update', {
+      lat,
+      lng,
+      accuracy,
+      ts: Date.now()
+    });
+  });
+
+  // Provider signals tracking has stopped (moved to in_progress or beyond)
+  socket.on('stop_tracking', (bookingId) => {
+    io.to(`track-${bookingId}`).emit('tracking_stopped');
+  });
+
   socket.on('disconnect', () => console.log('User disconnected:', socket.id));
 });
 

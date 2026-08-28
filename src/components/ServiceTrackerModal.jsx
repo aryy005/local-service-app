@@ -169,9 +169,10 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
           {/* Render Live GPS Map Tracking when Provider is On The Way */}
           {currentStageKey === 'in_transit' && (
             <LiveTrackingMap 
+              bookingId={booking._id}
               providerName={booking.providerId?.name}
               serviceAddress={booking.serviceAddress}
-              etaMinutes={12}
+              isProvider={isProvider}
             />
           )}
 
