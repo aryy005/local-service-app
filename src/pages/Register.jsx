@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { categories } from '../data/mockData';
@@ -25,6 +25,20 @@ const Register = () => {
   
   const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
+
+  const handleRoleRedirect = (role) => {
+    if (role === 'admin') {
+      navigate('/admin-dashboard');
+    } else if (role === 'provider') {
+      navigate('/provider-dashboard');
+    } else if (redirectUrl && redirectUrl.startsWith('/')) {
+      navigate(redirectUrl);
+    } else {
+      navigate('/customer-dashboard');
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,13 +50,7 @@ const Register = () => {
     setLoading(true);
     try {
       const data = await googleLogin(credentialResponse.credential, formData.role);
-      if (data.user.role === 'admin') {
-        navigate('/admin-dashboard');
-      } else if (data.user.role === 'provider') {
-        navigate('/provider-dashboard');
-      } else {
-        navigate('/customer-dashboard');
-      }
+      handleRoleRedirect(data.user.role);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -80,13 +88,7 @@ const Register = () => {
         location: `${formData.street ? formData.street + ', ' : ''}${formData.city}, ${formData.state} - ${formData.pincode}`
       });
 
-      if (data.user.role === 'provider') {
-        navigate('/provider-dashboard');
-      } else if (data.user.role === 'admin') {
-        navigate('/admin-dashboard');
-      } else {
-        navigate('/customer-dashboard');
-      }
+      handleRoleRedirect(data.user.role);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -278,7 +280,7 @@ const Register = () => {
         </div>
         
         <p className="auth-redirect mt-6">
-          Already have an account? <Link to="/auth/login">Sign in</Link>
+          Already have an account? <Link to={redirectUrl ? `/auth/login?redirect=${encodeURIComponent(redirectUrl)}` : '/auth/login'}>Sign in</Link>
         </p>
       </div>
     </div>

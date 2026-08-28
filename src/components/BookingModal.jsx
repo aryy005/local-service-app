@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Calendar, Clock, CheckCircle, Navigation, MapPin, CreditCard } from 'lucide-react';
+import { X, Calendar, Clock, CheckCircle, Navigation, MapPin, CreditCard, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentLocationName } from '../utils/geolocation';
@@ -44,7 +44,7 @@ const BookingModal = ({ provider, onClose }) => {
     setError('');
     
     if (!user) {
-      navigate('/auth/login');
+      navigate(`/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
     
@@ -89,7 +89,38 @@ const BookingModal = ({ provider, onClose }) => {
           <X size={24} />
         </button>
 
-        {step === 1 ? (
+        {!user ? (
+          <div style={{ padding: '2.5rem 1.5rem', textAlign: 'center' }}>
+            <div style={{ width: '60px', height: '60px', background: '#EEF2FF', color: '#4F46E5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem auto' }}>
+              <Lock size={30} />
+            </div>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Login Required</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.75rem', lineHeight: 1.5 }}>
+              You must be logged in as a <strong>Customer</strong> to book <strong>{provider.name}</strong>, assign unique order tracking, and view real-time updates.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', flexDirection: 'column' }}>
+              <button 
+                className="btn btn-primary btn-lg w-full"
+                style={{ fontWeight: 700 }}
+                onClick={() => {
+                  onClose();
+                  navigate(`/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+                }}
+              >
+                Sign In to Continue
+              </button>
+              <button 
+                className="btn btn-outline btn-md w-full"
+                onClick={() => {
+                  onClose();
+                  navigate(`/auth/signup?redirect=${encodeURIComponent(window.location.pathname)}`);
+                }}
+              >
+                Create a Free Account
+              </button>
+            </div>
+          </div>
+        ) : step === 1 ? (
           <>
             <div className="modal-header">
               <h2>Book {provider.name}</h2>

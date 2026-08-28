@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, CheckCircle, ArrowLeft, Clock, Shield, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Star, MapPin, CheckCircle, ArrowLeft, Clock, Shield, ShieldCheck, AlertTriangle, Lock } from 'lucide-react';
 import BookingModal from '../components/BookingModal';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
@@ -10,6 +10,7 @@ import './ProviderProfile.css';
 const ProviderProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, token } = useAuth();
   const [provider, setProvider] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -246,7 +247,34 @@ const ProviderProfile = () => {
               </div>
             </div>
 
-            {user?.role === 'provider' ? (
+            {!user ? (
+              <div style={{ marginTop: '1rem', background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.25)', padding: '1rem', borderRadius: '0.75rem', textAlign: 'center' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', background: '#EEF2FF', color: '#4F46E5', borderRadius: '50%', marginBottom: '0.5rem' }}>
+                  <Lock size={18} />
+                </div>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', margin: '0 0 0.25rem 0', fontWeight: 700 }}>
+                  Account Required to Book
+                </p>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0 0 0.85rem 0', lineHeight: 1.4 }}>
+                  Please sign in or create an account to book {provider.name} and track live GPS updates.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <button 
+                    className="btn btn-primary btn-md w-full"
+                    style={{ fontWeight: 700 }}
+                    onClick={() => navigate(`/auth/login?redirect=${encodeURIComponent(location.pathname)}`)}
+                  >
+                    Sign In to Book
+                  </button>
+                  <button 
+                    className="btn btn-outline btn-sm w-full"
+                    onClick={() => navigate(`/auth/signup?redirect=${encodeURIComponent(location.pathname)}`)}
+                  >
+                    Create Free Account
+                  </button>
+                </div>
+              </div>
+            ) : user?.role === 'provider' ? (
               <div style={{ marginTop: '1rem', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.85rem', borderRadius: '0.5rem', textAlign: 'center' }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-main)', margin: '0 0 0.5rem 0', fontWeight: 600 }}>
                   🔒 Service Provider Account

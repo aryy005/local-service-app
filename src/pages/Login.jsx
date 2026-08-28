@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
@@ -11,9 +11,23 @@ const Login = () => {
   
   const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleRoleRedirect = (role) => {
+    if (role === 'admin') {
+      navigate('/admin-dashboard');
+    } else if (role === 'provider') {
+      navigate('/provider-dashboard');
+    } else if (redirectUrl && redirectUrl.startsWith('/')) {
+      navigate(redirectUrl);
+    } else {
+      navigate('/customer-dashboard');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -22,13 +36,7 @@ const Login = () => {
     setLoading(true);
     try {
       const data = await login(formData.email, formData.password, formData.role);
-      if (data.user.role === 'admin') {
-        navigate('/admin-dashboard');
-      } else if (data.user.role === 'provider') {
-        navigate('/provider-dashboard');
-      } else {
-        navigate('/customer-dashboard');
-      }
+      handleRoleRedirect(data.user.role);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -41,13 +49,7 @@ const Login = () => {
     setLoading(true);
     try {
       const data = await googleLogin(credentialResponse.credential, formData.role);
-      if (data.user.role === 'admin') {
-        navigate('/admin-dashboard');
-      } else if (data.user.role === 'provider') {
-        navigate('/provider-dashboard');
-      } else {
-        navigate('/customer-dashboard');
-      }
+      handleRoleRedirect(data.user.role);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -133,7 +135,7 @@ const Login = () => {
         </div>
         
         <p className="auth-redirect mt-6">
-          Don't have an account? <Link to="/auth/signup">Sign up</Link>
+          Don't have an account? <Link to={redirectUrl ? `/auth/signup?redirect=${encodeURIComponent(redirectUrl)}` : '/auth/signup'}>Sign up</Link>
         </p>
       </div>
     </div>
