@@ -154,6 +154,7 @@ const ProviderDashboard = () => {
       setFormData({
         name: user.name || '',
         phone: user.phone || '',
+        category: user.providerDetails?.category || 'cat-5',
         hourlyRate: user.providerDetails?.hourlyRate || '',
         experienceYears: user.providerDetails?.experienceYears || '',
         location: user.providerDetails?.location || '',
@@ -223,6 +224,7 @@ const ProviderDashboard = () => {
         name: formData.name,
         phone: formData.phone,
         providerDetails: {
+          category: formData.category,
           hourlyRate: Number(formData.hourlyRate),
           experienceYears: Number(formData.experienceYears) || 0,
           location: formData.location,
