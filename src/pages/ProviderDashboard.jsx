@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, Phone, MapPin, Shield, CheckCircle, AlertCircle, Loader, ShieldCheck } from 'lucide-react';
 import { getCurrentLocationName } from '../utils/geolocation';
 import { API_URL } from '../config';
+import { categories } from '../data/mockData';
 import ChatModal from '../components/ChatModal';
 import ServiceTrackerModal from '../components/ServiceTrackerModal';
 import { MessageSquare } from 'lucide-react';
@@ -419,6 +420,22 @@ const ProviderDashboard = () => {
                   </div>
                 </div>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontWeight: 700, color: '#6366f1' }}>🛠️ Service Offered (Category)</label>
+                  <select 
+                    value={formData.category} 
+                    onChange={e => setFormData({ ...formData, category: e.target.value })}
+                    className="form-control"
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'var(--surface-card)', border: '1px solid var(--surface-border)', color: 'var(--text-main)', fontWeight: 600 }}
+                  >
+                    {categories.map(c => (
+                      <option key={c.id} value={c.id} style={{ background: '#1e293b', color: '#fff' }}>
+                        {c.name} — {c.description}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label>Bio / Description</label>
                   <textarea rows="4" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} required className="form-control" style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--surface-border)', color: 'var(--text-main)' }}></textarea>
                 </div>
@@ -438,6 +455,16 @@ const ProviderDashboard = () => {
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Phone Number</p>
                 <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.phone || 'Not provided'}</p>
               </div>
+              <div>
+                <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>🛠️ Service Offered</p>
+                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem', fontWeight: 700, color: '#6366f1' }}>
+                  {categories.find(c => c.id === user.providerDetails?.category || c.name.toLowerCase() === user.providerDetails?.category?.toLowerCase())?.name || user.providerDetails?.category || 'General Services'}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Location Area</p>
+                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.location || 'Not set'}</p>
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                 <div>
                   <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Hourly Rate</p>
@@ -447,10 +474,6 @@ const ProviderDashboard = () => {
                   <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Years of Experience</p>
                   <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.experienceYears || '0'} Years</p>
                 </div>
-              </div>
-              <div>
-                <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Location Area</p>
-                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.location || 'Not set'}</p>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Bio / Description</p>

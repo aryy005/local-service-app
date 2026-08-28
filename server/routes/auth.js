@@ -114,7 +114,7 @@ router.post('/google', async (req, res) => {
 // @desc    Register a user with basic info (Instant Sign-Up)
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, role = 'customer' } = req.body;
+    const { name, email, password, role = 'customer', category, hourlyRate, location, description, phone } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
@@ -130,15 +130,20 @@ router.post('/register', async (req, res) => {
     user = new User({
       name,
       email,
+      phone: phone || '',
       password,
       role: normalizedRole,
       authProvider: 'local',
       emailVerified: false,
       phoneVerified: false,
       providerDetails: normalizedRole === 'provider' ? {
-        rating: 0,
+        category: category || 'cat-5',
+        hourlyRate: Number(hourlyRate) || 20,
+        location: location || 'City Center',
+        description: description || `Professional ${category || 'service'} provider dedicated to quality work.`,
+        rating: 5.0,
         reviewsCount: 0,
-        experienceYears: 0,
+        experienceYears: 1,
         totalJobsCompleted: 0,
         aadhaarVerified: false
       } : undefined

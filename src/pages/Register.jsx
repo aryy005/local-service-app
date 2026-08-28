@@ -2,14 +2,19 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
+import { categories } from '../data/mockData';
 import './Auth.css';
 
 const Register = () => {
   const [formData, setFormData] = useState({ 
     name: '',
     email: '',
+    phone: '',
     password: '',
     role: 'customer',
+    category: 'cat-5', // Default: Electrician
+    hourlyRate: 25,
+    location: ''
   });
 
   const [error, setError] = useState('');
@@ -60,8 +65,12 @@ const Register = () => {
       const data = await register({
         name: formData.name,
         email: formData.email,
+        phone: formData.phone,
         password: formData.password,
         role: formData.role,
+        category: formData.category,
+        hourlyRate: Number(formData.hourlyRate),
+        location: formData.location
       });
 
       if (data.user.role === 'provider') {
@@ -141,6 +150,62 @@ const Register = () => {
               placeholder="At least 6 characters"
             />
           </div>
+
+          {formData.role === 'provider' && (
+            <>
+              <div className="form-group">
+                <label style={{ fontWeight: 700, color: '#6366f1' }}>🛠️ Service Offered (Select Category)</label>
+                <select 
+                  name="category" 
+                  value={formData.category} 
+                  onChange={handleChange}
+                  required
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.75rem', 
+                    borderRadius: '0.5rem', 
+                    border: '1px solid var(--surface-border)', 
+                    background: 'var(--surface-card)', 
+                    color: 'var(--text-main)', 
+                    fontWeight: 600,
+                    outline: 'none' 
+                  }}
+                >
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id} style={{ background: '#1e293b', color: '#fff' }}>
+                      {c.name} — {c.description}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label>Hourly Rate (₹/hr)</label>
+                  <input 
+                    type="number" 
+                    name="hourlyRate" 
+                    value={formData.hourlyRate} 
+                    onChange={handleChange} 
+                    required 
+                    min="1"
+                    placeholder="e.g. 25"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Service Area / Location</label>
+                  <input 
+                    type="text" 
+                    name="location" 
+                    value={formData.location} 
+                    onChange={handleChange} 
+                    placeholder="e.g. Downtown"
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           <button type="submit" className="btn btn-primary w-full mt-4" disabled={loading}>
             {loading ? 'Creating Account...' : 'Create Account'}
