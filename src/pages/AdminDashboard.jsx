@@ -88,6 +88,24 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeleteUser = async (userId, userName) => {
+    if (!window.confirm(`⚠️ Are you sure you want to permanently delete user "${userName}"? All associated orders and messages will also be removed.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      alert(data.message);
+      fetchAdminData();
+    } catch (err) {
+      alert('Error deleting user: ' + err.message);
+    }
+  };
+
   // Excel / CSV Export Function for Master Orders
   const exportOrdersToExcel = () => {
     if (!orders || orders.length === 0) {
@@ -373,6 +391,7 @@ const AdminDashboard = () => {
                   <th className="p-4 font-bold text-xs uppercase text-gray-500">Phone Number</th>
                   <th className="p-4 font-bold text-xs uppercase text-gray-500">Verification Badges</th>
                   <th className="p-4 font-bold text-xs uppercase text-gray-500">Joined Date</th>
+                  <th className="p-4 font-bold text-xs uppercase text-gray-500 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -394,10 +413,19 @@ const AdminDashboard = () => {
                     <td className="p-4 text-sm text-gray-500">
                       {new Date(u.createdAt).toLocaleDateString()}
                     </td>
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={() => handleDeleteUser(u._id, u.name)}
+                        className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors inline-flex items-center gap-1 text-xs font-semibold"
+                        title="Delete User"
+                      >
+                        <Trash2 size={15} /> Delete
+                      </button>
+                    </td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan="5" className="p-8 text-center text-gray-500 italic">No customers found.</td>
+                    <td colSpan="6" className="p-8 text-center text-gray-500 italic">No customers found.</td>
                   </tr>
                 )}
               </tbody>
@@ -419,6 +447,7 @@ const AdminDashboard = () => {
                   <th className="p-4 font-bold text-xs uppercase text-gray-500">Operating Location</th>
                   <th className="p-4 font-bold text-xs uppercase text-gray-500">Aadhaar Status</th>
                   <th className="p-4 font-bold text-xs uppercase text-gray-500">Joined Date</th>
+                  <th className="p-4 font-bold text-xs uppercase text-gray-500 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -458,10 +487,19 @@ const AdminDashboard = () => {
                     <td className="p-4 text-sm text-gray-500">
                       {new Date(p.createdAt).toLocaleDateString()}
                     </td>
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={() => handleDeleteUser(p._id, p.name)}
+                        className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors inline-flex items-center gap-1 text-xs font-semibold"
+                        title="Delete Provider"
+                      >
+                        <Trash2 size={15} /> Delete
+                      </button>
+                    </td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan="6" className="p-8 text-center text-gray-500 italic">No service providers found.</td>
+                    <td colSpan="7" className="p-8 text-center text-gray-500 italic">No service providers found.</td>
                   </tr>
                 )}
               </tbody>

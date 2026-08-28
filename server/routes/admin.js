@@ -69,24 +69,46 @@ router.get('/orders', [auth, admin], async (req, res) => {
 });
 
 // @route   POST api/admin/reset-database
-// @desc    Clear all database records (User, Booking, Payment, Message) except Admin
+// @desc    Clear all database records (User, Booking, Payment, Message) except primary System Admin
 router.post('/reset-database', [auth, admin], async (req, res) => {
   try {
     const Payment = require('../models/Payment');
     const Message = require('../models/Message');
 
-    // Wipe all bookings, payments, and messages
+    // Wipe all bookings, payments, messages, and non-admin users
     await Promise.all([
       Booking.deleteMany({}),
       Payment.deleteMany({}),
       Message.deleteMany({}),
-      User.deleteMany({ role: { $ne: 'admin' } })
+      User.deleteMany({ email: { $ne: 'admin@localfixr.com' } })
     ]);
 
-    res.json({ message: 'Database wiped successfully. Environment is now fresh and ready.' });
+    res.json({ message: 'Database wiped successfully. All demo and previous test accounts deleted.' });
   } catch (err) {
     console.error('Reset DB Error:', err);
     res.status(500).json({ message: 'Server error wiping database' });
+  }
+});
+
+// @route   DELETE api/admin/users/:id
+// @desc    Delete a specific user account (Customer or Provider) by ID
+router.delete('/users/:id', [auth, admin], async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    if (targetUser.role === 'admin' && targetUser.email === 'admin@localfixr.com') {
+      return res.status(400).json({ message: 'Primary system admin cannot be deleted' });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+    await Booking.deleteMany({ $or: [{ customerId: req.params.id }, { providerId: req.params.id }] });
+
+    res.json({ message: `User "${targetUser.name}" (${targetUser.email}) and associated records deleted.` });
+  } catch (err) {
+    console.error('Delete User Error:', err);
+    res.status(500).json({ message: 'Server error deleting user' });
   }
 });
 
