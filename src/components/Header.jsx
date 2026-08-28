@@ -188,17 +188,61 @@ const Header = () => {
         </button>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation Panel */}
       <div className={`mobile-nav-panel ${isMobileMenuOpen ? 'open' : ''}`}>
+        {/* Mobile Search */}
         <div className="mobile-search">
           <Search size={18} />
-          <input type="text" placeholder="Search for services" />
+          <input 
+            type="text" 
+            placeholder="Search for services..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchQuery.trim()) {
+                setIsMobileMenuOpen(false);
+                navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+              }
+            }}
+          />
         </div>
-        <Link to="/search" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Services</Link>
-        <button className="mobile-nav-link" onClick={() => { toggleTheme(); setIsMobileMenuOpen(false); }}
-          style={{ background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: 'inherit', font: 'inherit' }}>
-          {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
-        </button>
+
+        {/* Mobile Location Selector */}
+        <div 
+          className="mobile-nav-link" 
+          onClick={() => { handleLocateMe(); setIsMobileMenuOpen(false); }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+        >
+          <MapPin size={16} className="loc-icon" />
+          <span>Location: <strong>{locationValue || 'Detect City'}</strong></span>
+        </div>
+
+        <Link to="/search" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          Explore All Services
+        </Link>
+
+        {/* Quick controls row: Theme & Language */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.7rem 1.5rem', borderTop: '1px solid var(--surface-border)', borderBottom: '1px solid var(--surface-border)' }}>
+          <button 
+            onClick={() => { toggleTheme(); }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-main)', font: 'inherit', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+            <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Language:</span>
+            <select 
+              value={lang} 
+              onChange={(e) => setLang(e.target.value)}
+              style={{ background: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--surface-border)', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer', outline: 'none', fontSize: '0.85rem' }}
+            >
+              <option value="en">English (EN)</option>
+              <option value="hi">हिंदी (HI)</option>
+            </select>
+          </div>
+        </div>
         
         <div className="mobile-nav-actions">
           {user ? (
@@ -210,10 +254,11 @@ const Header = () => {
                 <div>
                   <div className="profile-user-name">{user.name}</div>
                   <div className="profile-user-email">{user.email}</div>
+                  <span className="profile-role-badge" style={{ marginTop: '2px' }}>{user.role}</span>
                 </div>
               </div>
               <Link to={getDashboardLink()} className="btn btn-outline w-full mt-2" onClick={() => setIsMobileMenuOpen(false)}>
-                <LayoutDashboard size={16} /> Profile & Dashboard
+                <LayoutDashboard size={16} /> {user.role === 'provider' ? 'My Workstation & Orders' : 'Profile & Orders'}
               </Link>
               <button onClick={handleLogout} className="btn btn-primary w-full mt-2">
                 <LogOut size={16} /> Logout
@@ -225,7 +270,7 @@ const Header = () => {
                 Login
               </Link>
               <Link to="/auth/signup" className="btn btn-primary w-full" onClick={() => setIsMobileMenuOpen(false)}>
-                Register
+                Sign Up / Register
               </Link>
             </>
           )}
