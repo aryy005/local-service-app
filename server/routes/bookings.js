@@ -77,6 +77,26 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+function checkProviderProfileCompleteness(user) {
+  const p = user.providerDetails || {};
+  const missing = [];
+  if (!user.name || !user.name.trim()) missing.push('Full Name');
+  if (!user.phone || !user.phone.trim()) missing.push('Phone Number');
+  if (!user.city && !user.addressDetails?.city && !p.location) missing.push('City / Service Area');
+  if (!p.category || !p.category.trim()) missing.push('Service Category');
+  if (!p.hourlyRate || Number(p.hourlyRate) <= 0) missing.push('Hourly Rate (₹)');
+  if (p.experienceYears === undefined || p.experienceYears === null || Number(p.experienceYears) < 0) missing.push('Years of Experience');
+  if (!p.description || p.description.trim().length < 10) missing.push('Bio / Description (min 10 characters)');
+  if (!p.upiId || !p.upiId.trim()) missing.push('Payout UPI ID');
+  if (!p.portfolioImages || !Array.isArray(p.portfolioImages) || p.portfolioImages.length === 0) missing.push('Work Portfolio Images (at least 1 photo of previous work)');
+  if (!user.phoneVerified && !p.aadhaarVerified) missing.push('Identity Verification (Phone OTP or Aadhaar KYC)');
+
+  return {
+    isComplete: missing.length === 0,
+    missing
+  };
+}
+
 // @route   PUT api/bookings/:id/stage
 // @desc    Advance service tracking stage (Provider / Customer cancel)
 router.put('/:id/stage', auth, async (req, res) => {
@@ -104,6 +124,20 @@ router.put('/:id/stage', auth, async (req, res) => {
 
     if (stage !== 'cancelled' && !isProvider && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Only the assigned provider or admin can advance service stages' });
+    }
+
+    // Strict Gate: Provider cannot provide service or advance stages if profile is incomplete
+    if (isProvider && (stage === 'accepted' || stage === 'in_transit' || stage === 'in_progress')) {
+      const providerUser = await User.findById(req.user.id);
+      if (providerUser) {
+        const check = checkProviderProfileCompleteness(providerUser);
+        if (!check.isComplete) {
+          return res.status(400).json({
+            message: `Cannot provide service! Please complete all mandatory profile fields and add portfolio images: ${check.missing.join(', ')}`,
+            missingFields: check.missing
+          });
+        }
+      }
     }
 
     const wasCompleted = booking.status === 'completed';
@@ -178,6 +212,20 @@ router.put('/:id/status', auth, async (req, res) => {
 
     if (providerIdStr !== userIdStr && req.user.role !== 'admin') {
       return res.status(401).json({ message: 'Not authorized to update this booking' });
+    }
+
+    // Strict Gate: Provider cannot accept booking if profile is incomplete
+    if (status === 'accepted') {
+      const providerUser = await User.findById(req.user.id);
+      if (providerUser) {
+        const check = checkProviderProfileCompleteness(providerUser);
+        if (!check.isComplete) {
+          return res.status(400).json({
+            message: `Cannot accept service request! Please complete all mandatory profile fields and add portfolio images: ${check.missing.join(', ')}`,
+            missingFields: check.missing
+          });
+        }
+      }
     }
     
     const wasCompleted = booking.status === 'completed';

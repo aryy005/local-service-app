@@ -124,7 +124,38 @@ const BookingModal = ({ provider, onClose }) => {
           <>
             <div className="modal-header">
               <h2>Book {provider.name}</h2>
-              <p>Fill in the details below to request a service.</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.35rem', flexWrap: 'wrap' }}>
+                <span style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', padding: '0.15rem 0.5rem', borderRadius: '0.35rem', fontSize: '0.8rem', fontWeight: 700 }}>
+                  ₹{provider.providerDetails?.hourlyRate || 25}/hr
+                </span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                  📍 {provider.city || provider.addressDetails?.city || provider.providerDetails?.location || 'Local Area'}
+                </span>
+                {provider.providerDetails?.experienceYears > 0 && (
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                    • {provider.providerDetails.experienceYears} Years Exp.
+                  </span>
+                )}
+              </div>
+
+              {/* Provider Work Photos Preview */}
+              {provider.providerDetails?.portfolioImages && provider.providerDetails.portfolioImages.length > 0 && (
+                <div style={{ marginTop: '0.75rem' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.35rem' }}>
+                    📸 Verified Work Photos:
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+                    {provider.providerDetails.portfolioImages.slice(0, 4).map((photo, i) => (
+                      <img 
+                        key={i} 
+                        src={photo} 
+                        alt="Work sample" 
+                        style={{ width: '48px', height: '48px', borderRadius: '0.35rem', objectFit: 'cover', border: '1px solid var(--surface-border)', flexShrink: 0 }} 
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {user?.role === 'provider' ? (

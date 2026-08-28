@@ -115,9 +115,16 @@ router.get('/:id/reviews', async (req, res) => {
 });
 
 // @route   GET api/providers/:id/portfolio
-// @desc    Get work photos from provider's completed bookings
+// @desc    Get work photos from provider's uploaded portfolio & completed bookings
 router.get('/:id/portfolio', async (req, res) => {
   try {
+    const provider = await User.findById(req.params.id);
+    let photos = [];
+
+    if (provider?.providerDetails?.portfolioImages && Array.isArray(provider.providerDetails.portfolioImages)) {
+      photos = [...provider.providerDetails.portfolioImages];
+    }
+
     const bookings = await require('../models/Booking').find({
       providerId: req.params.id,
       status: 'completed',
@@ -125,12 +132,15 @@ router.get('/:id/portfolio', async (req, res) => {
     });
     
     // Extract all photos into a flat array
-    let photos = [];
     bookings.forEach(b => {
-      if (b.workPhotos) photos = photos.concat(b.workPhotos);
+      if (b.workPhotos && Array.isArray(b.workPhotos)) {
+        photos = photos.concat(b.workPhotos);
+      }
     });
     
-    res.json(photos);
+    // Remove duplicates
+    const uniquePhotos = Array.from(new Set(photos.filter(Boolean)));
+    res.json(uniquePhotos);
   } catch (err) {
     res.status(500).send('Server Error');
   }

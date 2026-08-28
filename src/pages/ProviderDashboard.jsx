@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, Phone, MapPin, Shield, CheckCircle, AlertCircle, Loader, ShieldCheck, FileText, MessageSquare, MessageCircle } from 'lucide-react';
+import { 
+  Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, 
+  Phone, MapPin, Shield, CheckCircle, AlertCircle, Loader, ShieldCheck, 
+  FileText, MessageSquare, MessageCircle, Image, Upload, Plus, Trash2, 
+  AlertTriangle, Lock, CheckCircle2, Eye, Sparkles
+} from 'lucide-react';
 import { getCurrentLocationName } from '../utils/geolocation';
 import { API_URL } from '../config';
 import { categories } from '../data/mockData';
@@ -9,6 +14,41 @@ import ChatModal from '../components/ChatModal';
 import ServiceTrackerModal from '../components/ServiceTrackerModal';
 import InvoiceModal from '../components/InvoiceModal';
 import { openWhatsAppChat, formatWhatsAppBookingMessage } from '../utils/whatsapp';
+
+// Preset sample photos to make testing and demonstration instant for service partners
+const SAMPLE_PORTFOLIO_PRESETS = [
+  { label: 'Deep Cleaning Work', url: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80' },
+  { label: 'AC & Appliance Repair', url: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80' },
+  { label: 'Plumbing & Pipe Fitting', url: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=600&q=80' },
+  { label: 'Electrical Installation', url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=600&q=80' },
+  { label: 'Wall Painting & Finish', url: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&w=600&q=80' }
+];
+
+// Helper to validate complete provider profile
+export const checkProviderProfile = (user) => {
+  const p = user?.providerDetails || {};
+  const addr = user?.addressDetails || {};
+  
+  const checks = [
+    { key: 'name', label: 'Full Name', valid: !!(user?.name && user.name.trim().length > 0), value: user?.name },
+    { key: 'phone', label: 'Phone Number', valid: !!(user?.phone && user.phone.trim().length >= 10), value: user?.phone },
+    { key: 'street', label: 'Doorstep / Street Address', valid: !!(addr.street && addr.street.trim().length > 0), value: addr.street },
+    { key: 'city', label: 'Operating City & Area', valid: !!((user?.city || addr.city || p.location) && (user?.city || addr.city || p.location).trim().length > 0), value: user?.city || addr.city || p.location },
+    { key: 'category', label: 'Service Category', valid: !!(p.category && p.category.trim().length > 0), value: p.category },
+    { key: 'hourlyRate', label: 'Base / Hourly Rate (₹)', valid: !!(p.hourlyRate && Number(p.hourlyRate) > 0), value: p.hourlyRate ? `₹${p.hourlyRate}` : null },
+    { key: 'experienceYears', label: 'Experience (Years)', valid: (p.experienceYears !== undefined && p.experienceYears !== null && Number(p.experienceYears) >= 0), value: p.experienceYears !== undefined ? `${p.experienceYears} yrs` : null },
+    { key: 'description', label: 'Bio / Description (min 10 chars)', valid: !!(p.description && p.description.trim().length >= 10), value: p.description },
+    { key: 'upiId', label: 'Payout UPI ID', valid: !!(p.upiId && p.upiId.trim().length > 0), value: p.upiId },
+    { key: 'portfolio', label: 'Work Portfolio (Min 1 Image)', valid: !!(p.portfolioImages && Array.isArray(p.portfolioImages) && p.portfolioImages.length > 0), value: p.portfolioImages?.length ? `${p.portfolioImages.length} photos` : null },
+    { key: 'verification', label: 'Identity Verified (Phone / Aadhaar)', valid: !!(user?.phoneVerified || p.aadhaarVerified), value: user?.phoneVerified ? 'Phone Verified' : (p.aadhaarVerified ? 'Aadhaar Verified' : null) }
+  ];
+
+  const missing = checks.filter(c => !c.valid);
+  const isComplete = missing.length === 0;
+  const progress = Math.round(((checks.length - missing.length) / checks.length) * 100);
+
+  return { checks, missing, isComplete, progress };
+};
 
 const ProviderDashboard = () => {
   const { user, token, updateProfile } = useAuth();
@@ -19,19 +59,27 @@ const ProviderDashboard = () => {
   const [activeChat, setActiveChat] = useState(null);
   const [activeTrackerBooking, setActiveTrackerBooking] = useState(null);
   const [activeInvoiceBooking, setActiveInvoiceBooking] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
   // Profile Edit State
   const [isEditing, setIsEditing] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [customImageUrl, setCustomImageUrl] = useState('');
+  
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    street: '',
+    city: '',
+    state: '',
+    pincode: '',
     category: '',
     hourlyRate: '',
     experienceYears: '',
     location: '',
     description: '',
-    upiId: ''
+    upiId: '',
+    portfolioImages: []
   });
 
   // ─── Dashboard Inline Verification Handlers ───
@@ -49,6 +97,8 @@ const ProviderDashboard = () => {
   const [aadhaarDemoOtp, setAadhaarDemoOtp] = useState('');
   const [aadhaarLoading, setAadhaarLoading] = useState(false);
   const [aadhaarError, setAadhaarError] = useState('');
+
+  const profileStatus = checkProviderProfile(user);
 
   const handleSendPhoneOtp = async (channel = 'sms') => {
     if (!phoneInput) { setPhoneError('Enter your mobile number'); return; }
@@ -78,23 +128,22 @@ const ProviderDashboard = () => {
       if (!res.ok) throw new Error(data.message);
       await updateProfile({ phone: phoneInput, phoneVerified: true });
       setPhoneOtpSent(false);
-      alert('Phone number verified successfully!');
+      alert('Mobile number verified successfully!');
     } catch (err) { setPhoneError(err.message); }
     finally { setPhoneLoading(false); }
   };
 
   const handleSendAadhaarOtp = async () => {
-    const aadhaarClean = aadhaarInput.replace(/\s/g, '');
-    if (aadhaarClean.length !== 12) { setAadhaarError('Enter a valid 12-digit Aadhaar number'); return; }
+    if (aadhaarInput.length !== 12) { setAadhaarError('Enter a valid 12-digit Aadhaar number'); return; }
     setAadhaarLoading(true); setAadhaarError('');
     try {
       const res = await fetch(`${API_URL}/verify/aadhaar/send-otp`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ aadhaarNumber: aadhaarClean })
+        body: JSON.stringify({ aadhaarNumber: aadhaarInput })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      setAadhaarClientId(data.clientId || '');
+      setAadhaarClientId(data.client_id);
       setAadhaarStep('otp');
       if (data.demo_otp) setAadhaarDemoOtp(data.demo_otp);
     } catch (err) { setAadhaarError(err.message); }
@@ -102,21 +151,21 @@ const ProviderDashboard = () => {
   };
 
   const handleVerifyAadhaarOtp = async () => {
-    if (aadhaarOtp.length < 6) { setAadhaarError('Enter the 6-digit OTP'); return; }
+    if (aadhaarOtp.length < 6) { setAadhaarError('Enter the 6-digit UIDAI OTP'); return; }
     setAadhaarLoading(true); setAadhaarError('');
     try {
-      const aadhaarClean = aadhaarInput.replace(/\s/g, '');
       const res = await fetch(`${API_URL}/verify/aadhaar/verify-otp`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ aadhaarNumber: aadhaarClean, otp: aadhaarOtp, clientId: aadhaarClientId })
+        body: JSON.stringify({ client_id: aadhaarClientId, otp: aadhaarOtp, aadhaarNumber: aadhaarInput })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       await updateProfile({
         providerDetails: {
+          ...user.providerDetails,
           aadhaarVerified: true,
-          aadhaarLastFour: data.aadhaarLastFour || aadhaarClean.slice(-4),
-          aadhaarRefId: data.refId || ''
+          aadhaarLastFour: aadhaarInput.slice(-4),
+          aadhaarVerifiedAt: new Date()
         }
       });
       setAadhaarStep('verified');
@@ -156,13 +205,19 @@ const ProviderDashboard = () => {
       setFormData({
         name: user.name || '',
         phone: user.phone || '',
+        street: user.addressDetails?.street || '',
+        city: user.city || user.addressDetails?.city || user.providerDetails?.location || '',
+        state: user.addressDetails?.state || '',
+        pincode: user.addressDetails?.pincode || '',
         category: user.providerDetails?.category || 'cat-5',
         hourlyRate: user.providerDetails?.hourlyRate || '',
-        experienceYears: user.providerDetails?.experienceYears || '',
-        location: user.providerDetails?.location || '',
+        experienceYears: user.providerDetails?.experienceYears !== undefined ? user.providerDetails.experienceYears : '',
+        location: user.providerDetails?.location || user.city || '',
         description: user.providerDetails?.description || '',
-        upiId: user.providerDetails?.upiId || ''
+        upiId: user.providerDetails?.upiId || '',
+        portfolioImages: user.providerDetails?.portfolioImages || []
       });
+      setPhoneInput(user.phone || '');
     }
 
     fetchJobs();
@@ -170,6 +225,13 @@ const ProviderDashboard = () => {
   }, [user, token, navigate]);
 
   const updateJobStatus = async (id, status, extraData = {}) => {
+    if (status === 'accepted' && !profileStatus.isComplete) {
+      alert(`⚠️ Service Locked!\n\nYou must complete 100% of your provider profile before accepting jobs.\n\nMissing items:\n• ` + profileStatus.missing.map(m => m.label).join('\n• '));
+      setActiveTab('profile');
+      setIsEditing(true);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/bookings/${id}/status`, {
         method: 'PUT',
@@ -192,6 +254,13 @@ const ProviderDashboard = () => {
   };
 
   const advanceJobStage = async (id, stage, extraData = {}) => {
+    if ((stage === 'accepted' || stage === 'in_transit' || stage === 'in_progress') && !profileStatus.isComplete) {
+      alert(`⚠️ Service Locked!\n\nYou must complete 100% of your provider profile before servicing jobs.\n\nMissing items:\n• ` + profileStatus.missing.map(m => m.label).join('\n• '));
+      setActiveTab('profile');
+      setIsEditing(true);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/bookings/${id}/stage`, {
         method: 'PUT',
@@ -243,7 +312,11 @@ const ProviderDashboard = () => {
     setIsLocating(true);
     try {
       const location = await getCurrentLocationName();
-      setFormData(prev => ({ ...prev, location: location.name || location }));
+      setFormData(prev => ({ 
+        ...prev, 
+        location: location.name || location,
+        city: location.name || location
+      }));
     } catch (err) {
       alert(err.message);
     } finally {
@@ -251,23 +324,90 @@ const ProviderDashboard = () => {
     }
   };
 
+  // Portfolio Image Upload Handler (Base64)
+  const handlePortfolioFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    files.forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file (PNG, JPG, JPEG, WEBP).');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({
+          ...prev,
+          portfolioImages: [...(prev.portfolioImages || []), reader.result]
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Add Portfolio Image by URL
+  const handleAddImageUrl = () => {
+    if (!customImageUrl || !customImageUrl.trim()) return;
+    setFormData(prev => ({
+      ...prev,
+      portfolioImages: [...(prev.portfolioImages || []), customImageUrl.trim()]
+    }));
+    setCustomImageUrl('');
+  };
+
+  // Add Preset Image
+  const handleAddPresetImage = (url) => {
+    if (formData.portfolioImages?.includes(url)) return;
+    setFormData(prev => ({
+      ...prev,
+      portfolioImages: [...(prev.portfolioImages || []), url]
+    }));
+  };
+
+  // Remove Portfolio Image
+  const handleRemoveImage = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      portfolioImages: prev.portfolioImages.filter((_, idx) => idx !== indexToRemove)
+    }));
+  };
+
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.name.trim()) return alert('Full Name is required.');
+    if (!formData.phone.trim()) return alert('Phone Number is required.');
+    if (!formData.street.trim()) return alert('Doorstep / Street Address is required.');
+    if (!formData.city.trim()) return alert('Operating City is required.');
+    if (!formData.category.trim()) return alert('Service Category is required.');
+    if (!formData.hourlyRate || Number(formData.hourlyRate) <= 0) return alert('Hourly Rate must be greater than 0.');
+    if (!formData.description || formData.description.trim().length < 10) return alert('Bio / Description must be at least 10 characters.');
+    if (!formData.upiId.trim()) return alert('UPI ID is required for receiving customer payments.');
+    if (!formData.portfolioImages || formData.portfolioImages.length === 0) return alert('You must upload at least 1 Work Portfolio image.');
+
     try {
       await updateProfile({
         name: formData.name,
         phone: formData.phone,
+        city: formData.city,
+        addressDetails: {
+          street: formData.street,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode
+        },
         providerDetails: {
           category: formData.category,
           hourlyRate: Number(formData.hourlyRate),
           experienceYears: Number(formData.experienceYears) || 0,
-          location: formData.location,
+          location: formData.location || formData.city,
           description: formData.description,
-          upiId: formData.upiId
+          upiId: formData.upiId,
+          portfolioImages: formData.portfolioImages
         }
       });
       setIsEditing(false);
-      alert('Profile updated successfully!');
+      alert('✅ Profile & Work Portfolio successfully updated and verified!');
     } catch (err) {
       alert(err.message);
     }
@@ -279,17 +419,53 @@ const ProviderDashboard = () => {
   const pastJobs = jobs.filter(j => j.status !== 'pending');
 
   return (
-    <div className="container fade-in" style={{ maxWidth: '900px', margin: '0 auto' }}>
-      <div className="section-header" style={{ borderBottom: '1px solid var(--surface-border)', paddingBottom: '1rem', marginBottom: '2rem' }}>
-        <h1>Provider Dashboard</h1>
-        <p className="subtitle" style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>Manage your incoming jobs and profile.</p>
+    <div className="container fade-in" style={{ maxWidth: '960px', margin: '0 auto' }}>
+      <div className="section-header" style={{ borderBottom: '1px solid var(--surface-border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h1 style={{ margin: 0 }}>Partner Dashboard</h1>
+            <p className="subtitle" style={{ fontSize: '1rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>Manage bookings, work portfolio, and service eligibility.</p>
+          </div>
+
+          {/* Profile Completeness Pill */}
+          <div style={{ 
+            display: 'flex', alignItems: 'center', gap: '0.6rem', 
+            background: profileStatus.isComplete ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+            border: `1px solid ${profileStatus.isComplete ? '#10b981' : '#ef4444'}`,
+            padding: '0.4rem 0.85rem', borderRadius: '2rem' 
+          }}>
+            {profileStatus.isComplete ? (
+              <>
+                <CheckCircle2 size={16} color="#10b981" />
+                <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.85rem' }}>Profile 100% Complete & Active</span>
+              </>
+            ) : (
+              <>
+                <Lock size={16} color="#ef4444" />
+                <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '0.85rem' }}>
+                  Profile {profileStatus.progress}% Complete (Service Locked)
+                </span>
+              </>
+            )}
+          </div>
+        </div>
         
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', flexWrap: 'wrap' }}>
           <button 
             className={`btn ${activeTab === 'jobs' ? 'btn-primary' : 'btn-outline'}`} 
             onClick={() => setActiveTab('jobs')}
           >
-            My Jobs
+            My Jobs ({newJobs.length} New)
+          </button>
+          <button 
+            className={`btn ${activeTab === 'profile' ? 'btn-primary' : 'btn-outline'}`} 
+            onClick={() => setActiveTab('profile')}
+            style={{ position: 'relative' }}
+          >
+            My Profile & Portfolio
+            {!profileStatus.isComplete && (
+              <span style={{ position: 'absolute', top: '-4px', right: '-4px', width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%' }}></span>
+            )}
           </button>
           <button 
             className={`btn ${activeTab === 'earnings' ? 'btn-primary' : 'btn-outline'}`} 
@@ -301,39 +477,57 @@ const ProviderDashboard = () => {
             className={`btn ${activeTab === 'wallet' ? 'btn-primary' : 'btn-outline'}`} 
             onClick={() => setActiveTab('wallet')}
           >
-            Wallet
-          </button>
-          <button 
-            className={`btn ${activeTab === 'profile' ? 'btn-primary' : 'btn-outline'}`} 
-            onClick={() => setActiveTab('profile')}
-          >
-            My Profile
+            Wallet & Payout
           </button>
         </div>
       </div>
 
-      {/* ─── Profile & Verification Status Banner ─── */}
-      {(!user?.phoneVerified || !user?.providerDetails?.aadhaarVerified) && (
-        <div style={{ background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '1rem', padding: '1.25rem 1.5rem', marginBottom: '2rem' }}>
+      {/* ─── Mandatory Profile Requirement Gate Banner ─── */}
+      {!profileStatus.isComplete && (
+        <div style={{ 
+          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.08))', 
+          border: '1px solid rgba(239, 68, 68, 0.3)', 
+          borderRadius: '1rem', 
+          padding: '1.25rem 1.5rem', 
+          marginBottom: '2rem' 
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-            <Shield size={20} color="#eab308" />
-            <h3 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.05rem' }}>Complete Your Identity Verification</h3>
+            <AlertTriangle size={22} color="#ef4444" />
+            <h3 style={{ margin: 0, color: '#ef4444', fontSize: '1.05rem', fontWeight: 800 }}>
+              ⚠️ Service Provider Account Incomplete — Service Locked
+            </h3>
           </div>
-          <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-            Verify your Phone Number and Aadhaar UIDAI to activate your service profile and receive job requests.
+          <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', color: 'var(--text-main)' }}>
+            To protect customer trust and ensure service quality, <b>all provider profile fields and at least one photo of previous work are strictly mandatory</b>. You cannot accept service requests or appear in search results until your profile is 100% complete.
           </p>
 
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            {!user?.phoneVerified && (
-              <button className="btn btn-outline btn-sm" onClick={() => setActiveTab('profile')}>
-                📱 Verify Phone Number
-              </button>
-            )}
-            {!user?.providerDetails?.aadhaarVerified && (
-              <button className="btn btn-primary btn-sm" onClick={() => setActiveTab('profile')}>
-                🛡 Verify Aadhaar (UIDAI)
-              </button>
-            )}
+          <div style={{ marginBottom: '0.85rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.35rem', color: 'var(--text-muted)' }}>
+              <span>Completion Progress</span>
+              <span>{profileStatus.progress}% Completed</span>
+            </div>
+            <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ width: `${profileStatus.progress}%`, height: '100%', background: 'linear-gradient(90deg, #ef4444, #f59e0b)', borderRadius: '4px', transition: 'width 0.3s ease' }}></div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>Missing:</span>
+            {profileStatus.missing.map(m => (
+              <span key={m.key} style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.2rem 0.6rem', borderRadius: '0.35rem', fontSize: '0.8rem', fontWeight: 600 }}>
+                ✗ {m.label}
+              </span>
+            ))}
+            <button 
+              className="btn btn-primary btn-sm" 
+              style={{ marginLeft: 'auto', background: '#ef4444', borderColor: '#ef4444' }}
+              onClick={() => {
+                setActiveTab('profile');
+                setIsEditing(true);
+              }}
+            >
+              Complete Profile Now →
+            </button>
           </div>
         </div>
       )}
@@ -403,6 +597,7 @@ const ProviderDashboard = () => {
                 openChat={() => setActiveChat(job)} 
                 openTracker={() => setActiveTrackerBooking(job)} 
                 openInvoice={() => setActiveInvoiceBooking(job)} 
+                isProfileComplete={profileStatus.isComplete}
               />
             )) : <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No new job requests</div>}
           </div>
@@ -419,6 +614,7 @@ const ProviderDashboard = () => {
                 openChat={() => setActiveChat(job)} 
                 openTracker={() => setActiveTrackerBooking(job)} 
                 openInvoice={() => setActiveInvoiceBooking(job)} 
+                isProfileComplete={profileStatus.isComplete}
               />
             )) : <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No previous orders found</div>}
           </div>
@@ -427,40 +623,82 @@ const ProviderDashboard = () => {
 
       {activeTab === 'profile' && (
         <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-            <h2>Profile Details</h2>
-            {!isEditing && (
-              <button className="btn btn-outline btn-sm" onClick={() => setIsEditing(true)}>
-                <Edit2 size={16} /> Edit Profile
+          
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h2 style={{ margin: 0 }}>Service Partner Profile & Work Portfolio</h2>
+              <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                All fields marked with <b style={{ color: '#ef4444' }}>*</b> and work photos are mandatory to provide services.
+              </p>
+            </div>
+            {!isEditing ? (
+              <button className="btn btn-primary btn-sm" onClick={() => setIsEditing(true)}>
+                <Edit2 size={16} /> Edit Profile & Work Photos
+              </button>
+            ) : (
+              <button className="btn btn-outline btn-sm" onClick={() => setIsEditing(false)}>
+                Cancel Editing
               </button>
             )}
+          </div>
+
+          {/* Checklist of Mandatory Requirements */}
+          <div style={{ background: 'var(--surface-color)', border: '1px solid var(--surface-border)', borderRadius: '0.75rem', padding: '1.25rem', marginBottom: '2rem' }}>
+            <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ShieldCheck size={18} color="#6366f1" /> Mandatory Profile Checklist ({profileStatus.progress}% Complete)
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '0.75rem' }}>
+              {profileStatus.checks.map(c => (
+                <div key={c.key} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  {c.valid ? (
+                    <CheckCircle size={16} color="#10b981" />
+                  ) : (
+                    <AlertCircle size={16} color="#ef4444" />
+                  )}
+                  <span style={{ color: c.valid ? 'var(--text-main)' : '#ef4444', fontWeight: c.valid ? 500 : 700 }}>
+                    {c.label} {c.valid && c.value && typeof c.value === 'string' ? `(${c.value.slice(0, 15)}...)` : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {isEditing ? (
             <form onSubmit={handleProfileSubmit}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
                 <div className="form-group">
-                  <label>Full Name</label>
+                  <label>Full Name <span style={{ color: '#ef4444' }}>*</span></label>
                   <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="form-control" />
                 </div>
                 <div className="form-group">
-                  <label>Phone Number</label>
+                  <label>Mobile Number <span style={{ color: '#ef4444' }}>*</span></label>
                   <input type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required className="form-control" />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label>Hourly Rate (₹)</label>
-                    <input type="number" value={formData.hourlyRate} onChange={e => setFormData({...formData, hourlyRate: e.target.value})} required className="form-control" />
-                  </div>
-                  <div className="form-group">
-                    <label>Years of Exp.</label>
-                    <input type="number" value={formData.experienceYears} onChange={e => setFormData({...formData, experienceYears: e.target.value})} required className="form-control" min="0" />
-                  </div>
-                </div>
+
                 <div className="form-group">
-                  <label>Location Area</label>
+                  <label>Doorstep / Street Address <span style={{ color: '#ef4444' }}>*</span></label>
+                  <input 
+                    type="text" 
+                    value={formData.street} 
+                    onChange={e => setFormData({...formData, street: e.target.value})} 
+                    placeholder="e.g. Flat 302, Green Avenue, Sector 62"
+                    required 
+                    className="form-control" 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Operating City / Area <span style={{ color: '#ef4444' }}>*</span></label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <input type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} required className="form-control" style={{ width: '100%', paddingRight: '2.5rem' }} />
+                    <input 
+                      type="text" 
+                      value={formData.city} 
+                      onChange={e => setFormData({...formData, city: e.target.value, location: e.target.value})} 
+                      required 
+                      className="form-control" 
+                      style={{ width: '100%', paddingRight: '2.5rem' }} 
+                    />
                     <button 
                       type="button" 
                       onClick={handleLocateMe}
@@ -473,8 +711,32 @@ const ProviderDashboard = () => {
                     </button>
                   </div>
                 </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label>Base Hourly Rate (₹) <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input type="number" value={formData.hourlyRate} onChange={e => setFormData({...formData, hourlyRate: e.target.value})} required min="1" className="form-control" />
+                  </div>
+                  <div className="form-group">
+                    <label>Years of Exp. <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input type="number" value={formData.experienceYears} onChange={e => setFormData({...formData, experienceYears: e.target.value})} required className="form-control" min="0" />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Payout UPI ID <span style={{ color: '#ef4444' }}>*</span></label>
+                  <input 
+                    type="text" 
+                    value={formData.upiId} 
+                    onChange={e => setFormData({...formData, upiId: e.target.value})} 
+                    placeholder="e.g. partner@upi" 
+                    required 
+                    className="form-control" 
+                  />
+                </div>
+
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontWeight: 700, color: '#6366f1' }}>🛠️ Service Offered (Category)</label>
+                  <label style={{ fontWeight: 700, color: '#6366f1' }}>🛠️ Service Category <span style={{ color: '#ef4444' }}>*</span></label>
                   <select 
                     value={formData.category} 
                     onChange={e => setFormData({ ...formData, category: e.target.value })}
@@ -490,27 +752,159 @@ const ProviderDashboard = () => {
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label>Bio / Description</label>
-                  <textarea rows="4" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} required className="form-control" style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--surface-border)', color: 'var(--text-main)' }}></textarea>
+                  <label>Bio / Description (Tell customers about your skills) <span style={{ color: '#ef4444' }}>*</span></label>
+                  <textarea 
+                    rows="3" 
+                    value={formData.description} 
+                    onChange={e => setFormData({...formData, description: e.target.value})} 
+                    placeholder="Describe your expertise, experience, and tools..."
+                    required 
+                    className="form-control" 
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--surface-border)', color: 'var(--text-main)' }}
+                  />
                 </div>
+
+                {/* ─── Work Portfolio Images Section (Mandatory) ─── */}
+                <div className="form-group" style={{ gridColumn: '1 / -1', background: 'var(--surface-color)', border: '1px solid var(--surface-border)', padding: '1.25rem', borderRadius: '0.75rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <label style={{ margin: 0, fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Image size={18} color="#6366f1" /> Photos of Previous Work / Portfolio <span style={{ color: '#ef4444' }}>* (Min 1 image required)</span>
+                    </label>
+                    <span style={{ fontSize: '0.85rem', color: formData.portfolioImages?.length > 0 ? '#10b981' : '#ef4444', fontWeight: 700 }}>
+                      {formData.portfolioImages?.length || 0} Photos Added
+                    </span>
+                  </div>
+                  <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    Upload real photos of your completed repairs, cleaning, installations, or tools to verify your work for customers.
+                  </p>
+
+                  {/* Image Inputs */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                    {/* File Upload */}
+                    <div style={{ border: '2px dashed var(--surface-border)', borderRadius: '0.5rem', padding: '1rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)' }}>
+                      <Upload size={22} color="var(--primary-color)" style={{ margin: '0 auto 0.35rem auto' }} />
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>Upload from Device</div>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        multiple 
+                        onChange={handlePortfolioFileUpload}
+                        style={{ display: 'none' }}
+                        id="portfolio-file-input"
+                      />
+                      <label htmlFor="portfolio-file-input" className="btn btn-outline btn-sm" style={{ cursor: 'pointer' }}>
+                        Browse Photos
+                      </label>
+                    </div>
+
+                    {/* Image URL Input */}
+                    <div style={{ border: '1px solid var(--surface-border)', borderRadius: '0.5rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>Or Add via Image URL</div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input 
+                          type="url" 
+                          value={customImageUrl} 
+                          onChange={(e) => setCustomImageUrl(e.target.value)} 
+                          placeholder="https://example.com/photo.jpg"
+                          className="form-control"
+                          style={{ fontSize: '0.85rem' }}
+                        />
+                        <button type="button" className="btn btn-primary btn-sm" onClick={handleAddImageUrl}>
+                          <Plus size={16} /> Add
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preset Sample Photos */}
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                      Quick Add Verified Sample Work Photos:
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {SAMPLE_PORTFOLIO_PRESETS.map((preset, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleAddPresetImage(preset.url)}
+                          className="btn btn-outline btn-sm"
+                          style={{ fontSize: '0.78rem', padding: '0.25rem 0.6rem' }}
+                        >
+                          + {preset.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Uploaded Portfolio Gallery Grid */}
+                  {formData.portfolioImages && formData.portfolioImages.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.75rem' }}>
+                      {formData.portfolioImages.map((imgUrl, idx) => (
+                        <div key={idx} style={{ position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', height: '110px', border: '1px solid var(--surface-border)', background: '#000' }}>
+                          <img 
+                            src={imgUrl} 
+                            alt={`Portfolio work ${idx + 1}`} 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(idx)}
+                            style={{ 
+                              position: 'absolute', top: '4px', right: '4px', 
+                              background: 'rgba(239, 68, 68, 0.9)', color: 'white', 
+                              border: 'none', borderRadius: '50%', width: '22px', height: '22px', 
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                              cursor: 'pointer' 
+                            }}
+                            title="Remove Photo"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPreviewImage(imgUrl)}
+                            style={{ 
+                              position: 'absolute', bottom: '4px', right: '4px', 
+                              background: 'rgba(0,0,0,0.7)', color: 'white', 
+                              border: 'none', borderRadius: '4px', padding: '2px 5px',
+                              cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '3px'
+                            }}
+                          >
+                            <Eye size={12} /> View
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '1rem', background: 'rgba(239,68,68,0.05)', border: '1px dashed #ef4444', borderRadius: '0.5rem', color: '#ef4444', fontSize: '0.85rem', fontWeight: 600 }}>
+                      ⚠️ No work photos added yet. Upload at least 1 image to complete your profile and unlock services.
+                    </div>
+                  )}
+                </div>
+
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button type="submit" className="btn btn-primary"><Save size={18} /> Save Changes</button>
-                <button type="button" className="btn btn-outline" onClick={() => setIsEditing(false)}>Cancel</button>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button type="submit" className="btn btn-primary btn-lg" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  <Save size={18} /> Save & Verify Profile Requirements
+                </button>
+                <button type="button" className="btn btn-outline btn-lg" onClick={() => setIsEditing(false)}>
+                  Cancel
+                </button>
               </div>
             </form>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
               <div>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Full Name</p>
-                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.name}</p>
+                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem', fontWeight: 600 }}>{user.name}</p>
               </div>
               <div>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Phone Number</p>
-                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.phone || 'Not provided'}</p>
+                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem', fontWeight: 600 }}>{user.phone || <span style={{ color: '#ef4444' }}>Not provided</span>}</p>
               </div>
               <div>
-                <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>🛠️ Service Offered</p>
+                <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>🛠️ Service Category</p>
                 <p style={{ fontSize: '1.1rem', marginTop: '0.25rem', fontWeight: 700, color: '#6366f1' }}>
                   {categories.find(c => c.id === user.providerDetails?.category || c.name.toLowerCase() === user.providerDetails?.category?.toLowerCase())?.name || user.providerDetails?.category || 'General Services'}
                 </p>
@@ -518,28 +912,75 @@ const ProviderDashboard = () => {
               <div>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>📍 Operating City & Address</p>
                 <p style={{ fontSize: '1.1rem', marginTop: '0.25rem', fontWeight: 600, color: '#6366f1' }}>
-                  {user.addressDetails?.street ? `${user.addressDetails.street}, ` : ''}{user.city || user.providerDetails?.location || 'Not set'}
+                  {user.addressDetails?.street ? `${user.addressDetails.street}, ` : ''}{user.city || user.providerDetails?.location || <span style={{ color: '#ef4444' }}>Not set</span>}
                   {user.addressDetails?.pincode ? ` (${user.addressDetails.pincode})` : ''}
                 </p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                 <div>
-                  <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Hourly Rate</p>
-                  <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>₹{user.providerDetails?.hourlyRate || '0'}</p>
+                  <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Base Hourly Rate</p>
+                  <p style={{ fontSize: '1.1rem', marginTop: '0.25rem', fontWeight: 600 }}>₹{user.providerDetails?.hourlyRate || '0'}</p>
                 </div>
                 <div>
                   <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Years of Experience</p>
-                  <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.experienceYears || '0'} Years</p>
+                  <p style={{ fontSize: '1.1rem', marginTop: '0.25rem', fontWeight: 600 }}>{user.providerDetails?.experienceYears || '0'} Years</p>
                 </div>
+              </div>
+              <div>
+                <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Payout UPI ID</p>
+                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem', fontWeight: 600, color: '#38bdf8' }}>{user.providerDetails?.upiId || <span style={{ color: '#ef4444' }}>Not set</span>}</p>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Bio / Description</p>
-                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.description || 'No description added yet.'}</p>
+                <p style={{ fontSize: '1.05rem', marginTop: '0.25rem' }}>{user.providerDetails?.description || <span style={{ color: '#ef4444' }}>No description added yet.</span>}</p>
+              </div>
+
+              {/* ─── Display Work Portfolio Photos ─── */}
+              <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--surface-border)', paddingTop: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Image size={18} color="#6366f1" /> Work Portfolio & Photos ({user.providerDetails?.portfolioImages?.length || 0})
+                  </h4>
+                  <button className="btn btn-outline btn-sm" onClick={() => setIsEditing(true)}>
+                    + Manage Photos
+                  </button>
+                </div>
+
+                {user.providerDetails?.portfolioImages && user.providerDetails.portfolioImages.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1rem' }}>
+                    {user.providerDetails.portfolioImages.map((imgUrl, idx) => (
+                      <div 
+                        key={idx} 
+                        onClick={() => setPreviewImage(imgUrl)}
+                        style={{ position: 'relative', borderRadius: '0.75rem', overflow: 'hidden', height: '130px', border: '1px solid var(--surface-border)', cursor: 'pointer' }}
+                      >
+                        <img 
+                          src={imgUrl} 
+                          alt={`Work sample ${idx + 1}`} 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.2s' }}
+                          onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                          onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                        />
+                        <span style={{ position: 'absolute', bottom: '6px', left: '6px', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '0.72rem', padding: '2px 6px', borderRadius: '4px' }}>
+                          Photo #{idx + 1}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ padding: '1.5rem', background: 'rgba(239, 68, 68, 0.05)', border: '1px dashed #ef4444', borderRadius: '0.75rem', textAlign: 'center', color: '#ef4444' }}>
+                    <p style={{ margin: '0 0 0.5rem 0', fontWeight: 700 }}>⚠️ No portfolio work photos uploaded yet.</p>
+                    <p style={{ margin: 0, fontSize: '0.85rem' }}>Upload pictures of your previous work to unlock service availability.</p>
+                    <button className="btn btn-primary btn-sm mt-3" onClick={() => setIsEditing(true)}>
+                      Upload Work Photos Now
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* ── Verification Badges & Actions ── */}
               <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--surface-border)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
-                <p className="text-muted" style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.75rem' }}>Verification Status</p>
+                <p className="text-muted" style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.75rem' }}>Identity Verification Status</p>
                 
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
                   <span className={user.emailVerified ? 'verified-badge large' : 'unverified-badge'}>
@@ -676,6 +1117,24 @@ const ProviderDashboard = () => {
           onClose={() => setActiveInvoiceBooking(null)}
         />
       )}
+
+      {/* Full-Screen Image Preview Modal */}
+      {previewImage && (
+        <div 
+          onClick={() => setPreviewImage(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}
+        >
+          <div style={{ position: 'relative', maxWidth: '800px', maxHeight: '85vh' }} onClick={e => e.stopPropagation()}>
+            <img src={previewImage} alt="Work preview" style={{ maxWidth: '100%', maxHeight: '85vh', borderRadius: '0.75rem', border: '2px solid rgba(255,255,255,0.2)' }} />
+            <button 
+              onClick={() => setPreviewImage(null)}
+              style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -731,7 +1190,7 @@ const EarningsDashboard = ({ bookings }) => {
 };
 
 // Helper component for rendering jobs
-const JobCard = ({ job, updateJobStatus, advanceJobStage, openChat, rateCustomer, openTracker, openInvoice }) => {
+const JobCard = ({ job, updateJobStatus, advanceJobStage, openChat, rateCustomer, openTracker, openInvoice, isProfileComplete }) => {
   const currentStage = job.serviceStage || (job.status === 'completed' ? 'completed' : job.status === 'accepted' ? 'accepted' : 'requested');
 
   return (
@@ -863,9 +1322,15 @@ const JobCard = ({ job, updateJobStatus, advanceJobStage, openChat, rateCustomer
             <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
               <button 
                 onClick={() => updateJobStatus(job._id, 'accepted')}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'var(--accent-color)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+                style={{ 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', 
+                  background: isProfileComplete ? 'var(--accent-color)' : '#9ca3af', 
+                  color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', 
+                  cursor: 'pointer', fontWeight: 600 
+                }}
               >
-                <Check size={16} /> Accept Job
+                {isProfileComplete ? <Check size={16} /> : <Lock size={16} />} 
+                {isProfileComplete ? 'Accept Job' : 'Complete Profile to Accept'}
               </button>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
                 <button 

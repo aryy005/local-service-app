@@ -56,6 +56,8 @@ const userSchema = new mongoose.Schema({
     },
     description: { type: String },
     skills: [{ type: String }],
+    portfolioImages: [{ type: String }], // Images of past work / portfolio photos
+    isProfileComplete: { type: Boolean, default: false },
     rating: { type: Number, default: 0 },
     reviewsCount: { type: Number, default: 0 },
     avatarUrl: { type: String, default: '' },

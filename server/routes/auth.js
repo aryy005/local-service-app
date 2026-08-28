@@ -423,11 +423,32 @@ router.put('/me', auth, async (req, res) => {
       if (phoneVerified && !user.phoneVerifiedAt) user.phoneVerifiedAt = new Date();
     }
     
-    if (user.role === 'provider' && providerDetails) {
-      user.providerDetails = {
-        ...user.providerDetails,
-        ...providerDetails
-      };
+    if (user.role === 'provider') {
+      if (providerDetails) {
+        user.providerDetails = {
+          ...user.providerDetails,
+          ...providerDetails
+        };
+        if (Array.isArray(providerDetails.portfolioImages)) {
+          user.providerDetails.portfolioImages = providerDetails.portfolioImages;
+        }
+      }
+
+      // Check completeness
+      const p = user.providerDetails || {};
+      const missing = [];
+      if (!user.name || !user.name.trim()) missing.push('Full Name');
+      if (!user.phone || !user.phone.trim()) missing.push('Phone Number');
+      if (!user.city && !user.addressDetails?.city && !p.location) missing.push('City / Service Area');
+      if (!p.category || !p.category.trim()) missing.push('Service Category');
+      if (!p.hourlyRate || Number(p.hourlyRate) <= 0) missing.push('Hourly Rate');
+      if (p.experienceYears === undefined || p.experienceYears === null || Number(p.experienceYears) < 0) missing.push('Years of Experience');
+      if (!p.description || p.description.trim().length < 10) missing.push('Bio / Description');
+      if (!p.upiId || !p.upiId.trim()) missing.push('UPI ID');
+      if (!p.portfolioImages || !Array.isArray(p.portfolioImages) || p.portfolioImages.length === 0) missing.push('Work Portfolio Images');
+      if (!user.phoneVerified && !p.aadhaarVerified) missing.push('Phone or Aadhaar Verification');
+
+      user.providerDetails.isProfileComplete = (missing.length === 0);
     }
     
     await user.save();
