@@ -21,6 +21,14 @@ const userSchema = new mongoose.Schema({
     state: { type: String, default: '' },
     pincode: { type: String, default: '' }
   },
+  savedAddresses: [{
+    label: { type: String, default: 'Home' }, // 'Home', 'Work', 'Other'
+    street: { type: String, default: '' },
+    city: { type: String, default: '' },
+    state: { type: String, default: '' },
+    pincode: { type: String, default: '' },
+    isDefault: { type: Boolean, default: false }
+  }],
 
   // Verification Status (applicable to all users)
   emailVerified: { type: Boolean, default: false },

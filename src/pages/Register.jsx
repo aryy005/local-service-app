@@ -45,16 +45,54 @@ const Register = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  const [pendingGoogleCredential, setPendingGoogleCredential] = useState(null);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+
   const handleGoogleSuccess = async (credentialResponse) => {
     setError('');
+    
+    // Check if user has already filled in city and state on the registration form
+    if (!formData.city || !formData.state || !formData.pincode) {
+      // Hold credential and show the Address Collection Modal
+      setPendingGoogleCredential(credentialResponse.credential);
+      setShowAddressModal(true);
+      return;
+    }
+
+    // Complete Google Sign-Up with provided address
+    await executeGoogleRegister(credentialResponse.credential, formData);
+  };
+
+  const executeGoogleRegister = async (credential, addressInfo) => {
     setLoading(true);
+    setError('');
     try {
-      const data = await googleLogin(credentialResponse.credential, formData.role, 'register');
+      const data = await googleLogin(credential, formData.role, 'register', {
+        street: addressInfo.street || '',
+        city: addressInfo.city || '',
+        state: addressInfo.state || '',
+        pincode: addressInfo.pincode || '',
+        phone: addressInfo.phone || '',
+        category: formData.role === 'provider' ? formData.category : undefined,
+        hourlyRate: formData.role === 'provider' ? Number(formData.hourlyRate) : undefined
+      });
+      setShowAddressModal(false);
       handleRoleRedirect(data.user.role);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddressModalSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.city || !formData.state || !formData.pincode) {
+      setError('City, State, and Pincode are required to complete Google Sign-Up');
+      return;
+    }
+    if (pendingGoogleCredential) {
+      executeGoogleRegister(pendingGoogleCredential, formData);
     }
   };
 
@@ -283,6 +321,104 @@ const Register = () => {
           Already have an account? <Link to={redirectUrl ? `/auth/login?redirect=${encodeURIComponent(redirectUrl)}` : '/auth/login'}>Sign in</Link>
         </p>
       </div>
+
+      {/* ── Google Sign-Up Address Details Modal ── */}
+      {showAddressModal && (
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '1rem' }}>
+          <div className="glass-panel" style={{ background: 'var(--card-bg)', width: '100%', maxWidth: '460px', padding: '2rem', borderRadius: '1.25rem', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid var(--surface-border)' }}>
+            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.35rem', color: 'var(--text-main)' }}>
+              📍 Enter Your Service Address
+            </h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+              Please provide your address so nearby verified service professionals can reach your doorstep.
+            </p>
+
+            <form onSubmit={handleAddressModalSubmit}>
+              <div className="form-group mb-3">
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Phone Number (Optional)</label>
+                <input 
+                  type="tel" 
+                  name="phone" 
+                  value={formData.phone} 
+                  onChange={handleChange} 
+                  placeholder="e.g. 9876543210"
+                />
+              </div>
+
+              <div className="form-group mb-3">
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>House / Flat / Street Address</label>
+                <input 
+                  type="text" 
+                  name="street" 
+                  value={formData.street} 
+                  onChange={handleChange} 
+                  placeholder="e.g. Flat 402, Green Avenue"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>City *</label>
+                  <input 
+                    type="text" 
+                    name="city" 
+                    value={formData.city} 
+                    onChange={handleChange} 
+                    required 
+                    placeholder="e.g. Ludhiana"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>State *</label>
+                  <input 
+                    type="text" 
+                    name="state" 
+                    value={formData.state} 
+                    onChange={handleChange} 
+                    required 
+                    placeholder="e.g. Punjab"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group mb-4">
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Pincode *</label>
+                <input 
+                  type="text" 
+                  name="pincode" 
+                  value={formData.pincode} 
+                  onChange={handleChange} 
+                  required 
+                  placeholder="e.g. 141001"
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-outline" 
+                  style={{ flex: 1 }}
+                  onClick={() => {
+                    setShowAddressModal(false);
+                    setPendingGoogleCredential(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  style={{ flex: 1.5 }}
+                  disabled={loading}
+                >
+                  {loading ? 'Completing...' : 'Complete Sign-Up →'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -466,8 +466,11 @@ const ProviderDashboard = () => {
                 </p>
               </div>
               <div>
-                <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Location Area</p>
-                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem' }}>{user.providerDetails?.location || 'Not set'}</p>
+                <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>📍 Operating City & Address</p>
+                <p style={{ fontSize: '1.1rem', marginTop: '0.25rem', fontWeight: 600, color: '#6366f1' }}>
+                  {user.addressDetails?.street ? `${user.addressDetails.street}, ` : ''}{user.city || user.providerDetails?.location || 'Not set'}
+                  {user.addressDetails?.pincode ? ` (${user.addressDetails.pincode})` : ''}
+                </p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                 <div>

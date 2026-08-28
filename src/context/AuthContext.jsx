@@ -90,11 +90,11 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  const googleLogin = async (credential, role = 'customer', action = 'login') => {
+  const googleLogin = async (credential, role = 'customer', action = 'login', extraData = {}) => {
     const res = await fetch(`${API_URL}/auth/google`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ credential, role, action })
+      body: JSON.stringify({ credential, role, action, ...extraData })
     });
     
     const data = await parseJsonResponse(res, action === 'login' ? 'Google login failed' : 'Google registration failed');
@@ -120,6 +120,52 @@ export const AuthProvider = ({ children }) => {
     return updatedUser;
   };
 
+  const addAddress = async (addressData) => {
+    const res = await fetch(`${API_URL}/auth/addresses`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify(addressData)
+    });
+    
+    const updatedUser = await parseJsonResponse(res, 'Failed to add address');
+    setUser(updatedUser);
+    toast.success('New address added successfully!');
+    return updatedUser;
+  };
+
+  const updateAddress = async (addressId, addressData) => {
+    const res = await fetch(`${API_URL}/auth/addresses/${addressId}`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify(addressData)
+    });
+    
+    const updatedUser = await parseJsonResponse(res, 'Failed to update address');
+    setUser(updatedUser);
+    toast.success('Address updated successfully!');
+    return updatedUser;
+  };
+
+  const deleteAddress = async (addressId) => {
+    const res = await fetch(`${API_URL}/auth/addresses/${addressId}`, {
+      method: 'DELETE',
+      headers: { 
+        'Authorization': `Bearer ${token}` 
+      }
+    });
+    
+    const updatedUser = await parseJsonResponse(res, 'Failed to delete address');
+    setUser(updatedUser);
+    toast.success('Address removed');
+    return updatedUser;
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -132,7 +178,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, googleLogin, logout, updateProfile, userLocation, saveLocation }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      loading, 
+      login, 
+      register, 
+      googleLogin, 
+      logout, 
+      updateProfile, 
+      addAddress, 
+      updateAddress, 
+      deleteAddress, 
+      userLocation, 
+      saveLocation 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -11,7 +11,19 @@ const { hashAadhaar, isValidAadhaar } = require('../services/verification');
 // @desc    Authenticate user with Google OAuth 2.0 Credential Token (Enforces strict registration check)
 router.post('/google', async (req, res) => {
   try {
-    const { credential, role = 'customer', action = 'login' } = req.body;
+    const { 
+      credential, 
+      role = 'customer', 
+      action = 'login',
+      street = '',
+      city = '',
+      state = '',
+      pincode = '',
+      phone = '',
+      category = 'cat-5',
+      hourlyRate = 25,
+      description = ''
+    } = req.body;
 
     if (!credential) {
       return res.status(400).json({ message: 'Google credential token is required' });
@@ -86,20 +98,44 @@ router.post('/google', async (req, res) => {
         });
       }
 
+      const primaryCity = city.trim() || 'Delhi NCR';
+      const addressObj = {
+        street: street.trim(),
+        city: primaryCity,
+        state: state.trim(),
+        pincode: pincode.trim()
+      };
+
+      const initialSavedAddresses = [];
+      if (street.trim() || city.trim()) {
+        initialSavedAddresses.push({
+          label: 'Home',
+          street: street.trim(),
+          city: primaryCity,
+          state: state.trim(),
+          pincode: pincode.trim(),
+          isDefault: true
+        });
+      }
+
       user = new User({
         name: name || 'Google User',
         email: normalizedEmail,
+        phone: phone.trim(),
         role: normalizedRole,
         googleId,
         authProvider: 'google',
+        city: primaryCity,
+        addressDetails: addressObj,
+        savedAddresses: initialSavedAddresses,
         emailVerified: true,
         emailVerifiedAt: new Date(),
         providerDetails: normalizedRole === 'provider' ? {
           avatarUrl: picture || '',
-          category: 'cat-5',
-          hourlyRate: 25,
-          location: 'Delhi NCR',
-          description: 'Verified professional service provider.',
+          category: category || 'cat-5',
+          hourlyRate: Number(hourlyRate) || 25,
+          location: primaryCity,
+          description: description.trim() || 'Verified professional service provider.',
           rating: 5.0,
           reviewsCount: 0,
           experienceYears: 1,
@@ -354,16 +390,30 @@ router.get('/me', auth, async (req, res) => {
 });
 
 // @route   PUT api/auth/me
-// @desc    Update user profile and verification status
+// @desc    Update user profile, address, and verification status
 router.put('/me', auth, async (req, res) => {
   try {
-    const { name, phone, emailVerified, phoneVerified, providerDetails } = req.body;
+    const { name, phone, city, addressDetails, savedAddresses, emailVerified, phoneVerified, providerDetails } = req.body;
     let user = await User.findById(req.user.id);
     
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (name) user.name = name;
-    if (phone) user.phone = phone;
+    if (phone !== undefined) user.phone = phone;
+    if (city) user.city = city;
+    
+    if (addressDetails) {
+      user.addressDetails = {
+        ...user.addressDetails,
+        ...addressDetails
+      };
+      if (addressDetails.city) user.city = addressDetails.city;
+    }
+
+    if (Array.isArray(savedAddresses)) {
+      user.savedAddresses = savedAddresses;
+    }
+
     if (typeof emailVerified === 'boolean') {
       user.emailVerified = emailVerified;
       if (emailVerified && !user.emailVerifiedAt) user.emailVerifiedAt = new Date();
@@ -381,10 +431,127 @@ router.put('/me', auth, async (req, res) => {
     }
     
     await user.save();
-    res.json(user);
+    const updatedUser = await User.findById(req.user.id).select('-password');
+    res.json(updatedUser);
   } catch (err) {
     console.error('Profile update error:', err.message);
     res.status(500).json({ message: 'Server error updating profile' });
+  }
+});
+
+// @route   POST api/auth/addresses
+// @desc    Add a new address to user's savedAddresses
+router.post('/addresses', auth, async (req, res) => {
+  try {
+    const { label = 'Home', street = '', city = '', state = '', pincode = '', isDefault = false } = req.body;
+
+    if (!street || !city) {
+      return res.status(400).json({ message: 'Street address and City are required' });
+    }
+
+    let user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!Array.isArray(user.savedAddresses)) {
+      user.savedAddresses = [];
+    }
+
+    const shouldBeDefault = isDefault || user.savedAddresses.length === 0;
+
+    if (shouldBeDefault) {
+      user.savedAddresses.forEach(a => a.isDefault = false);
+      user.city = city.trim();
+      user.addressDetails = {
+        street: street.trim(),
+        city: city.trim(),
+        state: state.trim(),
+        pincode: pincode.trim()
+      };
+    }
+
+    user.savedAddresses.push({
+      label: label.trim() || 'Home',
+      street: street.trim(),
+      city: city.trim(),
+      state: state.trim(),
+      pincode: pincode.trim(),
+      isDefault: shouldBeDefault
+    });
+
+    await user.save();
+    const updatedUser = await User.findById(req.user.id).select('-password');
+    res.json(updatedUser);
+  } catch (err) {
+    console.error('Add address error:', err.message);
+    res.status(500).json({ message: 'Failed to add address' });
+  }
+});
+
+// @route   PUT api/auth/addresses/:id
+// @desc    Update an existing saved address or set as default
+router.put('/addresses/:id', auth, async (req, res) => {
+  try {
+    const { label, street, city, state, pincode, isDefault } = req.body;
+    let user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const addr = user.savedAddresses.id(req.params.id);
+    if (!addr) return res.status(404).json({ message: 'Address not found' });
+
+    if (label !== undefined) addr.label = label.trim();
+    if (street !== undefined) addr.street = street.trim();
+    if (city !== undefined) addr.city = city.trim();
+    if (state !== undefined) addr.state = state.trim();
+    if (pincode !== undefined) addr.pincode = pincode.trim();
+
+    if (isDefault) {
+      user.savedAddresses.forEach(a => a.isDefault = false);
+      addr.isDefault = true;
+      user.city = addr.city;
+      user.addressDetails = {
+        street: addr.street,
+        city: addr.city,
+        state: addr.state,
+        pincode: addr.pincode
+      };
+    }
+
+    await user.save();
+    const updatedUser = await User.findById(req.user.id).select('-password');
+    res.json(updatedUser);
+  } catch (err) {
+    console.error('Update address error:', err.message);
+    res.status(500).json({ message: 'Failed to update address' });
+  }
+});
+
+// @route   DELETE api/auth/addresses/:id
+// @desc    Delete a saved address
+router.delete('/addresses/:id', auth, async (req, res) => {
+  try {
+    let user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.savedAddresses.pull({ _id: req.params.id });
+
+    // If remaining addresses exist and none is default, set the first one as default
+    if (user.savedAddresses.length > 0 && !user.savedAddresses.some(a => a.isDefault)) {
+      user.savedAddresses[0].isDefault = true;
+      user.city = user.savedAddresses[0].city;
+      user.addressDetails = {
+        street: user.savedAddresses[0].street,
+        city: user.savedAddresses[0].city,
+        state: user.savedAddresses[0].state,
+        pincode: user.savedAddresses[0].pincode
+      };
+    }
+
+    await user.save();
+    const updatedUser = await User.findById(req.user.id).select('-password');
+    res.json(updatedUser);
+  } catch (err) {
+    console.error('Delete address error:', err.message);
+    res.status(500).json({ message: 'Failed to delete address' });
   }
 });
 
