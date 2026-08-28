@@ -211,7 +211,7 @@ const ProviderDashboard = () => {
     setIsLocating(true);
     try {
       const location = await getCurrentLocationName();
-      setFormData(prev => ({ ...prev, location }));
+      setFormData(prev => ({ ...prev, location: location.name || location }));
     } catch (err) {
       alert(err.message);
     } finally {
