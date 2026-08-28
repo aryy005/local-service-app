@@ -11,6 +11,7 @@ import Register from './pages/Register';
 import CustomerDashboard from './pages/CustomerDashboard';
 import ProviderDashboard from './pages/ProviderDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminLogin from './pages/AdminLogin';
 import NotFound from './pages/NotFound';
 import { Toaster } from 'react-hot-toast';
 
@@ -26,6 +27,8 @@ function App() {
             <Route path="/provider/:id" element={<ProviderProfile />} />
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/signup" element={<Register />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
             <Route 
               path="/customer-dashboard" 
               element={

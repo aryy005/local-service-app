@@ -18,7 +18,7 @@ const admin = async (req, res, next) => {
 
 router.get('/stats', [auth, admin], async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
+    const totalUsers = await User.countDocuments({ role: 'customer' });
     const totalProviders = await User.countDocuments({ role: 'provider' });
     const totalBookings = await Booking.countDocuments();
     const users = await User.find().select('-password').sort({ createdAt: -1 }).limit(20);
@@ -26,6 +26,45 @@ router.get('/stats', [auth, admin], async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+// @route   GET api/admin/customers
+// @desc    Get list of all customer accounts
+router.get('/customers', [auth, admin], async (req, res) => {
+  try {
+    const customers = await User.find({ role: 'customer' }).select('-password').sort({ createdAt: -1 });
+    res.json(customers);
+  } catch (err) {
+    console.error('Fetch Customers Error:', err);
+    res.status(500).json({ message: 'Server error fetching customers' });
+  }
+});
+
+// @route   GET api/admin/providers
+// @desc    Get list of all service provider accounts
+router.get('/providers', [auth, admin], async (req, res) => {
+  try {
+    const providers = await User.find({ role: 'provider' }).select('-password').sort({ createdAt: -1 });
+    res.json(providers);
+  } catch (err) {
+    console.error('Fetch Providers Error:', err);
+    res.status(500).json({ message: 'Server error fetching providers' });
+  }
+});
+
+// @route   GET api/admin/orders
+// @desc    Get list of all master orders with customer & provider populated details
+router.get('/orders', [auth, admin], async (req, res) => {
+  try {
+    const orders = await Booking.find()
+      .populate('customerId', 'name email phone')
+      .populate('providerId', 'name email phone providerDetails')
+      .sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    console.error('Fetch Orders Error:', err);
+    res.status(500).json({ message: 'Server error fetching master orders' });
   }
 });
 
