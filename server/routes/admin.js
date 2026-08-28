@@ -29,4 +29,26 @@ router.get('/stats', [auth, admin], async (req, res) => {
   }
 });
 
+// @route   POST api/admin/reset-database
+// @desc    Clear all database records (User, Booking, Payment, Message) except Admin
+router.post('/reset-database', [auth, admin], async (req, res) => {
+  try {
+    const Payment = require('../models/Payment');
+    const Message = require('../models/Message');
+
+    // Wipe all bookings, payments, and messages
+    await Promise.all([
+      Booking.deleteMany({}),
+      Payment.deleteMany({}),
+      Message.deleteMany({}),
+      User.deleteMany({ role: { $ne: 'admin' } })
+    ]);
+
+    res.json({ message: 'Database wiped successfully. Environment is now fresh and ready.' });
+  } catch (err) {
+    console.error('Reset DB Error:', err);
+    res.status(500).json({ message: 'Server error wiping database' });
+  }
+});
+
 module.exports = router;

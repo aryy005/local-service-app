@@ -41,13 +41,44 @@ const AdminDashboard = () => {
   const customers = stats?.recentUsers?.filter(u => u.role === 'customer') || [];
   const providers = stats?.recentUsers?.filter(u => u.role === 'provider') || [];
 
+  const handleResetDB = async () => {
+    if (!window.confirm("⚠️ ARE YOU SURE? This will permanently delete all customer accounts, provider accounts, bookings, payments, and messages, leaving a fresh clean database.")) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/reset-database`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      alert(data.message);
+      window.location.reload();
+    } catch (err) {
+      alert('Error resetting database: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="admin-dashboard fade-in container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-          Admin Control Center
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">Welcome back, Super Admin {user?.name}</p>
+      <div className="mb-8 flex justify-between items-center flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+            Admin Control Center
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Welcome back, Super Admin {user?.name}</p>
+        </div>
+        
+        <button 
+          onClick={handleResetDB}
+          className="btn btn-outline"
+          style={{ borderColor: '#EF4444', color: '#EF4444', fontWeight: 700, padding: '0.6rem 1.2rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+        >
+          🧹 Reset Database (Clean Environment)
+        </button>
       </div>
 
       {/* Top Value Cards */}
