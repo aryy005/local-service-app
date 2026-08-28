@@ -40,6 +40,8 @@ app.use(cors({
   credentials: true
 }));
 
+const path = require('path');
+
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/verify', require('./routes/verification'));
 app.use('/api/providers', require('./routes/providers'));
@@ -47,6 +49,17 @@ app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/payments', require('./routes/payments'));
+
+// Serve static build assets & SPA fallback for page reloads (e.g. /provider-dashboard, /customer-dashboard)
+const distPath = path.join(__dirname, '../dist');
+if (require('fs').existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(distPath, 'index.html'));
+    }
+  });
+}
 
 
 const PORT = process.env.PORT || 5000;
