@@ -134,7 +134,7 @@ const Home = () => {
       {/* How It Works */}
       <section className="how-it-works">
         <div className="section-header">
-          <h2>How NearPro works</h2>
+          <h2>How LocalFixr works</h2>
         </div>
         <div className="steps-grid">
           <div className="step-card">
@@ -183,7 +183,7 @@ const Home = () => {
         <section className="cta-banner">
           <div className="cta-content">
             <h2>Are you a skilled professional?</h2>
-            <p>Join thousands of service providers and grow your business with NearPro</p>
+            <p>Join thousands of service providers and grow your business with LocalFixr</p>
             <div className="cta-features">
               <span>✓ Set your own rates</span>
               <span>✓ Low 10% commission</span>

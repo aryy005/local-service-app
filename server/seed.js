@@ -138,7 +138,7 @@ const seedDB = async () => {
     console.log('MongoDB connected for seeding');
 
     // Delete existing providers to prevent duplicates during multiple seeds
-    await User.deleteMany({ role: 'provider', email: { $ne: 'admin@nearpro.com' } });
+    await User.deleteMany({ role: 'provider', email: { $ne: 'admin@localfixr.com' } });
     console.log('Cleared existing mock providers');
 
     for (let p of providers) {

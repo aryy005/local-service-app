@@ -25,12 +25,12 @@ const Footer = () => {
               width: '28px', height: '28px', background: 'var(--primary-color)', color: 'white',
               borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontWeight: '800', fontSize: '0.65rem'
-            }}>NP</div>
-            <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>NearPro</span>
+            }}>LF</div>
+            <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>LocalFixr</span>
           </div>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
             {isProvider 
-              ? 'NearPro Partner Portal. Manage client bookings, track revenue, and receive instant payouts.' 
+              ? 'LocalFixr Partner Portal. Manage client bookings, track revenue, and receive instant payouts.' 
               : "Your neighborhood's trusted service marketplace. Verified professionals, fair prices."}
           </p>
         </div>
@@ -39,7 +39,7 @@ const Footer = () => {
         <div>
           <h4 style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>Company</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>About NearPro</Link>
+            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>About LocalFixr</Link>
             <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Partner Guidelines</Link>
           </div>
         </div>
@@ -85,7 +85,7 @@ const Footer = () => {
         gap: '0.5rem',
       }}>
         <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-          © {new Date().getFullYear()} NearPro. All rights reserved.
+          © {new Date().getFullYear()} LocalFixr. All rights reserved.
         </p>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <a href="#" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Privacy</a>

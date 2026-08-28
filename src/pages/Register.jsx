@@ -91,7 +91,7 @@ const Register = () => {
     <div className="auth-page fade-in">
       <div className="auth-card glass-panel" style={{ maxWidth: '480px' }}>
         <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Join NearPro in seconds — no hassle setup</p>
+        <p className="auth-subtitle">Join LocalFixr in seconds — no hassle setup</p>
         
         {error && <div className="error-alert">{error}</div>}
 

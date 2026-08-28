@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 async function cleanDatabase() {
   try {
-    let uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/nearpro';
+    let uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/localfixr';
     console.log('Connecting to MongoDB at:', uri);
 
     try {
@@ -35,7 +35,7 @@ async function cleanDatabase() {
     // Seed fresh System Admin
     const adminUser = new User({
       name: 'System Admin',
-      email: 'admin@nearpro.com',
+      email: 'admin@localfixr.com',
       password: 'password123',
       phone: '+919999999999',
       role: 'admin',
@@ -44,7 +44,7 @@ async function cleanDatabase() {
     });
 
     await adminUser.save();
-    console.log('✓ Clean System Admin created: admin@nearpro.com / password123');
+    console.log('✓ Clean System Admin created: admin@localfixr.com / password123');
 
     console.log('\n✨ Database clean reset completed successfully!');
     process.exit(0);

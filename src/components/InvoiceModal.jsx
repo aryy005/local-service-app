@@ -26,9 +26,9 @@ const InvoiceModal = ({ booking, onClose }) => {
         <div className="invoice-paper" ref={invoiceRef}>
           <div className="invoice-header">
             <div className="invoice-brand">
-              <h1>LocalPro</h1>
+              <h1>LocalFixr</h1>
               <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
-                Local Service Marketplace Inc.
+                LocalFixr Technologies Inc.
               </p>
             </div>
             <div className="invoice-title-block">

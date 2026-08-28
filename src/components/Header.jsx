@@ -69,8 +69,8 @@ const Header = () => {
       <div className="container header-content">
         {/* Logo */}
         <Link to={getHomeLink()} className="logo">
-          <div className="logo-mark">NP</div>
-          <span className="logo-text">NearPro</span>
+          <div className="logo-mark">LF</div>
+          <span className="logo-text">LocalFixr</span>
         </Link>
         
         {user?.role === 'provider' ? (

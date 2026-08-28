@@ -89,18 +89,18 @@ const connectDB = async () => {
 
 async function seedDatabase() {
   const User = require('./models/User');
-  const adminExists = await User.findOne({ email: 'admin@nearpro.com', role: 'admin' });
+  const adminExists = await User.findOne({ email: 'admin@localfixr.com', role: 'admin' });
   if (!adminExists) {
     await User.create({
       name: 'System Admin',
-      email: 'admin@nearpro.com',
+      email: 'admin@localfixr.com',
       password: 'password123',
       phone: '+919999999999',
       role: 'admin',
       emailVerified: true,
       phoneVerified: true
     });
-    console.log('✓ System Admin created: admin@nearpro.com / password123');
+    console.log('✓ System Admin created: admin@localfixr.com / password123');
   }
 }
 
