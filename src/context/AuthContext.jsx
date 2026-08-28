@@ -90,18 +90,18 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  const googleLogin = async (credential, role = 'customer') => {
+  const googleLogin = async (credential, role = 'customer', action = 'login') => {
     const res = await fetch(`${API_URL}/auth/google`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ credential, role })
+      body: JSON.stringify({ credential, role, action })
     });
     
-    const data = await parseJsonResponse(res, 'Google login failed');
+    const data = await parseJsonResponse(res, action === 'login' ? 'Google login failed' : 'Google registration failed');
     setToken(data.token);
     setUser(data.user);
     localStorage.setItem('token', data.token);
-    toast.success('Welcome back!');
+    toast.success(action === 'login' ? 'Welcome back!' : 'Account registered with Google successfully!');
     return data;
   };
 

@@ -49,7 +49,7 @@ const Register = () => {
     setError('');
     setLoading(true);
     try {
-      const data = await googleLogin(credentialResponse.credential, formData.role);
+      const data = await googleLogin(credentialResponse.credential, formData.role, 'register');
       handleRoleRedirect(data.user.role);
     } catch (err) {
       setError(err.message);

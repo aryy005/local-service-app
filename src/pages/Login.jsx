@@ -48,7 +48,7 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const data = await googleLogin(credentialResponse.credential, formData.role);
+      const data = await googleLogin(credentialResponse.credential, formData.role, 'login');
       handleRoleRedirect(data.user.role);
     } catch (err) {
       setError(err.message);

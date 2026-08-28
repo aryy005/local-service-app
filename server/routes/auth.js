@@ -7,10 +7,11 @@ const auth = require('../middleware/auth');
 const { hashAadhaar, isValidAadhaar } = require('../services/verification');
 
 // @route   POST api/auth/google
-// @desc    Authenticate user with Google OAuth 2.0 Credential Token
+// @route   POST api/auth/google
+// @desc    Authenticate user with Google OAuth 2.0 Credential Token (Enforces strict registration check)
 router.post('/google', async (req, res) => {
   try {
-    const { credential, role = 'customer' } = req.body;
+    const { credential, role = 'customer', action = 'login' } = req.body;
 
     if (!credential) {
       return res.status(400).json({ message: 'Google credential token is required' });
@@ -53,33 +54,57 @@ router.post('/google', async (req, res) => {
     }
 
     const { email, name, sub: googleId, picture } = payload;
+    const normalizedEmail = email.toLowerCase().trim();
     const normalizedRole = ['customer', 'provider', 'admin'].includes(role) ? role : 'customer';
 
-    // Find existing user by email and role
-    let user = await User.findOne({ email, role: normalizedRole });
+    // Find existing user by email
+    let user = await User.findOne({ email: normalizedEmail });
 
-    if (user) {
-      // Link Google ID if not already linked
+    // IF LOGIN: User MUST already exist in the database
+    if (action === 'login') {
+      if (!user) {
+        return res.status(400).json({
+          message: `No account found for "${normalizedEmail}". You must sign up first before signing in.`
+        });
+      }
+      if (user.role !== normalizedRole) {
+        return res.status(400).json({
+          message: `This email is registered as a "${user.role}". Please switch to the ${user.role} role to sign in.`
+        });
+      }
       if (!user.googleId) {
         user.googleId = googleId;
       }
       user.emailVerified = true;
-      if (!user.emailVerifiedAt) {
-        user.emailVerifiedAt = new Date();
-      }
+      if (!user.emailVerifiedAt) user.emailVerifiedAt = new Date();
       await user.save();
     } else {
-      // Create new user account with Google profile
+      // IF REGISTER: User must NOT already exist
+      if (user) {
+        return res.status(400).json({
+          message: `An account with email "${normalizedEmail}" already exists. Please sign in instead.`
+        });
+      }
+
       user = new User({
         name: name || 'Google User',
-        email,
+        email: normalizedEmail,
         role: normalizedRole,
         googleId,
         authProvider: 'google',
         emailVerified: true,
         emailVerifiedAt: new Date(),
         providerDetails: normalizedRole === 'provider' ? {
-          avatarUrl: picture || ''
+          avatarUrl: picture || '',
+          category: 'cat-5',
+          hourlyRate: 25,
+          location: 'Delhi NCR',
+          description: 'Verified professional service provider.',
+          rating: 5.0,
+          reviewsCount: 0,
+          experienceYears: 1,
+          totalJobsCompleted: 0,
+          aadhaarVerified: false
         } : undefined
       });
       await user.save();
@@ -105,8 +130,8 @@ router.post('/google', async (req, res) => {
       }
     );
   } catch (err) {
-    console.error('Google Auth Error:', err);
-    res.status(500).json({ message: 'Google authentication failed on server' });
+    console.error('Google Auth Error:', err.message);
+    res.status(500).json({ message: 'Google authentication failed' });
   }
 });
 
@@ -262,33 +287,57 @@ router.post('/reset-password', async (req, res) => {
 });
 
 // @route   POST api/auth/login
-// @desc    Authenticate user & get token
+// @desc    Authenticate user & get token (Enforces strict account existence check)
 router.post('/login', async (req, res) => {
   try {
     const { email, password, role } = req.body;
 
-    if (!role) {
-      return res.status(400).json({ message: 'Role is required for login' });
+    if (!email || !password || !role) {
+      return res.status(400).json({ message: 'Email, password, and role are all required to sign in' });
     }
 
-    let user = await User.findOne({ email, role });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
+
     if (!user) {
-      return res.status(400).json({ message: 'Invalid Credentials for this role' });
+      return res.status(400).json({ message: `No account found with email "${normalizedEmail}". Please sign up first.` });
+    }
+
+    if (user.role !== role) {
+      return res.status(400).json({
+        message: `This email is registered as a "${user.role}". Please select the ${user.role} role to sign in.`
+      });
+    }
+
+    if (user.authProvider === 'google' && !user.password) {
+      return res.status(400).json({
+        message: 'This account was created with Google Sign-In. Please click "Continue with Google" to sign in.'
+      });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid Credentials' });
+      return res.status(400).json({ message: 'Incorrect password. Please check your credentials or reset your password.' });
     }
 
     const payload = { user: { id: user.id, role: user.role } };
     jwt.sign(payload, process.env.JWT_SECRET || 'secret123', { expiresIn: '5h' }, (err, token) => {
       if (err) throw err;
-      res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+      res.json({
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          city: user.city,
+          addressDetails: user.addressDetails
+        }
+      });
     });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Login Error:', err.message);
+    res.status(500).json({ message: 'Server error during login' });
   }
 });
 
