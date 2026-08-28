@@ -5,6 +5,7 @@ import { Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, P
 import { getCurrentLocationName } from '../utils/geolocation';
 import { API_URL } from '../config';
 import ChatModal from '../components/ChatModal';
+import ServiceTrackerModal from '../components/ServiceTrackerModal';
 import { MessageSquare } from 'lucide-react';
 
 const ProviderDashboard = () => {
@@ -14,6 +15,7 @@ const ProviderDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('jobs'); // 'jobs' | 'profile' | 'earnings' | 'wallet'
   const [activeChat, setActiveChat] = useState(null);
+  const [activeTrackerBooking, setActiveTrackerBooking] = useState(null);
 
   // Profile Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -355,14 +357,14 @@ const ProviderDashboard = () => {
 
           <div className="jobs-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '3rem' }}>
             {newJobs.length > 0 ? newJobs.map(job => (
-              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} rateCustomer={rateCustomer} openChat={() => setActiveChat(job)} />
+              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} rateCustomer={rateCustomer} openChat={() => setActiveChat(job)} openTracker={() => setActiveTrackerBooking(job)} />
             )) : <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No new job requests</div>}
           </div>
 
           <h2 style={{ marginBottom: '1.5rem' }}>Previous / Accepted Orders</h2>
           <div className="jobs-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {pastJobs.length > 0 ? pastJobs.map(job => (
-              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} rateCustomer={rateCustomer} openChat={() => setActiveChat(job)} />
+              <JobCard key={job._id} job={job} updateJobStatus={updateJobStatus} rateCustomer={rateCustomer} openChat={() => setActiveChat(job)} openTracker={() => setActiveTrackerBooking(job)} />
             )) : <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No previous orders found</div>}
           </div>
         </div>
@@ -623,12 +625,23 @@ const EarningsDashboard = ({ bookings }) => {
       ) : (
         <p style={{ color: 'var(--text-muted)' }}>No completed jobs to show earnings for yet.</p>
       )}
+
+      {activeTrackerBooking && (
+        <ServiceTrackerModal 
+          booking={activeTrackerBooking}
+          onClose={() => setActiveTrackerBooking(null)}
+          onUpdateBooking={(updated) => {
+            setActiveTrackerBooking(updated);
+            setJobs(prev => prev.map(j => j._id === updated._id ? updated : j));
+          }}
+        />
+      )}
     </div>
   );
 };
 
 // Helper component for rendering jobs
-const JobCard = ({ job, updateJobStatus, openChat, rateCustomer }) => (
+const JobCard = ({ job, updateJobStatus, openChat, rateCustomer, openTracker }) => (
   <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
@@ -673,6 +686,15 @@ const JobCard = ({ job, updateJobStatus, openChat, rateCustomer }) => (
               ⚠️ Payment Pending (₹{job.finalPrice})
             </span>
           ) : null}
+        </div>
+        
+        <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column', marginBottom: '0.5rem' }}>
+          <button 
+            onClick={openTracker}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'linear-gradient(135deg, #6366F1, #4F46E5)', color: 'white', border: 'none', padding: '0.55rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}
+          >
+            <Navigation size={15} /> Manage Progress 📍
+          </button>
         </div>
         
         {job.status === 'pending' && (

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Edit2, Save, Phone, MessageSquare, CreditCard, FileText, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, Edit2, Save, Phone, MessageSquare, CreditCard, FileText, CheckCircle, Navigation } from 'lucide-react';
 import { API_URL } from '../config';
 import ChatModal from '../components/ChatModal';
 import BookingModal from '../components/BookingModal';
 import AIDiagnosisModal from '../components/AIDiagnosisModal';
 import PaymentModal from '../components/PaymentModal';
 import InvoiceModal from '../components/InvoiceModal';
+import ServiceTrackerModal from '../components/ServiceTrackerModal';
 import { useLanguage } from '../context/LanguageContext';
 
 const CustomerDashboard = () => {
@@ -22,6 +23,7 @@ const CustomerDashboard = () => {
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [activePaymentBooking, setActivePaymentBooking] = useState(null);
   const [activeInvoiceBooking, setActiveInvoiceBooking] = useState(null);
+  const [activeTrackerBooking, setActiveTrackerBooking] = useState(null);
 
   // Profile Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -191,6 +193,15 @@ const CustomerDashboard = () => {
               </div>
               
               <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexDirection: 'column' }}>
+                {/* Track Service Button */}
+                <button 
+                  onClick={() => setActiveTrackerBooking(booking)}
+                  className="btn btn-primary btn-sm" 
+                  style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'linear-gradient(135deg, #6366F1, #4F46E5)', border: 'none', fontWeight: 700 }}
+                >
+                  <Navigation size={16} /> Track Service Progress 📍
+                </button>
+
                 {/* Pay Now Button (Always available for unpaid bookings) */}
                 {booking.paymentStatus !== 'paid' && (
                   <button 
@@ -376,6 +387,18 @@ const CustomerDashboard = () => {
         <InvoiceModal 
           booking={activeInvoiceBooking} 
           onClose={() => setActiveInvoiceBooking(null)} 
+        />
+      )}
+      {activeTrackerBooking && (
+        <ServiceTrackerModal 
+          booking={activeTrackerBooking}
+          onClose={() => setActiveTrackerBooking(null)}
+          onUpdateBooking={(updated) => {
+            setActiveTrackerBooking(updated);
+            setBookings(prev => prev.map(b => b._id === updated._id ? updated : b));
+          }}
+          onOpenPayment={(b) => setActivePaymentBooking(b)}
+          onOpenInvoice={(b) => setActiveInvoiceBooking(b)}
         />
       )}
     </div>

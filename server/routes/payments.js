@@ -104,11 +104,19 @@ router.post('/verify', auth, async (req, res) => {
 
     // Update Booking status
     booking.paymentStatus = 'paid';
+    booking.serviceStage = 'paid';
     booking.paymentMethod = paymentMethod;
     booking.paymentId = txnId;
     booking.paidAmount = breakdown.totalAmount;
     booking.paidAt = new Date();
     booking.billingDetails = breakdown;
+
+    booking.stageHistory.push({
+      stage: 'paid',
+      title: 'Payment Received',
+      description: `Payment of ₹${breakdown.totalAmount} completed via ${paymentMethod.toUpperCase()}`,
+      timestamp: new Date()
+    });
 
     await booking.save();
 

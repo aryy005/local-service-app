@@ -8,6 +8,17 @@ const bookingSchema = new mongoose.Schema({
   description: { type: String, required: true },
   serviceAddress: { type: String, required: true, default: 'Customer Location' }, // Added service address
   status: { type: String, enum: ['pending', 'accepted', 'declined', 'completed'], default: 'pending' },
+  serviceStage: { 
+    type: String, 
+    enum: ['requested', 'accepted', 'in_transit', 'in_progress', 'completed', 'paid', 'declined', 'cancelled'], 
+    default: 'requested' 
+  },
+  stageHistory: [{
+    stage: { type: String, required: true },
+    title: { type: String, required: true },
+    description: { type: String },
+    timestamp: { type: Date, default: Date.now }
+  }],
   workPhotos: [{ type: String }], // Array of image URLs for before/after portfolio
   finalPrice: { type: Number, default: 0 }, // Actual amount earned
   paymentStatus: { 
