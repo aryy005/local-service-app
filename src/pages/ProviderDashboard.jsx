@@ -659,10 +659,20 @@ const JobCard = ({ job, updateJobStatus, openChat, rateCustomer }) => (
           <p style={{ margin: 0 }}>"{job.description}"</p>
         </div>
       </div>
-
       <div style={{ textAlign: 'right' }}>
-        <div style={{ marginBottom: '1rem', fontWeight: 600, color: job.status === 'pending' ? 'var(--warning-color)' : job.status === 'accepted' ? 'var(--accent-color)' : 'var(--text-muted)', textTransform: 'capitalize' }}>
-          {job.status}
+        <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
+          <div style={{ fontWeight: 600, color: job.status === 'pending' ? 'var(--warning-color)' : job.status === 'accepted' ? 'var(--accent-color)' : 'var(--text-muted)', textTransform: 'capitalize' }}>
+            {job.status}
+          </div>
+          {job.paymentStatus === 'paid' ? (
+            <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700 }}>
+              ✓ Paid (₹{job.paidAmount || job.finalPrice})
+            </span>
+          ) : job.status === 'completed' || (job.finalPrice && job.finalPrice > 0) ? (
+            <span style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700 }}>
+              ⚠️ Payment Pending (₹{job.finalPrice})
+            </span>
+          ) : null}
         </div>
         
         {job.status === 'pending' && (

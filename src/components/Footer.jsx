@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Footer = () => {
+  const { user } = useAuth();
+  const isProvider = user?.role === 'provider';
+
   return (
     <footer style={{
       marginTop: 'auto',
@@ -25,7 +29,9 @@ const Footer = () => {
             <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>NearPro</span>
           </div>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-            Your neighborhood's trusted service marketplace. Verified professionals, fair prices.
+            {isProvider 
+              ? 'NearPro Partner Portal. Manage client bookings, track revenue, and receive instant payouts.' 
+              : "Your neighborhood's trusted service marketplace. Verified professionals, fair prices."}
           </p>
         </div>
 
@@ -33,29 +39,38 @@ const Footer = () => {
         <div>
           <h4 style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>Company</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <Link to="/" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>About Us</Link>
-            <Link to="/" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Careers</Link>
-            <Link to="/" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Blog</Link>
+            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>About NearPro</Link>
+            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Partner Guidelines</Link>
           </div>
         </div>
 
-        {/* For Customers */}
+        {/* Workspace Quick Links */}
         <div>
-          <h4 style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>For Customers</h4>
+          <h4 style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+            {isProvider ? 'Partner Workstation' : 'For Customers'}
+          </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <Link to="/search" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Browse Services</Link>
-            <Link to="/" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>How it Works</Link>
-            <Link to="/" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Safety</Link>
+            {isProvider ? (
+              <>
+                <Link to="/provider-dashboard" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>My Jobs & Orders</Link>
+                <Link to="/provider-dashboard" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Earnings & Withdrawals</Link>
+                <Link to="/provider-dashboard" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Profile & Verification</Link>
+              </>
+            ) : (
+              <>
+                <Link to="/search" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Browse Services</Link>
+                <Link to="/" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>How it Works</Link>
+              </>
+            )}
           </div>
         </div>
 
-        {/* For Professionals */}
+        {/* Support */}
         <div>
-          <h4 style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>For Professionals</h4>
+          <h4 style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>Help & Support</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <Link to="/auth/signup" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Register as Pro</Link>
-            <Link to="/" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Partner Guidelines</Link>
-            <Link to="/" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Support</Link>
+            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Partner Support</Link>
+            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Safety & Trust</Link>
           </div>
         </div>
       </div>

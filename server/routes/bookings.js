@@ -9,7 +9,7 @@ const auth = require('../middleware/auth');
 router.post('/', auth, async (req, res) => {
   try {
     if (req.user.role !== 'customer') {
-      return res.status(403).json({ message: 'Only customers can book providers' });
+      return res.status(403).json({ message: 'Service Provider accounts cannot book services. Provider accounts are restricted to managing incoming job orders on the Provider Dashboard.' });
     }
 
     const { providerId, date, timePreference, description, serviceAddress } = req.body;

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { X, Calendar, Clock, CheckCircle, Navigation, MapPin } from 'lucide-react';
+import { X, Calendar, Clock, CheckCircle, Navigation, MapPin, CreditCard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentLocationName } from '../utils/geolocation';
 import { API_URL } from '../config';
+import PaymentModal from './PaymentModal';
 import './BookingModal.css';
 
 const BookingModal = ({ provider, onClose }) => {
@@ -13,6 +14,8 @@ const BookingModal = ({ provider, onClose }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [createdBooking, setCreatedBooking] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [formData, setFormData] = useState({
     date: '',
     timePreference: '',
@@ -70,6 +73,7 @@ const BookingModal = ({ provider, onClose }) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Error occurred');
       
+      setCreatedBooking({ ...data, providerId: provider });
       setStep(2);
     } catch (err) {
       setError(err.message);
@@ -92,8 +96,22 @@ const BookingModal = ({ provider, onClose }) => {
               <p>Fill in the details below to request a service.</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="booking-form">
-              {error && <div className="error-alert">{error}</div>}
+            {user?.role === 'provider' ? (
+              <div style={{ padding: '2rem 1rem', textAlign: 'center' }}>
+                <div style={{ width: '56px', height: '56px', background: '#FEE2E2', color: '#DC2626', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+                  <X size={28} />
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>Service Provider Account</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                  Provider accounts cannot book services. On your account, you can only view, accept, and manage incoming orders on your <strong>Provider Dashboard</strong>.
+                </p>
+                <button className="btn btn-primary" onClick={() => { onClose(); navigate('/provider-dashboard'); }}>
+                  Go to Provider Dashboard
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="booking-form">
+                {error && <div className="error-alert">{error}</div>}
               
               <div className="form-group">
                 <label>Date</label>
@@ -172,35 +190,63 @@ const BookingModal = ({ provider, onClose }) => {
                 </button>
               </div>
             </form>
+            )}
           </>
         ) : (
           <div className="success-state fade-in">
             <CheckCircle size={64} color="var(--accent-color)" className="success-icon" />
-            <h2>Booking Requested!</h2>
-            <p>Your request has been sent to <strong>{provider.name}</strong>.</p>
-            <p className="mt-2 text-muted">You will receive a confirmation shortly when the provider accepts the job.</p>
+            <h2>Booking Requested Successfully!</h2>
+            <p>Your service booking request has been sent to <strong>{provider.name}</strong>.</p>
             
             <div className="booking-summary glass-panel mt-4">
               <div className="summary-item">
-                <span className="label">Date:</span>
-                <span>{formData.date}</span>
-              </div>
-              <div className="summary-item">
-                <span className="label">Time:</span>
-                <span style={{textTransform: 'capitalize'}}>{formData.timePreference}</span>
+                <span className="label">Date & Slot:</span>
+                <span style={{ textTransform: 'capitalize' }}>{formData.date} ({formData.timePreference})</span>
               </div>
               <div className="summary-item">
                 <span className="label">Address:</span>
                 <span>{formData.serviceAddress}</span>
               </div>
+              <div className="summary-item">
+                <span className="label">Hourly / Base Rate:</span>
+                <span style={{ fontWeight: 700, color: '#10B981' }}>₹{provider.providerDetails?.hourlyRate || 25}</span>
+              </div>
             </div>
 
-            <button className="btn btn-primary mt-8 w-full" onClick={onClose}>
-              Done
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.5rem' }}>
+              <button 
+                className="btn btn-primary" 
+                style={{ width: '100%', padding: '0.85rem', fontWeight: 700, background: 'linear-gradient(135deg, #10B981, #059669)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                onClick={() => setShowPaymentModal(true)}
+              >
+                <CreditCard size={18} /> Pay Now (₹{provider.providerDetails?.hourlyRate || 25})
+              </button>
+
+              <button 
+                className="btn btn-outline" 
+                style={{ width: '100%' }}
+                onClick={onClose}
+              >
+                Pay Later (Go to Dashboard)
+              </button>
+            </div>
           </div>
         )}
       </div>
+
+      {showPaymentModal && createdBooking && (
+        <PaymentModal 
+          booking={createdBooking} 
+          onClose={() => {
+            setShowPaymentModal(false);
+            onClose();
+          }}
+          onSuccess={() => {
+            setShowPaymentModal(false);
+            onClose();
+          }}
+        />
+      )}
     </div>
   );
 };

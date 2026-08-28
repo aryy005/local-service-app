@@ -21,6 +21,11 @@ const ProviderProfile = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
+    if (user?.role === 'provider') {
+      navigate('/provider-dashboard', { replace: true });
+      return;
+    }
+
     const fetchProviderData = async () => {
       try {
         const [provRes, revRes, portRes] = await Promise.all([
@@ -241,13 +246,32 @@ const ProviderProfile = () => {
               </div>
             </div>
 
-            <button 
-              className="btn btn-primary btn-lg w-full mt-4"
-              onClick={() => setIsBookingOpen(true)}
-            >
-              Book Now
-            </button>
-            <p className="booking-note text-center mt-2 text-muted">You won't be charged yet</p>
+            {user?.role === 'provider' ? (
+              <div style={{ marginTop: '1rem', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.85rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-main)', margin: '0 0 0.5rem 0', fontWeight: 600 }}>
+                  🔒 Service Provider Account
+                </p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 0.75rem 0' }}>
+                  Provider accounts cannot book services. You can only manage incoming jobs on your dashboard.
+                </p>
+                <button 
+                  className="btn btn-primary btn-sm w-full"
+                  onClick={() => navigate('/provider-dashboard')}
+                >
+                  Manage My Orders
+                </button>
+              </div>
+            ) : (
+              <>
+                <button 
+                  className="btn btn-primary btn-lg w-full mt-4"
+                  onClick={() => setIsBookingOpen(true)}
+                >
+                  Book Now
+                </button>
+                <p className="booking-note text-center mt-2 text-muted">You won't be charged yet</p>
+              </>
+            )}
           </div>
         </aside>
       </div>

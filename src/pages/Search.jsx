@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { categories } from '../data/mockData';
 import ProviderCard from '../components/ProviderCard';
 import SkeletonLoader from '../components/SkeletonLoader';
@@ -9,7 +9,8 @@ import { API_URL } from '../config';
 import './Search.css';
 
 const Search = () => {
-  const { userLocation } = useAuth();
+  const { user, userLocation } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryId = searchParams.get('category');
   
@@ -20,6 +21,11 @@ const Search = () => {
   const [radius, setRadius] = useState(30000); // 30km default
 
   useEffect(() => {
+    if (user?.role === 'provider') {
+      navigate('/provider-dashboard', { replace: true });
+      return;
+    }
+
     const fetchProviders = async () => {
       try {
         setLoading(true);

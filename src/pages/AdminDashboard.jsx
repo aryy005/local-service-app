@@ -6,25 +6,33 @@ import { Users, UserCheck, CalendarCheck, MapPin, User as UserIcon, Briefcase, S
 const AdminDashboard = () => {
   const { token, user } = useAuth();
   const [stats, setStats] = useState(null);
+  const [paymentSummary, setPaymentSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchAdminData = async () => {
       try {
-        const res = await fetch(`${API_URL}/admin/stats`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Failed to fetch admin statistics');
-        const data = await res.json();
-        setStats(data);
+        const [statsRes, paymentsRes] = await Promise.all([
+          fetch(`${API_URL}/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(`${API_URL}/payments/admin/summary`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+        
+        if (!statsRes.ok) throw new Error('Failed to fetch admin statistics');
+        const statsData = await statsRes.json();
+        setStats(statsData);
+
+        if (paymentsRes.ok) {
+          const paymentsData = await paymentsRes.json();
+          setPaymentSummary(paymentsData);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    if (token) fetchStats();
+    if (token) fetchAdminData();
   }, [token]);
 
   if (loading) return <div className="p-8 text-center text-gray-500">Loading Admin Panel...</div>;
@@ -43,7 +51,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Top Value Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <div className="glass-panel p-6 flex items-center shadow-md border-l-4 border-indigo-500 rounded-xl">
           <div className="p-4 bg-indigo-100 dark:bg-indigo-900/40 rounded-full mr-4">
             <Users className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
@@ -71,6 +79,17 @@ const AdminDashboard = () => {
           <div>
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Total Bookings</p>
             <h3 className="text-3xl font-black dark:text-white mt-1">{stats?.totalBookings || 0}</h3>
+          </div>
+        </div>
+
+        <div className="glass-panel p-6 flex items-center shadow-md border-l-4 border-purple-500 rounded-xl">
+          <div className="p-4 bg-purple-100 dark:bg-purple-900/40 rounded-full mr-4">
+            <Briefcase className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Platform Revenue</p>
+            <h3 className="text-3xl font-black dark:text-white mt-1">₹{paymentSummary?.totalPlatformFee || 0}</h3>
+            <span className="text-xs text-purple-600 dark:text-purple-400 font-bold">Vol: ₹{paymentSummary?.totalVolume || 0}</span>
           </div>
         </div>
       </div>

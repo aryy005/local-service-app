@@ -58,35 +58,54 @@ const Header = () => {
     return '/customer-dashboard';
   };
 
+  const getHomeLink = () => {
+    if (user?.role === 'provider') return '/provider-dashboard';
+    if (user?.role === 'admin') return '/admin-dashboard';
+    return '/';
+  };
+
   return (
     <header className="header">
       <div className="container header-content">
         {/* Logo */}
-        <Link to="/" className="logo">
+        <Link to={getHomeLink()} className="logo">
           <div className="logo-mark">NP</div>
           <span className="logo-text">NearPro</span>
         </Link>
         
-        {/* Location selector (UC-style) */}
-        <div className="location-selector" onClick={handleLocateMe}>
-          <MapPin size={16} className="loc-icon" />
-          <span className="loc-text">{locationValue || 'Select City'}</span>
-          <ChevronDown size={14} />
-        </div>
+        {user?.role === 'provider' ? (
+          /* Provider Workstation Header Badge */
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.25)', padding: '0.4rem 0.85rem', borderRadius: '2rem', color: '#6366f1', fontSize: '0.85rem', fontWeight: 700 }}>
+            💼 Provider Workstation
+          </div>
+        ) : (
+          <>
+            {/* Location selector (UC-style) */}
+            <div className="location-selector" onClick={handleLocateMe}>
+              <MapPin size={16} className="loc-icon" />
+              <span className="loc-text">{locationValue || 'Select City'}</span>
+              <ChevronDown size={14} />
+            </div>
 
-        {/* Search bar */}
-        <div className="search-bar">
-          <Search size={18} className="search-icon" />
-          <input 
-            type="text" 
-            placeholder="Search for services" 
-            className="search-input"
-          />
-        </div>
+            {/* Search bar */}
+            <div className="search-bar">
+              <Search size={18} className="search-icon" />
+              <input 
+                type="text" 
+                placeholder="Search for services" 
+                className="search-input"
+              />
+            </div>
+          </>
+        )}
 
         {/* Navigation */}
         <nav className="desktop-nav">
-          <Link to="/search" className="nav-link">Services</Link>
+          {user?.role === 'provider' ? (
+            <Link to="/provider-dashboard" className="nav-link" style={{ fontWeight: 700, color: '#6366f1' }}>My Jobs & Orders</Link>
+          ) : (
+            <Link to="/search" className="nav-link">Services</Link>
+          )}
           
           <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme">
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
@@ -131,7 +150,7 @@ const Header = () => {
                     onClick={() => setIsProfileOpen(false)}
                   >
                     <LayoutDashboard size={16} />
-                    <span>Profile & Dashboard</span>
+                    <span>{user.role === 'provider' ? 'My Jobs & Dashboard' : 'Profile & Dashboard'}</span>
                   </Link>
 
                   <button 

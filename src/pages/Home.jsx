@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { categories } from '../data/mockData';
 import { API_URL } from '../config';
@@ -10,10 +10,16 @@ import SkeletonLoader from '../components/SkeletonLoader';
 
 const Home = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [providersList, setProvidersList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (user?.role === 'provider') {
+      navigate('/provider-dashboard', { replace: true });
+      return;
+    }
+
     const fetchProviders = async () => {
       try {
         const res = await fetch(`${API_URL}/providers`);
@@ -28,7 +34,7 @@ const Home = () => {
       }
     };
     fetchProviders();
-  }, []);
+  }, [user, navigate]);
 
   // Get top 3 providers for the highlighted section
   const topProviders = providersList.sort((a, b) => (b.providerDetails?.rating || 0) - (a.providerDetails?.rating || 0)).slice(0, 3);
