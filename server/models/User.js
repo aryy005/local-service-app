@@ -57,11 +57,15 @@ const userSchema = new mongoose.Schema({
     aadhaarVerified: { type: Boolean, default: false },
     aadhaarVerifiedAt: { type: Date },
     aadhaarRefId: { type: String, default: '' }       // UIDAI transaction reference ID
-  }
+  },
+  // Password Reset Token & OTP fields
+  resetPasswordToken: { type: String, default: null },
+  resetPasswordExpires: { type: Date, default: null },
+  resetPasswordOtp: { type: String, default: null }
 }, { timestamps: true });
 
-// Ensure a user can only have one account per role
-userSchema.index({ email: 1, role: 1 }, { unique: true });
+// Ensure strict ONE account per email address across the entire application
+userSchema.index({ email: 1 }, { unique: true });
 // Add geospatial index for fast nearby radius queries
 userSchema.index({ 'providerDetails.locationGeo': '2dsphere' });
 

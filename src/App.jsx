@@ -12,6 +12,7 @@ import CustomerDashboard from './pages/CustomerDashboard';
 import ProviderDashboard from './pages/ProviderDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
+import ForgotPassword from './pages/ForgotPassword';
 import NotFound from './pages/NotFound';
 import { Toaster } from 'react-hot-toast';
 
@@ -26,7 +27,10 @@ function App() {
             <Route path="/search" element={<Search />} />
             <Route path="/provider/:id" element={<ProviderProfile />} />
             <Route path="/auth/login" element={<Login />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/auth/signup" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/auth/forgot-password" element={<ForgotPassword />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route 
