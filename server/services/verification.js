@@ -57,11 +57,22 @@ function verifyStoredOTP(key, inputOtp) {
 //              Uses Nodemailer with SMTP
 // ═══════════════════════════════════════════════════════════════
 
-function getEmailTransporter() {
-  // If SMTP credentials are configured, use them
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+async function getEmailTransporter() {
+  // If custom SMTP credentials or Gmail credentials are provided
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const isGmail = process.env.SMTP_USER.endsWith('@gmail.com') || (process.env.SMTP_HOST && process.env.SMTP_HOST.includes('gmail'));
+    if (isGmail && !process.env.SMTP_HOST) {
+      return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS
+        }
+      });
+    }
+
     return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT) || 587,
       secure: parseInt(process.env.SMTP_PORT) === 465,
       auth: {
@@ -70,8 +81,23 @@ function getEmailTransporter() {
       }
     });
   }
-  // Fallback: no real email sending (demo mode)
-  return null;
+
+  // Fallback to Ethereal Test Account for instant live email web preview
+  try {
+    const testAccount = await nodemailer.createTestAccount();
+    return nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass
+      },
+      isTestAccount: true
+    });
+  } catch (err) {
+    return null;
+  }
 }
 
 async function sendEmailOTP(email) {
@@ -79,12 +105,12 @@ async function sendEmailOTP(email) {
   const key = `email:${email.toLowerCase()}`;
   storeOTP(key, otp);
 
-  const transporter = getEmailTransporter();
+  const transporter = await getEmailTransporter();
   
   if (transporter) {
     try {
-      await transporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      const info = await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER || '"LocalFixr Security" <no-reply@localfixr.com>',
         to: email,
         subject: 'LocalFixr - Email Verification OTP',
         html: `
@@ -103,11 +129,16 @@ async function sendEmailOTP(email) {
           </div>
         `
       });
-      console.log(`[EMAIL OTP] Sent OTP to ${email}`);
+
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      if (previewUrl) {
+        console.log(`[EMAIL OTP] Sent via test account. Preview: ${previewUrl}`);
+      } else {
+        console.log(`[EMAIL OTP] Sent OTP via SMTP to ${email}`);
+      }
       return { sent: true, demo: false };
     } catch (err) {
       console.error(`[EMAIL OTP] Failed to send email:`, err.message);
-      // Fall through to demo mode
     }
   }
 
@@ -305,19 +336,31 @@ async function sendPartnerWelcomeEmail(partnerUser) {
 </html>
   `;
 
-  const transporter = getEmailTransporter();
+  const transporter = await getEmailTransporter();
   const subject = `Welcome to the LocalFixr Partner Network, ${partnerName}! 🌟 Official Onboarding Confirmation`;
 
   if (transporter) {
     try {
-      await transporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      const info = await transporter.sendMail({
+        from: process.env.SMTP_FROM || (process.env.SMTP_USER ? `"LocalFixr Partner Network" <${process.env.SMTP_USER}>` : '"LocalFixr Partner Network" <onboarding@localfixr.com>'),
         to: partnerEmail,
         subject: subject,
         html: htmlContent
       });
-      console.log(`[PARTNER WELCOME EMAIL] Sent official welcome letter via SMTP to ${partnerEmail}`);
-      return { sent: true, demo: false };
+
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      if (previewUrl) {
+        console.log(`\n=============================================================`);
+        console.log(`🌟 [PARTNER WELCOME EMAIL PREVIEW READY]`);
+        console.log(`To: ${partnerEmail}`);
+        console.log(`Subject: ${subject}`);
+        console.log(`🔗 Click to view rendered letter: ${previewUrl}`);
+        console.log(`=============================================================\n`);
+        return { sent: true, demo: false, previewUrl };
+      } else {
+        console.log(`[PARTNER WELCOME EMAIL] Sent official welcome letter via real SMTP to ${partnerEmail}`);
+        return { sent: true, demo: false };
+      }
     } catch (err) {
       console.error(`[PARTNER WELCOME EMAIL] SMTP dispatch failed:`, err.message);
     }
@@ -329,7 +372,7 @@ async function sendPartnerWelcomeEmail(partnerUser) {
   console.log(`To: ${partnerEmail}`);
   console.log(`Subject: ${subject}`);
   console.log(`Partner ID: LF-PRO-${partnerId.slice(-6).toUpperCase()}`);
-  console.log(`Category: ${category} | Hourly Rate: ₹${hourlyRate}`);
+  console.log(`Category: ${category} | Starting Base Price: ₹${hourlyRate}`);
   console.log(`=============================================================\n`);
   return { sent: true, demo: true };
 }
