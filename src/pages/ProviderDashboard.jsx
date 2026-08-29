@@ -5,7 +5,7 @@ import {
   Check, X, Calendar, Clock, User as UserIcon, Edit2, Save, Navigation, 
   Phone, MapPin, Shield, CheckCircle, AlertCircle, Loader, ShieldCheck, 
   FileText, MessageSquare, MessageCircle, Image, Upload, Plus, Trash2, 
-  AlertTriangle, Lock, CheckCircle2, Eye, Sparkles
+  AlertTriangle, Lock, CheckCircle2, Eye, Sparkles, Briefcase, TrendingUp, Wallet
 } from 'lucide-react';
 import { getCurrentLocationName } from '../utils/geolocation';
 import { API_URL } from '../config';
@@ -460,29 +460,57 @@ const ProviderDashboard = () => {
   const pastJobs = jobs.filter(j => j.status !== 'pending');
 
   return (
-    <div className="container fade-in" style={{ maxWidth: '960px', margin: '0 auto' }}>
-      <div className="section-header" style={{ borderBottom: '1px solid var(--surface-border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="provider-dashboard-container fade-in" style={{ width: '100%', margin: '0 auto', paddingBottom: '3rem' }}>
+      
+      {/* ─── Top Partner Workstation Header ─── */}
+      <div className="partner-header-card" style={{
+        background: 'var(--card-bg)',
+        border: '1px solid var(--surface-border)',
+        borderRadius: '1.25rem',
+        padding: '1.5rem',
+        marginBottom: '1.75rem',
+        boxShadow: '0 4px 20px -5px rgba(0, 0, 0, 0.05)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
           <div>
-            <h1 style={{ margin: 0 }}>Partner Dashboard</h1>
-            <p className="subtitle" style={{ fontSize: '1rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>Manage bookings, work portfolio, and service eligibility.</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <h1 style={{ margin: 0, fontSize: '1.85rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text-main)' }}>
+                Partner Dashboard
+              </h1>
+              <span style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '9999px',
+                background: 'rgba(99, 102, 241, 0.12)',
+                color: '#6366f1',
+                border: '1px solid rgba(99, 102, 241, 0.25)'
+              }}>
+                Pro Workstation
+              </span>
+            </div>
+            <p className="subtitle" style={{ fontSize: '0.92rem', color: 'var(--text-muted)', margin: '0.35rem 0 0 0' }}>
+              Manage bookings, live tracking, work portfolio, and payout eligibility.
+            </p>
           </div>
 
           {/* Profile Completeness Pill */}
           <div style={{ 
-            display: 'flex', alignItems: 'center', gap: '0.6rem', 
+            display: 'inline-flex', alignItems: 'center', gap: '0.55rem', 
             background: profileStatus.isComplete ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
             border: `1px solid ${profileStatus.isComplete ? '#10b981' : '#ef4444'}`,
-            padding: '0.4rem 0.85rem', borderRadius: '2rem' 
+            padding: '0.45rem 1rem', borderRadius: '2rem',
+            flexShrink: 0
           }}>
             {profileStatus.isComplete ? (
               <>
-                <CheckCircle2 size={16} color="#10b981" />
+                <CheckCircle2 size={18} color="#10b981" />
                 <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.85rem' }}>Profile 100% Complete & Active</span>
               </>
             ) : (
               <>
-                <Lock size={16} color="#ef4444" />
+                <Lock size={18} color="#ef4444" />
                 <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '0.85rem' }}>
                   Profile {profileStatus.progress}% Complete (Service Locked)
                 </span>
@@ -491,34 +519,132 @@ const ProviderDashboard = () => {
           </div>
         </div>
         
-        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', flexWrap: 'wrap' }}>
+        {/* ─── Sleek Navigation Tab Strip ─── */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '0.5rem', 
+          marginTop: '1.5rem', 
+          padding: '0.35rem',
+          background: 'var(--bg-secondary)', 
+          border: '1px solid var(--surface-border)', 
+          borderRadius: '0.85rem',
+          overflowX: 'auto'
+        }}>
           <button 
-            className={`btn ${activeTab === 'jobs' ? 'btn-primary' : 'btn-outline'}`} 
+            type="button"
             onClick={() => setActiveTab('jobs')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.65rem 1.25rem',
+              borderRadius: '0.65rem',
+              fontSize: '0.88rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              border: 'none',
+              transition: 'all 0.2s ease',
+              background: activeTab === 'jobs' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
+              color: activeTab === 'jobs' ? '#ffffff' : 'var(--text-secondary)',
+              boxShadow: activeTab === 'jobs' ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none'
+            }}
           >
-            My Jobs ({newJobs.length} New)
-          </button>
-          <button 
-            className={`btn ${activeTab === 'profile' ? 'btn-primary' : 'btn-outline'}`} 
-            onClick={() => setActiveTab('profile')}
-            style={{ position: 'relative' }}
-          >
-            My Profile & Portfolio
-            {!profileStatus.isComplete && (
-              <span style={{ position: 'absolute', top: '-4px', right: '-4px', width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%' }}></span>
+            <Briefcase size={16} />
+            <span>My Jobs</span>
+            {newJobs.length > 0 && (
+              <span style={{
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                padding: '0.15rem 0.5rem',
+                borderRadius: '9999px',
+                background: activeTab === 'jobs' ? '#ffffff' : '#6366f1',
+                color: activeTab === 'jobs' ? '#6366f1' : '#ffffff'
+              }}>
+                {newJobs.length} New
+              </span>
             )}
           </button>
+
           <button 
-            className={`btn ${activeTab === 'earnings' ? 'btn-primary' : 'btn-outline'}`} 
-            onClick={() => setActiveTab('earnings')}
+            type="button"
+            onClick={() => setActiveTab('profile')}
+            style={{
+              position: 'relative',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.65rem 1.25rem',
+              borderRadius: '0.65rem',
+              fontSize: '0.88rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              border: 'none',
+              transition: 'all 0.2s ease',
+              background: activeTab === 'profile' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
+              color: activeTab === 'profile' ? '#ffffff' : 'var(--text-secondary)',
+              boxShadow: activeTab === 'profile' ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none'
+            }}
           >
-            Earnings
+            <UserIcon size={16} />
+            <span>My Profile & Portfolio</span>
+            {!profileStatus.isComplete && (
+              <span style={{ 
+                width: '8px', height: '8px', 
+                background: '#ef4444', 
+                borderRadius: '50%',
+                display: 'inline-block'
+              }}></span>
+            )}
           </button>
+
           <button 
-            className={`btn ${activeTab === 'wallet' ? 'btn-primary' : 'btn-outline'}`} 
-            onClick={() => setActiveTab('wallet')}
+            type="button"
+            onClick={() => setActiveTab('earnings')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.65rem 1.25rem',
+              borderRadius: '0.65rem',
+              fontSize: '0.88rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              border: 'none',
+              transition: 'all 0.2s ease',
+              background: activeTab === 'earnings' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
+              color: activeTab === 'earnings' ? '#ffffff' : 'var(--text-secondary)',
+              boxShadow: activeTab === 'earnings' ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none'
+            }}
           >
-            Wallet & Payout
+            <TrendingUp size={16} />
+            <span>Earnings & Metrics</span>
+          </button>
+
+          <button 
+            type="button"
+            onClick={() => setActiveTab('wallet')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.65rem 1.25rem',
+              borderRadius: '0.65rem',
+              fontSize: '0.88rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              border: 'none',
+              transition: 'all 0.2s ease',
+              background: activeTab === 'wallet' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
+              color: activeTab === 'wallet' ? '#ffffff' : 'var(--text-secondary)',
+              boxShadow: activeTab === 'wallet' ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none'
+            }}
+          >
+            <Wallet size={16} />
+            <span>Wallet & Payout</span>
           </button>
         </div>
       </div>

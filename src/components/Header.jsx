@@ -68,19 +68,25 @@ const Header = () => {
   return (
     <header className="header">
       <div className="container header-content">
-        {/* Logo */}
-        <Link to={getHomeLink()} className="logo">
-          <div className="logo-mark">LF</div>
-          <span className="logo-text">LocalFixr</span>
-        </Link>
-        
         {user?.role === 'provider' ? (
-          /* Provider Workstation Header Badge */
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.25)', padding: '0.4rem 0.85rem', borderRadius: '2rem', color: '#6366f1', fontSize: '0.85rem', fontWeight: 700 }}>
-            💼 Provider Workstation
+          /* Provider Brand Group */
+          <div className="provider-brand-group">
+            <Link to={getHomeLink()} className="logo">
+              <div className="logo-mark">LF</div>
+              <span className="logo-text">LocalFixr</span>
+            </Link>
+            <div className="provider-header-badge">
+              💼 Provider Workstation
+            </div>
           </div>
         ) : (
           <>
+            {/* Logo */}
+            <Link to={getHomeLink()} className="logo">
+              <div className="logo-mark">LF</div>
+              <span className="logo-text">LocalFixr</span>
+            </Link>
+
             {/* Location selector (UC-style) */}
             <div className="location-selector" onClick={handleLocateMe}>
               <MapPin size={16} className="loc-icon" />
@@ -111,22 +117,27 @@ const Header = () => {
         {/* Navigation */}
         <nav className="desktop-nav">
           {user?.role === 'provider' ? (
-            <Link to="/provider-dashboard" className="nav-link" style={{ fontWeight: 700, color: '#6366f1' }}>My Jobs & Orders</Link>
+            <Link to="/provider-dashboard" className="nav-link" style={{ fontWeight: 700, color: '#6366f1' }}>
+              My Jobs & Orders
+            </Link>
           ) : (
-            <Link to="/search" className="nav-link">Services</Link>
+            <Link to="/search" className="nav-link">
+              Services
+            </Link>
           )}
           
-          <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme">
-            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme" title="Toggle Dark/Light Mode">
+            {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
           </button>
           
           <select 
             value={lang} 
             onChange={(e) => setLang(e.target.value)}
-            style={{ background: 'transparent', color: 'inherit', border: '1px solid var(--surface-border)', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer', outline: 'none' }}
+            className="header-lang-select"
+            aria-label="Language Selector"
           >
-            <option value="en" style={{color: 'black'}}>EN</option>
-            <option value="hi" style={{color: 'black'}}>HI</option>
+            <option value="en">EN</option>
+            <option value="hi">HI</option>
           </select>
           
           {user ? (
