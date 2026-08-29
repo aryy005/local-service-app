@@ -128,8 +128,8 @@ const BookingModal = ({ provider, onClose }) => {
             <div className="modal-header">
               <h2>Book {provider.name}</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.35rem', flexWrap: 'wrap' }}>
-                <span style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', padding: '0.15rem 0.5rem', borderRadius: '0.35rem', fontSize: '0.8rem', fontWeight: 700 }}>
-                  ₹{provider.providerDetails?.hourlyRate || 25}/hr
+                <span style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', padding: '0.2rem 0.6rem', borderRadius: '0.35rem', fontSize: '0.82rem', fontWeight: 800 }}>
+                  Starts from ₹{provider.providerDetails?.hourlyRate || 199}
                 </span>
                 <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                   📍 {provider.city || provider.addressDetails?.city || provider.providerDetails?.location || 'Local Area'}
@@ -279,8 +279,8 @@ const BookingModal = ({ provider, onClose }) => {
                 <span>{formData.serviceAddress}</span>
               </div>
               <div className="summary-item">
-                <span className="label">Hourly / Base Rate:</span>
-                <span style={{ fontWeight: 700, color: '#10B981' }}>₹{provider.providerDetails?.hourlyRate || 25}</span>
+                <span className="label">Starting / Base Service Price:</span>
+                <span style={{ fontWeight: 800, color: '#10B981', fontSize: '1rem' }}>Starts from ₹{provider.providerDetails?.hourlyRate || 199}</span>
               </div>
             </div>
 
@@ -301,7 +301,7 @@ const BookingModal = ({ provider, onClose }) => {
                 style={{ width: '100%', padding: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer' }}
                 onClick={() => setShowPaymentModal(true)}
               >
-                <CreditCard size={18} /> Pay Now (₹{provider.providerDetails?.hourlyRate || 25})
+                <CreditCard size={18} /> Pay Base Booking Fee (₹{provider.providerDetails?.hourlyRate || 199})
               </button>
             </div>
           </div>

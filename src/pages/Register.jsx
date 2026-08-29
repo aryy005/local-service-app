@@ -13,7 +13,7 @@ const Register = () => {
     password: '',
     role: 'customer',
     category: 'cat-5', // Default: Electrician
-    hourlyRate: 25,
+    hourlyRate: 199,
     street: '',
     city: '',
     state: '',
@@ -283,7 +283,7 @@ const Register = () => {
               </div>
 
               <div className="form-group">
-                <label>Hourly Rate (₹/hr)</label>
+                <label>Starting / Base Price (₹)</label>
                 <input 
                   type="number" 
                   name="hourlyRate" 
@@ -291,8 +291,11 @@ const Register = () => {
                   onChange={handleChange} 
                   required 
                   min="1"
-                  placeholder="e.g. 25"
+                  placeholder="e.g. 199"
                 />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
+                  Starting price for your base service or minimum inspection fee.
+                </span>
               </div>
             </>
           )}

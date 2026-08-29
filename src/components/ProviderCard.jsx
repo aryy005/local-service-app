@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Star, MapPin, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Star, MapPin, ShieldCheck, ArrowRight } from 'lucide-react';
 import './ProviderCard.css';
 
 const ProviderCard = ({ provider }) => {
   const details = provider.providerDetails || {};
   const initials = provider.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  const basePrice = details.hourlyRate || details.basePrice || 199;
   
   return (
     <Link to={`/provider/${provider._id || provider.id}`} className="provider-card">
@@ -28,11 +29,11 @@ const ProviderCard = ({ provider }) => {
           <div className="pc-meta">
             <span className="pc-rating">
               <Star size={14} fill="#ffc107" color="#ffc107" />
-              {details.rating || '0'}
+              {details.rating || '5.0'}
               <span className="pc-reviews">({details.reviewsCount || 0})</span>
             </span>
             <span className="pc-location">
-              <MapPin size={13} /> {details.location || 'N/A'}
+              <MapPin size={13} /> {details.location || 'Local Area'}
             </span>
             {details.totalJobsCompleted > 0 && (
               <span className="pc-location">
@@ -51,9 +52,12 @@ const ProviderCard = ({ provider }) => {
       <p className="pc-description">{details.description}</p>
 
       <div className="pc-footer">
-        <span className="pc-rate">₹{details.hourlyRate || '—'}<small>/hr</small></span>
+        <div className="pc-price-box">
+          <span className="pc-starts-label">Starts from</span>
+          <span className="pc-rate">₹{basePrice}</span>
+        </div>
         <span className="pc-book-btn">
-          View Profile <ChevronRight size={14} />
+          Book Now <ArrowRight size={14} />
         </span>
       </div>
     </Link>

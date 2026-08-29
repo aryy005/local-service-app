@@ -211,8 +211,8 @@ async function sendPartnerWelcomeEmail(partnerUser) {
                         <td style="padding:6px 0; font-size:14px; font-weight:700; color:#4f46e5;">${category}</td>
                       </tr>
                       <tr>
-                        <td style="padding:6px 0; font-size:14px; color:#64748b;">Base Rate:</td>
-                        <td style="padding:6px 0; font-size:14px; font-weight:700; color:#059669;">₹${hourlyRate} / hr</td>
+                        <td style="padding:6px 0; font-size:14px; color:#64748b;">Starting Base Price:</td>
+                        <td style="padding:6px 0; font-size:14px; font-weight:700; color:#059669;">Starts from ₹${hourlyRate}</td>
                       </tr>
                       <tr>
                         <td style="padding:6px 0; font-size:14px; color:#64748b;">Operating Area:</td>

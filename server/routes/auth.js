@@ -469,7 +469,7 @@ router.put('/me', auth, async (req, res) => {
       if (!user.phone || !user.phone.trim()) missing.push('Phone Number');
       if (!user.city && !user.addressDetails?.city && !p.location) missing.push('City / Service Area');
       if (!p.category || !p.category.trim()) missing.push('Service Category');
-      if (!p.hourlyRate || Number(p.hourlyRate) <= 0) missing.push('Hourly Rate');
+      if (!p.hourlyRate || Number(p.hourlyRate) <= 0) missing.push('Starting / Base Price');
       if (p.experienceYears === undefined || p.experienceYears === null || Number(p.experienceYears) < 0) missing.push('Years of Experience');
       if (!p.description || p.description.trim().length < 10) missing.push('Bio / Description');
       if (!p.upiId || !p.upiId.trim()) missing.push('UPI ID');

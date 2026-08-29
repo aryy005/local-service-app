@@ -35,7 +35,7 @@ export const checkProviderProfile = (user) => {
     { key: 'street', label: 'Doorstep / Street Address', valid: !!(addr.street && addr.street.trim().length > 0), value: addr.street },
     { key: 'city', label: 'Operating City & Area', valid: !!((user?.city || addr.city || p.location) && (user?.city || addr.city || p.location).trim().length > 0), value: user?.city || addr.city || p.location },
     { key: 'category', label: 'Service Category', valid: !!(p.category && p.category.trim().length > 0), value: p.category },
-    { key: 'hourlyRate', label: 'Base / Hourly Rate (₹)', valid: !!(p.hourlyRate && Number(p.hourlyRate) > 0), value: p.hourlyRate ? `₹${p.hourlyRate}` : null },
+    { key: 'hourlyRate', label: 'Starting / Base Price (₹)', valid: !!(p.hourlyRate && Number(p.hourlyRate) > 0), value: p.hourlyRate ? `Starts from ₹${p.hourlyRate}` : null },
     { key: 'experienceYears', label: 'Experience (Years)', valid: (p.experienceYears !== undefined && p.experienceYears !== null && Number(p.experienceYears) >= 0), value: p.experienceYears !== undefined ? `${p.experienceYears} yrs` : null },
     { key: 'description', label: 'Bio / Description (min 10 chars)', valid: !!(p.description && p.description.trim().length >= 10), value: p.description },
     { key: 'upiId', label: 'Payout UPI ID', valid: !!(p.upiId && p.upiId.trim().length > 0), value: p.upiId },
@@ -421,7 +421,7 @@ const ProviderDashboard = () => {
     if (!formData.street.trim()) return alert('Doorstep / Street Address is required.');
     if (!formData.city.trim()) return alert('Operating City is required.');
     if (!formData.category.trim()) return alert('Service Category is required.');
-    if (!formData.hourlyRate || Number(formData.hourlyRate) <= 0) return alert('Hourly Rate must be greater than 0.');
+    if (!formData.hourlyRate || Number(formData.hourlyRate) <= 0) return alert('Starting / Base Price must be greater than 0.');
     if (!formData.description || formData.description.trim().length < 10) return alert('Bio / Description must be at least 10 characters.');
     if (!formData.upiId.trim()) return alert('UPI ID is required for receiving customer payments.');
     if (!formData.portfolioImages || formData.portfolioImages.length === 0) return alert('You must upload at least 1 Work Portfolio image.');
@@ -881,8 +881,9 @@ const ProviderDashboard = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="form-group">
-                    <label>Base Hourly Rate (₹) <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="number" value={formData.hourlyRate} onChange={e => setFormData({...formData, hourlyRate: e.target.value})} required min="1" className="form-control" />
+                    <label>Starting / Base Price (₹) <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input type="number" value={formData.hourlyRate} onChange={e => setFormData({...formData, hourlyRate: e.target.value})} required min="1" className="form-control" placeholder="e.g. 199" />
+                    <small style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>Customers see "Starts from ₹{formData.hourlyRate || 199}"</small>
                   </div>
                   <div className="form-group">
                     <label>Years of Exp. <span style={{ color: '#ef4444' }}>*</span></label>
@@ -1085,8 +1086,8 @@ const ProviderDashboard = () => {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                 <div>
-                  <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Base Hourly Rate</p>
-                  <p style={{ fontSize: '1.1rem', marginTop: '0.25rem', fontWeight: 600 }}>₹{user.providerDetails?.hourlyRate || '0'}</p>
+                  <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Starting / Base Price</p>
+                  <p style={{ fontSize: '1.1rem', marginTop: '0.25rem', fontWeight: 700, color: '#10b981' }}>Starts from ₹{user.providerDetails?.hourlyRate || '199'}</p>
                 </div>
                 <div>
                   <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Years of Experience</p>

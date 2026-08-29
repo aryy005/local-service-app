@@ -751,7 +751,7 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300 block">₹{p.providerDetails?.hourlyRate || 25}/hr</span>
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300 block">Starts ₹{p.providerDetails?.hourlyRate || 199}</span>
                       <span className="text-[10px] text-slate-400 font-semibold">{p.jobsCount || 0} jobs completed</span>
                     </div>
                   </div>
@@ -1046,7 +1046,7 @@ const AdminDashboard = () => {
                       </span>
                     </td>
                     <td className="p-3.5">
-                      <div className="font-bold text-emerald-600">₹{p.providerDetails?.hourlyRate || 25}/hr</div>
+                      <div className="font-bold text-emerald-600">Starts ₹{p.providerDetails?.hourlyRate || 199}</div>
                       <div className="text-[11px] text-slate-400 font-semibold">{p.jobsCount || 0} jobs ({p.completedJobs || 0} done)</div>
                     </td>
                     <td className="p-3.5 text-slate-600 dark:text-slate-300">

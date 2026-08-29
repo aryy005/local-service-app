@@ -174,9 +174,19 @@ const ProviderProfile = () => {
         {/* Right Column: Booking Widget */}
         <aside className="profile-sidebar">
           <div className="glass-panel sticky-booking-card">
-            <div className="booking-price">
-              <span className="price">₹{provider.providerDetails.hourlyRate}</span>
-              <span className="unit">/hr</span>
+            <div className="booking-price" style={{ paddingBottom: '0.75rem', borderBottom: '1px solid var(--surface-border)', marginBottom: '1rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)', display: 'block' }}>
+                Service Base Price
+              </span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem', marginTop: '0.2rem' }}>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Starts from</span>
+                <span className="price" style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                  ₹{provider.providerDetails.hourlyRate || 199}
+                </span>
+              </div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0', lineHeight: 1.4 }}>
+                *Base inspection / standard starting rate. Final quote tailored on-site.
+              </p>
             </div>
             
             <div className="booking-features">
