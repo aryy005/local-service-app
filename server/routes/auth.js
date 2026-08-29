@@ -403,10 +403,11 @@ router.put('/me', auth, async (req, res) => {
     if (city) user.city = city;
     
     if (addressDetails) {
-      user.addressDetails = {
-        ...user.addressDetails,
-        ...addressDetails
-      };
+      if (!user.addressDetails) user.addressDetails = {};
+      if (addressDetails.street !== undefined) user.addressDetails.street = addressDetails.street;
+      if (addressDetails.city !== undefined) user.addressDetails.city = addressDetails.city;
+      if (addressDetails.state !== undefined) user.addressDetails.state = addressDetails.state;
+      if (addressDetails.pincode !== undefined) user.addressDetails.pincode = addressDetails.pincode;
       if (addressDetails.city) user.city = addressDetails.city;
     }
 
@@ -424,13 +425,28 @@ router.put('/me', auth, async (req, res) => {
     }
     
     if (user.role === 'provider') {
+      if (!user.providerDetails) user.providerDetails = {};
+
       if (providerDetails) {
-        user.providerDetails = {
-          ...user.providerDetails,
-          ...providerDetails
-        };
-        if (Array.isArray(providerDetails.portfolioImages)) {
+        if (providerDetails.category !== undefined) user.providerDetails.category = providerDetails.category;
+        if (providerDetails.hourlyRate !== undefined) user.providerDetails.hourlyRate = Number(providerDetails.hourlyRate) || 0;
+        if (providerDetails.experienceYears !== undefined) user.providerDetails.experienceYears = Number(providerDetails.experienceYears) || 0;
+        if (providerDetails.location !== undefined) user.providerDetails.location = providerDetails.location;
+        if (providerDetails.description !== undefined) user.providerDetails.description = providerDetails.description;
+        if (providerDetails.upiId !== undefined) user.providerDetails.upiId = providerDetails.upiId;
+        if (providerDetails.skills !== undefined && Array.isArray(providerDetails.skills)) user.providerDetails.skills = providerDetails.skills;
+        if (providerDetails.portfolioImages !== undefined && Array.isArray(providerDetails.portfolioImages)) {
           user.providerDetails.portfolioImages = providerDetails.portfolioImages;
+        }
+        if (providerDetails.avatarUrl !== undefined) user.providerDetails.avatarUrl = providerDetails.avatarUrl;
+        if (providerDetails.locationGeo && providerDetails.locationGeo.coordinates) {
+          user.providerDetails.locationGeo = {
+            type: 'Point',
+            coordinates: [
+              parseFloat(providerDetails.locationGeo.coordinates[0]) || 0,
+              parseFloat(providerDetails.locationGeo.coordinates[1]) || 0
+            ]
+          };
         }
       }
 
@@ -455,8 +471,8 @@ router.put('/me', auth, async (req, res) => {
     const updatedUser = await User.findById(req.user.id).select('-password');
     res.json(updatedUser);
   } catch (err) {
-    console.error('Profile update error:', err.message);
-    res.status(500).json({ message: 'Server error updating profile' });
+    console.error('Profile update error:', err);
+    res.status(500).json({ message: err.message || 'Server error updating profile' });
   }
 });
 
