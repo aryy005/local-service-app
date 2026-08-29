@@ -85,7 +85,10 @@ const BookingModal = ({ provider, onClose }) => {
   return (
     <div className="modal-overlay fade-in">
       <div className="modal-content glass-panel">
-        <button className="close-btn" onClick={onClose}>
+        <button className="close-btn" onClick={() => {
+          onClose();
+          if (step === 2) navigate('/customer-dashboard');
+        }}>
           <X size={24} />
         </button>
 
@@ -284,18 +287,21 @@ const BookingModal = ({ provider, onClose }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.5rem' }}>
               <button 
                 className="btn btn-primary" 
-                style={{ width: '100%', padding: '0.85rem', fontWeight: 700, background: 'linear-gradient(135deg, #10B981, #059669)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                onClick={() => setShowPaymentModal(true)}
+                style={{ width: '100%', padding: '0.85rem', fontWeight: 700, background: 'linear-gradient(135deg, #6366f1, #4f46e5)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer' }}
+                onClick={() => {
+                  onClose();
+                  navigate('/customer-dashboard');
+                }}
               >
-                <CreditCard size={18} /> Pay Now (₹{provider.providerDetails?.hourlyRate || 25})
+                <CheckCircle size={18} /> View My Orders & Live Tracking
               </button>
 
               <button 
                 className="btn btn-outline" 
-                style={{ width: '100%' }}
-                onClick={onClose}
+                style={{ width: '100%', padding: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer' }}
+                onClick={() => setShowPaymentModal(true)}
               >
-                Pay Later (Go to Dashboard)
+                <CreditCard size={18} /> Pay Now (₹{provider.providerDetails?.hourlyRate || 25})
               </button>
             </div>
           </div>
@@ -308,10 +314,12 @@ const BookingModal = ({ provider, onClose }) => {
           onClose={() => {
             setShowPaymentModal(false);
             onClose();
+            navigate('/customer-dashboard');
           }}
           onSuccess={() => {
             setShowPaymentModal(false);
             onClose();
+            navigate('/customer-dashboard');
           }}
         />
       )}

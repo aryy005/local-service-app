@@ -17,9 +17,6 @@ const ProviderProfile = () => {
   const [portfolio, setPortfolio] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-  
-  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
-  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     if (user?.role === 'provider') {
@@ -45,35 +42,7 @@ const ProviderProfile = () => {
       }
     };
     fetchProviderData();
-  }, [id]);
-
-  const handleReviewSubmit = async (e) => {
-    e.preventDefault();
-    if (!token) return toast.error('You must be logged in to leave a review.');
-    
-    setSubmittingReview(true);
-    try {
-      const res = await fetch(`${API_URL}/providers/${id}/reviews`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(newReview)
-      });
-      
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to submit review');
-      
-      setReviews(prev => [...prev, { ...data, customer: { name: user.name } }]);
-      setNewReview({ rating: 5, comment: '' });
-      toast.success('Review submitted successfully!');
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setSubmittingReview(false);
-    }
-  };
+  }, [id, user, navigate]);
 
   if (loading) return <div className="container mt-8 text-center">Loading provider profile...</div>;
 
@@ -162,56 +131,39 @@ const ProviderProfile = () => {
           )}
 
           <div className="glass-panel profile-section">
-            <h2>Reviews ({reviews.length})</h2>
-            
-            {user && user.role === 'customer' && (
-              <form onSubmit={handleReviewSubmit} style={{
-                marginBottom: '1.25rem', padding: '1rem',
-                background: 'var(--bg-secondary)', borderRadius: 'var(--border-radius-sm)',
-                border: '1px solid var(--surface-border)'
-              }}>
-                <h4 style={{ fontWeight: 700, marginBottom: '0.65rem', fontSize: '0.95rem' }}>Leave a Review</h4>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.65rem' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>Rating: </span>
-                  <select 
-                    style={{ width: 'auto', padding: '0.3rem 0.5rem', fontSize: '0.85rem' }}
-                    value={newReview.rating} 
-                    onChange={e => setNewReview({ ...newReview, rating: Number(e.target.value)})}
-                  >
-                    {[5,4,3,2,1].map(r => <option key={r} value={r}>{r} Stars</option>)}
-                  </select>
-                </div>
-                <textarea 
-                  required
-                  style={{ marginBottom: '0.65rem', minHeight: '70px', fontSize: '0.9rem' }}
-                  placeholder="Share your experience..."
-                  value={newReview.comment}
-                  onChange={e => setNewReview({ ...newReview, comment: e.target.value })}
-                />
-                <button type="submit" disabled={submittingReview} className="btn btn-primary btn-sm">
-                  {submittingReview ? 'Submitting...' : 'Submit Review'}
-                </button>
-              </form>
-            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h2 style={{ margin: 0 }}>Customer Reviews & Ratings ({reviews.length})</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(255, 193, 7, 0.12)', border: '1px solid rgba(255, 193, 7, 0.3)', padding: '0.3rem 0.65rem', borderRadius: '2rem' }}>
+                <Star size={15} fill="#ffc107" color="#ffc107" />
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#d97706' }}>
+                  {provider.providerDetails.rating || '5.0'} / 5.0 Rating
+                </span>
+              </div>
+            </div>
 
             <div className="reviews-list">
               {reviews.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No reviews yet.</p>
+                <div style={{ padding: '1.5rem', textAlign: 'center', background: 'var(--bg-secondary)', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--surface-border)' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+                    No reviews yet for this service professional. Reviews are submitted by customers after booking completion.
+                  </p>
+                </div>
               ) : (
                 reviews.map(review => (
                   <div key={review._id} style={{
                     padding: '1rem', background: 'var(--bg-secondary)',
                     borderRadius: 'var(--border-radius-sm)',
-                    border: '1px solid var(--surface-border)'
+                    border: '1px solid var(--surface-border)',
+                    marginBottom: '0.75rem'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                      <strong style={{ fontSize: '0.9rem' }}>{review.customer?.name || 'Customer'}</strong>
+                      <strong style={{ fontSize: '0.9rem' }}>{review.customer?.name || 'Verified Customer'}</strong>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                         <Star size={13} fill="#ffc107" color="#ffc107" />
                         <span style={{ fontSize: '0.82rem', fontWeight: 700 }}>{review.rating}</span>
                       </div>
                     </div>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: 1.5 }}>{review.comment}</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: 1.5, margin: 0 }}>{review.comment}</p>
                   </div>
                 ))
               )}
