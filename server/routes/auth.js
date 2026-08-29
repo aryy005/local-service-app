@@ -148,7 +148,11 @@ router.post('/google', async (req, res) => {
       await user.save();
 
       if (normalizedRole === 'provider') {
-        sendPartnerWelcomeEmail(user).catch(err => console.error('[EMAIL] Failed to send partner welcome letter on Google sign-up:', err.message));
+        try {
+          await sendPartnerWelcomeEmail(user);
+        } catch (emailErr) {
+          console.error('[EMAIL] Failed to send partner welcome letter on Google sign-up:', emailErr.message);
+        }
       }
     }
 
@@ -232,7 +236,11 @@ router.post('/register', async (req, res) => {
     await user.save();
 
     if (normalizedRole === 'provider') {
-      sendPartnerWelcomeEmail(user).catch(err => console.error('[EMAIL] Failed to send partner welcome letter on registration:', err.message));
+      try {
+        await sendPartnerWelcomeEmail(user);
+      } catch (emailErr) {
+        console.error('[EMAIL] Failed to send partner welcome letter on registration:', emailErr.message);
+      }
     }
 
     const payload = { user: { id: user.id, role: user.role } };
@@ -482,7 +490,11 @@ router.put('/me', auth, async (req, res) => {
       if (user.providerDetails.isProfileComplete && !user.providerDetails.welcomeEmailSent) {
         user.providerDetails.welcomeEmailSent = true;
         user.providerDetails.welcomeEmailSentAt = new Date();
-        sendPartnerWelcomeEmail(user).catch(err => console.error('[EMAIL] Failed to send partner welcome letter on profile complete:', err.message));
+        try {
+          await sendPartnerWelcomeEmail(user);
+        } catch (emailErr) {
+          console.error('[EMAIL] Failed to send partner welcome letter on profile complete:', emailErr.message);
+        }
       }
     }
     
