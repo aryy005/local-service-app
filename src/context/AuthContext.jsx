@@ -24,7 +24,17 @@ const parseJsonResponse = async (res, defaultErrorMsg = 'Server error') => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
+  const [token, setToken] = useState(() => {
+    try {
+      // Clear legacy localStorage token so it doesn't bleed across tabs
+      if (typeof window !== 'undefined' && window.localStorage?.getItem('token')) {
+        window.localStorage.removeItem('token');
+      }
+      return typeof window !== 'undefined' ? window.sessionStorage?.getItem('token') || null : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
   
   // Custom Global Location State (Default to null. Can be stored as { lng, lat, name })
@@ -70,7 +80,8 @@ export const AuthProvider = ({ children }) => {
     const data = await parseJsonResponse(res, 'Login failed');
     setToken(data.token);
     setUser(data.user);
-    localStorage.setItem('token', data.token);
+    sessionStorage.setItem('token', data.token);
+    localStorage.removeItem('token');
     toast.success('Welcome back!');
     return data;
   };
@@ -85,7 +96,8 @@ export const AuthProvider = ({ children }) => {
     const data = await parseJsonResponse(res, 'Registration failed');
     setToken(data.token);
     setUser(data.user);
-    localStorage.setItem('token', data.token);
+    sessionStorage.setItem('token', data.token);
+    localStorage.removeItem('token');
     toast.success('Account created successfully!');
     return data;
   };
@@ -100,7 +112,8 @@ export const AuthProvider = ({ children }) => {
     const data = await parseJsonResponse(res, action === 'login' ? 'Google login failed' : 'Google registration failed');
     setToken(data.token);
     setUser(data.user);
-    localStorage.setItem('token', data.token);
+    sessionStorage.setItem('token', data.token);
+    localStorage.removeItem('token');
     toast.success(action === 'login' ? 'Welcome back!' : 'Account registered with Google successfully!');
     return data;
   };
@@ -169,6 +182,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setToken(null);
     setUser(null);
+    sessionStorage.removeItem('token');
     localStorage.removeItem('token');
   };
 

@@ -38,7 +38,7 @@ The application is built on the popular **MERN** stack, supercharged with Vite f
 2.  If they choose Provider, additional fields dynamically render (Category, Hourly Rate, Bio, Location).
 3.  Upon submission, the frontend POSTs to `/api/auth/register`. 
 4.  The backend encrypts the password Using Bcrypt and creates a Mongoose Document. 
-5.  A secure `JWT` is generated and returned to the frontend. The `AuthContext` saves this token to `localStorage` and redirects the user to their appropriate Dashboard.
+5.  A secure `JWT` is generated and returned to the frontend. The `AuthContext` saves this token to `sessionStorage` (for isolated, tab-specific sessions) and redirects the user to their appropriate Dashboard.
 
 ### B. Booking Workflow
 1.  Customers browse the homepage and view `ProviderCard` components.
@@ -117,7 +117,7 @@ Responsible for the interactive UI and client logic.
 *   `index.css`: **The Design System**. Contains globally scoped CSS variables (colors, fonts, spacing) that dynamically swap palettes when toggling Dark/Light mode.
 
 #### Global Contexts (`/context`)
-*   `AuthContext.jsx`: Manages global user state. It handles login, logout, and automatic relogin (fetching `/api/auth/me` on refresh if a token exists in `localStorage`).
+*   `AuthContext.jsx`: Manages global user state. It handles login, logout, and automatic relogin (fetching `/api/auth/me` on refresh if a token exists in `sessionStorage`).
 *   `ThemeContext.jsx`: Simple toggle logic governing whether the application currently has the `dark` class applied to its root HTML element.
 
 #### Reusable Components (`/components`)
