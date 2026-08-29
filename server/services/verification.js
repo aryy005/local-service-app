@@ -165,7 +165,7 @@ async function sendPartnerWelcomeEmail(partnerUser) {
   const hourlyRate = p.hourlyRate || 25;
   const location = partnerUser.city || p.location || 'Your Operating City';
   const partnerId = partnerUser._id ? partnerUser._id.toString() : Date.now().toString();
-  const clientUrl = process.env.CLIENT_URL || 'https://local-service-app-ten.vercel.app';
+  const clientUrl = process.env.CLIENT_URL || 'https://localfixr.site';
   const partnerSignInUrl = `${clientUrl}/auth/login?role=provider&redirect=${encodeURIComponent('/provider-dashboard')}`;
 
   const htmlContent = `
