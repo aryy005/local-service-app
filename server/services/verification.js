@@ -174,29 +174,44 @@ async function sendPartnerWelcomeEmail(partnerUser) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to the LocalFixr Partner Network</title>
+  <title>Partner Onboarding Letter - LocalFixr</title>
 </head>
-<body style="margin:0; padding:0; background-color:#f1f5f9; font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; color:#1e293b;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f1f5f9; padding:40px 15px;">
+<body style="margin:0; padding:0; background-color:#ffffff; font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; color:#0f172a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#ffffff; padding:24px 15px;">
     <tr>
       <td align="center">
-        <!-- Main Email Card -->
-        <table role="presentation" width="100%" style="max-width:620px; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 12px 35px rgba(0,0,0,0.06); border:1px solid #e2e8f0;">
+        <table role="presentation" width="100%" style="max-width:650px; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:32px 36px; text-align:left;">
           
-          <!-- Gradient Header -->
+          <!-- Header (Matching Tax Invoice Header) -->
           <tr>
-            <td style="background: linear-gradient(135deg, #3730a3 0%, #4f46e5 50%, #7c3aed 100%); padding:40px 32px; text-align:center; color:#ffffff;">
+            <td style="padding-bottom:24px; border-bottom:2px solid #0f172a;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td align="center">
-                    <div style="display:inline-block; width:54px; height:54px; background:rgba(255,255,255,0.22); border:1.5px solid rgba(255,255,255,0.4); border-radius:14px; line-height:54px; font-size:24px; font-weight:900; color:#ffffff; margin-bottom:12px; letter-spacing:-0.03em;">
-                      LF
-                    </div>
-                    <h1 style="margin:0; font-size:26px; font-weight:800; letter-spacing:-0.02em; color:#ffffff;">
-                      LocalFixr Partner Network
+                  <td valign="top" style="text-align:left;">
+                    <h1 style="margin:0; font-size:26px; font-weight:800; color:#0f172a; letter-spacing:-0.03em;">
+                      LocalFixr
                     </h1>
-                    <div style="display:inline-block; margin-top:12px; padding:5px 16px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); border-radius:30px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#ffffff;">
-                      🌟 Official Onboarding &amp; Verification Confirmation
+                    <p style="margin:4px 0 0 0; font-size:13px; color:#64748b;">
+                      LocalFixr Technologies Inc.
+                    </p>
+                    <p style="margin:2px 0 0 0; font-size:12px; color:#94a3b8;">
+                      Service Partner Onboarding &amp; Verification
+                    </p>
+                  </td>
+                  <td valign="top" style="text-align:right;">
+                    <h2 style="margin:0; font-size:18px; font-weight:800; color:#0f172a; text-transform:uppercase; letter-spacing:0.04em;">
+                      WELCOME LETTER
+                    </h2>
+                    <div style="margin-top:6px; font-size:13px; color:#4f46e5; font-weight:700; font-family:monospace;">
+                      Partner ID: LF-PRO-${partnerId.slice(-6).toUpperCase()}
+                    </div>
+                    <div style="margin-top:2px; font-size:12px; color:#64748b;">
+                      Date: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </div>
+                    <div style="margin-top:4px;">
+                      <span style="display:inline-block; padding:2px 8px; background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; font-size:11px; font-weight:700; border-radius:4px; text-transform:uppercase;">
+                        ✓ Verified Partner
+                      </span>
                     </div>
                   </td>
                 </tr>
@@ -204,127 +219,127 @@ async function sendPartnerWelcomeEmail(partnerUser) {
             </td>
           </tr>
 
-          <!-- Letter Body -->
+          <!-- Welcome Salutation & Introduction -->
           <tr>
-            <td style="padding:36px 32px 24px 32px;">
-              <h2 style="margin:0 0 16px 0; font-size:20px; font-weight:800; color:#0f172a; line-height:1.3;">
-                Welcome to LocalFixr, ${partnerName}! 🤝
-              </h2>
-              <p style="margin:0 0 16px 0; font-size:15px; line-height:1.65; color:#334155;">
-                We are thrilled to formally welcome you to the <strong>LocalFixr Service Partner Ecosystem</strong>. Your professional partner account has been successfully registered and provisioned on our verified marketplace.
-              </p>
-              <p style="margin:0 0 20px 0; font-size:15px; line-height:1.65; color:#334155;">
-                As an authorized service partner, you now have access to verified customer bookings in your service radius, transparent commission rates, live in-app GPS tracking, and instant UPI earnings payouts.
-              </p>
-
-              <!-- Account Summary Box -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
-                <tr>
-                  <td style="padding:14px 20px; background:#eef2ff; border-bottom:1px solid #c7d2fe;">
-                    <strong style="font-size:13px; text-transform:uppercase; letter-spacing:0.05em; color:#3730a3;">
-                      📋 Partner Profile &amp; Credentials
-                    </strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:18px 20px;">
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                      <tr>
-                        <td style="padding:6px 0; font-size:14px; color:#64748b;" width="42%">Partner Name:</td>
-                        <td style="padding:6px 0; font-size:14px; font-weight:700; color:#0f172a;">${partnerName}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:6px 0; font-size:14px; color:#64748b;">Registered Email:</td>
-                        <td style="padding:6px 0; font-size:14px; font-weight:700; color:#0f172a;">${partnerEmail}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:6px 0; font-size:14px; color:#64748b;">Service Specialization:</td>
-                        <td style="padding:6px 0; font-size:14px; font-weight:700; color:#4f46e5;">${category}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:6px 0; font-size:14px; color:#64748b;">Starting Base Price:</td>
-                        <td style="padding:6px 0; font-size:14px; font-weight:700; color:#059669;">Starts from ₹${hourlyRate}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:6px 0; font-size:14px; color:#64748b;">Operating Area:</td>
-                        <td style="padding:6px 0; font-size:14px; font-weight:700; color:#0f172a;">${location}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:6px 0; font-size:14px; color:#64748b;">Partner Reference ID:</td>
-                        <td style="padding:6px 0; font-size:14px; font-family:monospace; font-weight:800; color:#6366f1;">LF-PRO-${partnerId.slice(-6).toUpperCase()}</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Steps for Success -->
-              <h3 style="margin:28px 0 16px 0; font-size:16px; font-weight:800; color:#0f172a;">
-                🚀 How to Maximize Your Earnings on LocalFixr:
+            <td style="padding:24px 0 16px 0;">
+              <h3 style="margin:0 0 10px 0; font-size:17px; font-weight:700; color:#0f172a;">
+                Dear ${partnerName},
               </h3>
-              
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+              <p style="margin:0 0 12px 0; font-size:14px; line-height:1.6; color:#334155;">
+                We are pleased to welcome you to the <strong>LocalFixr Service Partner Network</strong>. Your partner account and profile have been successfully registered on our marketplace platform.
+              </p>
+              <p style="margin:0; font-size:14px; line-height:1.6; color:#334155;">
+                Below are the confirmed registration details and credentials associated with your partner workstation:
+              </p>
+            </td>
+          </tr>
+
+          <!-- Two-Column Details Grid (Same as Invoice Details Grid) -->
+          <tr>
+            <td style="padding:16px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e2e8f0; border-radius:6px; background:#fafafa;">
                 <tr>
-                  <td width="36" valign="top" style="padding-right:12px;">
-                    <div style="width:28px; height:28px; background:#e0e7ff; color:#4f46e5; border-radius:50%; text-align:center; line-height:28px; font-weight:800; font-size:13px;">1</div>
-                  </td>
-                  <td valign="top" style="padding-bottom:14px;">
-                    <strong style="font-size:14px; color:#0f172a;">Monitor Your Partner Workstation</strong>
-                    <div style="font-size:13px; color:#64748b; line-height:1.5; margin-top:2px;">
-                      Incoming service requests will appear live in your workstation with customer requirements, address, and scheduled time.
+                  <td width="50%" valign="top" style="padding:16px 18px; border-right:1px solid #e2e8f0;">
+                    <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">
+                      PARTNER INFORMATION
+                    </div>
+                    <div style="font-size:14px; font-weight:700; color:#0f172a; margin-bottom:4px;">
+                      ${partnerName}
+                    </div>
+                    <div style="font-size:13px; color:#475569; margin-bottom:3px;">
+                      Email: ${partnerEmail}
+                    </div>
+                    <div style="font-size:13px; color:#475569;">
+                      Phone: ${partnerUser.phone || 'Provided during verification'}
                     </div>
                   </td>
-                </tr>
-                <tr>
-                  <td width="36" valign="top" style="padding-right:12px;">
-                    <div style="width:28px; height:28px; background:#e0e7ff; color:#4f46e5; border-radius:50%; text-align:center; line-height:28px; font-weight:800; font-size:13px;">2</div>
-                  </td>
-                  <td valign="top" style="padding-bottom:14px;">
-                    <strong style="font-size:14px; color:#0f172a;">Complete Aadhaar &amp; Phone Verification</strong>
-                    <div style="font-size:13px; color:#64748b; line-height:1.5; margin-top:2px;">
-                      Verified partners earn a verified trust badge on their profile, receiving up to <strong>3x more customer bookings</strong>.
+                  <td width="50%" valign="top" style="padding:16px 18px;">
+                    <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">
+                      SERVICE SPECIFICATIONS
                     </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td width="36" valign="top" style="padding-right:12px;">
-                    <div style="width:28px; height:28px; background:#e0e7ff; color:#4f46e5; border-radius:50%; text-align:center; line-height:28px; font-weight:800; font-size:13px;">3</div>
-                  </td>
-                  <td valign="top" style="padding-bottom:14px;">
-                    <strong style="font-size:14px; color:#0f172a;">Instant UPI Settlements</strong>
-                    <div style="font-size:13px; color:#64748b; line-height:1.5; margin-top:2px;">
-                      When you finish a job, payment is automatically processed and transferred directly to your configured UPI ID.
+                    <div style="font-size:14px; font-weight:700; color:#4f46e5; margin-bottom:4px;">
+                      ${category}
+                    </div>
+                    <div style="font-size:13px; color:#475569; margin-bottom:3px;">
+                      Operating Area: <strong>${location}</strong>
+                    </div>
+                    <div style="font-size:13px; color:#059669; font-weight:600;">
+                      Starting Base Price: <strong>Starts from ₹${hourlyRate}</strong>
                     </div>
                   </td>
                 </tr>
               </table>
+            </td>
+          </tr>
 
-              <!-- Action Button -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:28px 0 10px 0;">
-                <tr>
-                  <td align="center">
-                    <a href="${dashboardUrl}" target="_blank" style="display:inline-block; padding:15px 36px; background:linear-gradient(135deg, #4f46e5, #6366f1); color:#ffffff; font-size:15px; font-weight:800; text-decoration:none; border-radius:10px; box-shadow:0 4px 14px rgba(79, 70, 229, 0.4);">
-                      Open Partner Workstation &rarr;
-                    </a>
-                  </td>
-                </tr>
+          <!-- Summary Table (Same as Invoice Table) -->
+          <tr>
+            <td style="padding:12px 0 20px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; width:100%;">
+                <thead>
+                  <tr style="border-bottom:1px solid #cbd5e1; background:#f1f5f9;">
+                    <th style="padding:10px 12px; font-size:12px; font-weight:700; color:#334155; text-align:left; text-transform:uppercase;">Program Feature</th>
+                    <th style="padding:10px 12px; font-size:12px; font-weight:700; color:#334155; text-align:left; text-transform:uppercase;">Details</th>
+                    <th style="padding:10px 12px; font-size:12px; font-weight:700; color:#334155; text-align:right; text-transform:uppercase;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid #e2e8f0;">
+                    <td style="padding:12px; font-size:13px; font-weight:600; color:#0f172a;">Partner Marketplace Access</td>
+                    <td style="padding:12px; font-size:13px; color:#475569;">Receive customer repair &amp; service requests in ${location}</td>
+                    <td style="padding:12px; font-size:13px; font-weight:700; color:#059669; text-align:right;">Active</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #e2e8f0;">
+                    <td style="padding:12px; font-size:13px; font-weight:600; color:#0f172a;">Live GPS En-Route Navigation</td>
+                    <td style="padding:12px; font-size:13px; color:#475569;">Real-time customer tracking &amp; doorstep routing</td>
+                    <td style="padding:12px; font-size:13px; font-weight:700; color:#059669; text-align:right;">Enabled</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #e2e8f0;">
+                    <td style="padding:12px; font-size:13px; font-weight:600; color:#0f172a;">Direct UPI Instant Payouts</td>
+                    <td style="padding:12px; font-size:13px; color:#475569;">Instant settlement upon job completion</td>
+                    <td style="padding:12px; font-size:13px; font-weight:700; color:#059669; text-align:right;">Active</td>
+                  </tr>
+                </tbody>
               </table>
+            </td>
+          </tr>
 
+          <!-- 3 Steps Instructions -->
+          <tr>
+            <td style="padding:12px 0 24px 0;">
+              <div style="font-size:13px; font-weight:700; color:#0f172a; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px;">
+                Next Steps to Begin Taking Orders:
+              </div>
+              <ol style="margin:0; padding-left:18px; font-size:13px; line-height:1.7; color:#334155;">
+                <li><strong>Complete Identity KYC:</strong> Ensure your Phone OTP &amp; Aadhaar verification is marked complete to display the verified trust badge on your profile.</li>
+                <li><strong>Upload Portfolio:</strong> Add previous job photos to your portfolio to increase customer booking conversion.</li>
+                <li><strong>Accept Live Jobs:</strong> Keep your Workstation active to receive and accept bookings.</li>
+              </ol>
+            </td>
+          </tr>
+
+          <!-- Action Button -->
+          <tr>
+            <td style="padding:10px 0 28px 0; text-align:center;">
+              <a href="${dashboardUrl}" target="_blank" style="display:inline-block; padding:12px 28px; background:#0f172a; color:#ffffff; font-size:14px; font-weight:700; text-decoration:none; border-radius:6px;">
+                Access Partner Workstation &rarr;
+              </a>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="background:#f8fafc; padding:24px 32px; border-top:1px solid #e2e8f0; text-align:center;">
-              <p style="margin:0 0 6px 0; font-size:13px; font-weight:700; color:#475569;">
-                Need help or have questions regarding your onboarding?
-              </p>
-              <p style="margin:0 0 14px 0; font-size:12px; color:#64748b;">
-                Our Partner Support Desk is available 24/7 at <a href="mailto:support@localfixr.com" style="color:#6366f1; text-decoration:none; font-weight:600;">support@localfixr.com</a>.
-              </p>
-              <p style="margin:0; font-size:11px; color:#94a3b8;">
-                &copy; ${new Date().getFullYear()} LocalFixr Technologies Pvt. Ltd. All rights reserved. • Safe &amp; Verified Partner Program
-              </p>
+            <td style="border-top:1px solid #e2e8f0; padding-top:16px; font-size:11px; color:#94a3b8; line-height:1.5;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="left" style="font-size:11px; color:#64748b;">
+                    🛡️ Official Service Partner Engagement Letter • LocalFixr Marketplace
+                  </td>
+                  <td align="right" style="font-size:11px; color:#64748b;">
+                    Support: support@localfixr.com
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
