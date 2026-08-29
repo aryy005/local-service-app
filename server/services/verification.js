@@ -166,7 +166,7 @@ async function sendPartnerWelcomeEmail(partnerUser) {
   const location = partnerUser.city || p.location || 'Your Operating City';
   const partnerId = partnerUser._id ? partnerUser._id.toString() : Date.now().toString();
   const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-  const dashboardUrl = `${clientUrl}/provider-dashboard`;
+  const partnerSignInUrl = `${clientUrl}/auth/login?role=provider&redirect=${encodeURIComponent('/provider-dashboard')}`;
 
   const htmlContent = `
 <!DOCTYPE html>
@@ -321,8 +321,8 @@ async function sendPartnerWelcomeEmail(partnerUser) {
           <!-- Action Button -->
           <tr>
             <td style="padding:10px 0 28px 0; text-align:center;">
-              <a href="${dashboardUrl}" target="_blank" style="display:inline-block; padding:12px 28px; background:#0f172a; color:#ffffff; font-size:14px; font-weight:700; text-decoration:none; border-radius:6px;">
-                Access Partner Workstation &rarr;
+              <a href="${partnerSignInUrl}" target="_blank" style="display:inline-block; padding:12px 28px; background:#0f172a; color:#ffffff; font-size:14px; font-weight:700; text-decoration:none; border-radius:6px;">
+                Sign In to Partner Workstation &rarr;
               </a>
             </td>
           </tr>
