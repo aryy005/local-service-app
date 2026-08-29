@@ -75,6 +75,17 @@ router.post('/:id/reviews', auth, async (req, res) => {
       return res.status(404).json({ message: 'Provider not found' });
     }
 
+    const Booking = require('../models/Booking');
+    const completedBooking = await Booking.findOne({
+      providerId: providerId,
+      customerId: customerId,
+      status: 'completed'
+    });
+
+    if (!completedBooking) {
+      return res.status(400).json({ message: 'You can only review a service partner after your booking has been fully completed.' });
+    }
+
     const existingReview = await Review.findOne({ provider: providerId, customer: customerId });
     if (existingReview) {
       return res.status(400).json({ message: 'You have already reviewed this provider' });

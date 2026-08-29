@@ -299,15 +299,21 @@ const CustomerDashboard = () => {
                   </button>
                 )}
 
-                {/* Rate & Tip Button when Completed or Paid */}
-                {(booking.paymentStatus === 'paid' || booking.status === 'completed') && (
+                {/* Rate & Review Button ONLY when Service is fully completed */}
+                {booking.status === 'completed' && !booking.customerReview && (
                   <button 
                     onClick={() => setActiveReviewBooking(booking)}
                     className="btn btn-outline btn-sm" 
                     style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', borderColor: '#f59e0b', color: '#f59e0b', fontWeight: 700 }}
                   >
-                    <Star size={16} className="fill-amber-400 text-amber-400" /> Rate & Tip Professional
+                    <Star size={16} className="fill-amber-400 text-amber-400" /> Rate & Review Completed Service
                   </button>
+                )}
+
+                {booking.status === 'completed' && booking.customerReview && (
+                  <div style={{ fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', padding: '0.4rem', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '6px' }}>
+                    <CheckCircle size={14} /> Review Submitted ({booking.customerReview.rating} ★)
+                  </div>
                 )}
 
                 {booking.status === 'completed' && (
