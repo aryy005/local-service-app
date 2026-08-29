@@ -121,6 +121,219 @@ function verifyEmailOTP(email, otp) {
   return verifyStoredOTP(key, otp);
 }
 
+/**
+ * Sends an official, executive-quality HTML Welcome Letter to newly registered/completed service partners
+ */
+async function sendPartnerWelcomeEmail(partnerUser) {
+  if (!partnerUser || !partnerUser.email) return { sent: false, error: 'Invalid user email' };
+
+  const partnerName = partnerUser.name || 'Service Partner';
+  const partnerEmail = partnerUser.email;
+  const p = partnerUser.providerDetails || {};
+  const category = p.category || 'Home Services & Repairs';
+  const hourlyRate = p.hourlyRate || 25;
+  const location = partnerUser.city || p.location || 'Your Operating City';
+  const partnerId = partnerUser._id ? partnerUser._id.toString() : Date.now().toString();
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  const dashboardUrl = `${clientUrl}/provider-dashboard`;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to the LocalFixr Partner Network</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f1f5f9; font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; color:#1e293b;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f1f5f9; padding:40px 15px;">
+    <tr>
+      <td align="center">
+        <!-- Main Email Card -->
+        <table role="presentation" width="100%" style="max-width:620px; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 12px 35px rgba(0,0,0,0.06); border:1px solid #e2e8f0;">
+          
+          <!-- Gradient Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #3730a3 0%, #4f46e5 50%, #7c3aed 100%); padding:40px 32px; text-align:center; color:#ffffff;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <div style="display:inline-block; width:54px; height:54px; background:rgba(255,255,255,0.22); border:1.5px solid rgba(255,255,255,0.4); border-radius:14px; line-height:54px; font-size:24px; font-weight:900; color:#ffffff; margin-bottom:12px; letter-spacing:-0.03em;">
+                      LF
+                    </div>
+                    <h1 style="margin:0; font-size:26px; font-weight:800; letter-spacing:-0.02em; color:#ffffff;">
+                      LocalFixr Partner Network
+                    </h1>
+                    <div style="display:inline-block; margin-top:12px; padding:5px 16px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); border-radius:30px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#ffffff;">
+                      🌟 Official Onboarding &amp; Verification Confirmation
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Letter Body -->
+          <tr>
+            <td style="padding:36px 32px 24px 32px;">
+              <h2 style="margin:0 0 16px 0; font-size:20px; font-weight:800; color:#0f172a; line-height:1.3;">
+                Welcome to LocalFixr, ${partnerName}! 🤝
+              </h2>
+              <p style="margin:0 0 16px 0; font-size:15px; line-height:1.65; color:#334155;">
+                We are thrilled to formally welcome you to the <strong>LocalFixr Service Partner Ecosystem</strong>. Your professional partner account has been successfully registered and provisioned on our verified marketplace.
+              </p>
+              <p style="margin:0 0 20px 0; font-size:15px; line-height:1.65; color:#334155;">
+                As an authorized service partner, you now have access to verified customer bookings in your service radius, transparent commission rates, live in-app GPS tracking, and instant UPI earnings payouts.
+              </p>
+
+              <!-- Account Summary Box -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
+                <tr>
+                  <td style="padding:14px 20px; background:#eef2ff; border-bottom:1px solid #c7d2fe;">
+                    <strong style="font-size:13px; text-transform:uppercase; letter-spacing:0.05em; color:#3730a3;">
+                      📋 Partner Profile &amp; Credentials
+                    </strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:18px 20px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="padding:6px 0; font-size:14px; color:#64748b;" width="42%">Partner Name:</td>
+                        <td style="padding:6px 0; font-size:14px; font-weight:700; color:#0f172a;">${partnerName}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0; font-size:14px; color:#64748b;">Registered Email:</td>
+                        <td style="padding:6px 0; font-size:14px; font-weight:700; color:#0f172a;">${partnerEmail}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0; font-size:14px; color:#64748b;">Service Specialization:</td>
+                        <td style="padding:6px 0; font-size:14px; font-weight:700; color:#4f46e5;">${category}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0; font-size:14px; color:#64748b;">Base Rate:</td>
+                        <td style="padding:6px 0; font-size:14px; font-weight:700; color:#059669;">₹${hourlyRate} / hr</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0; font-size:14px; color:#64748b;">Operating Area:</td>
+                        <td style="padding:6px 0; font-size:14px; font-weight:700; color:#0f172a;">${location}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0; font-size:14px; color:#64748b;">Partner Reference ID:</td>
+                        <td style="padding:6px 0; font-size:14px; font-family:monospace; font-weight:800; color:#6366f1;">LF-PRO-${partnerId.slice(-6).toUpperCase()}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Steps for Success -->
+              <h3 style="margin:28px 0 16px 0; font-size:16px; font-weight:800; color:#0f172a;">
+                🚀 How to Maximize Your Earnings on LocalFixr:
+              </h3>
+              
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td width="36" valign="top" style="padding-right:12px;">
+                    <div style="width:28px; height:28px; background:#e0e7ff; color:#4f46e5; border-radius:50%; text-align:center; line-height:28px; font-weight:800; font-size:13px;">1</div>
+                  </td>
+                  <td valign="top" style="padding-bottom:14px;">
+                    <strong style="font-size:14px; color:#0f172a;">Monitor Your Partner Workstation</strong>
+                    <div style="font-size:13px; color:#64748b; line-height:1.5; margin-top:2px;">
+                      Incoming service requests will appear live in your workstation with customer requirements, address, and scheduled time.
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td width="36" valign="top" style="padding-right:12px;">
+                    <div style="width:28px; height:28px; background:#e0e7ff; color:#4f46e5; border-radius:50%; text-align:center; line-height:28px; font-weight:800; font-size:13px;">2</div>
+                  </td>
+                  <td valign="top" style="padding-bottom:14px;">
+                    <strong style="font-size:14px; color:#0f172a;">Complete Aadhaar &amp; Phone Verification</strong>
+                    <div style="font-size:13px; color:#64748b; line-height:1.5; margin-top:2px;">
+                      Verified partners earn a verified trust badge on their profile, receiving up to <strong>3x more customer bookings</strong>.
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td width="36" valign="top" style="padding-right:12px;">
+                    <div style="width:28px; height:28px; background:#e0e7ff; color:#4f46e5; border-radius:50%; text-align:center; line-height:28px; font-weight:800; font-size:13px;">3</div>
+                  </td>
+                  <td valign="top" style="padding-bottom:14px;">
+                    <strong style="font-size:14px; color:#0f172a;">Instant UPI Settlements</strong>
+                    <div style="font-size:13px; color:#64748b; line-height:1.5; margin-top:2px;">
+                      When you finish a job, payment is automatically processed and transferred directly to your configured UPI ID.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Action Button -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:28px 0 10px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${dashboardUrl}" target="_blank" style="display:inline-block; padding:15px 36px; background:linear-gradient(135deg, #4f46e5, #6366f1); color:#ffffff; font-size:15px; font-weight:800; text-decoration:none; border-radius:10px; box-shadow:0 4px 14px rgba(79, 70, 229, 0.4);">
+                      Open Partner Workstation &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8fafc; padding:24px 32px; border-top:1px solid #e2e8f0; text-align:center;">
+              <p style="margin:0 0 6px 0; font-size:13px; font-weight:700; color:#475569;">
+                Need help or have questions regarding your onboarding?
+              </p>
+              <p style="margin:0 0 14px 0; font-size:12px; color:#64748b;">
+                Our Partner Support Desk is available 24/7 at <a href="mailto:support@localfixr.com" style="color:#6366f1; text-decoration:none; font-weight:600;">support@localfixr.com</a>.
+              </p>
+              <p style="margin:0; font-size:11px; color:#94a3b8;">
+                &copy; ${new Date().getFullYear()} LocalFixr Technologies Pvt. Ltd. All rights reserved. • Safe &amp; Verified Partner Program
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  const transporter = getEmailTransporter();
+  const subject = `Welcome to the LocalFixr Partner Network, ${partnerName}! 🌟 Official Onboarding Confirmation`;
+
+  if (transporter) {
+    try {
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to: partnerEmail,
+        subject: subject,
+        html: htmlContent
+      });
+      console.log(`[PARTNER WELCOME EMAIL] Sent official welcome letter via SMTP to ${partnerEmail}`);
+      return { sent: true, demo: false };
+    } catch (err) {
+      console.error(`[PARTNER WELCOME EMAIL] SMTP dispatch failed:`, err.message);
+    }
+  }
+
+  // Demo / Local development mode fallback:
+  console.log(`\n=============================================================`);
+  console.log(`📨 [PARTNER WELCOME EMAIL DISPATCHED (DEV/DEMO MODE)]`);
+  console.log(`To: ${partnerEmail}`);
+  console.log(`Subject: ${subject}`);
+  console.log(`Partner ID: LF-PRO-${partnerId.slice(-6).toUpperCase()}`);
+  console.log(`Category: ${category} | Hourly Rate: ₹${hourlyRate}`);
+  console.log(`=============================================================\n`);
+  return { sent: true, demo: true };
+}
+
 // ═══════════════════════════════════════════════════════════════
 //               INDIAN PHONE NUMBER VERIFICATION
 //         Validates +91 format and uses MSG91 for SMS
@@ -499,6 +712,7 @@ module.exports = {
   // Email
   sendEmailOTP,
   verifyEmailOTP,
+  sendPartnerWelcomeEmail,
   // Phone
   validateIndianPhone,
   sendPhoneOTP,

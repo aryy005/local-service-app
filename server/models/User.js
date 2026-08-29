@@ -66,7 +66,10 @@ const userSchema = new mongoose.Schema({
     aadhaarLastFour: { type: String, default: '' },   // Last 4 digits for display (XXXX-XXXX-1234)
     aadhaarVerified: { type: Boolean, default: false },
     aadhaarVerifiedAt: { type: Date },
-    aadhaarRefId: { type: String, default: '' }       // UIDAI transaction reference ID
+    aadhaarRefId: { type: String, default: '' },      // UIDAI transaction reference ID
+    // Partner Welcome Email Tracking
+    welcomeEmailSent: { type: Boolean, default: false },
+    welcomeEmailSentAt: { type: Date }
   },
   // Password Reset Token & OTP fields
   resetPasswordToken: { type: String, default: null },

@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
-const { hashAadhaar, isValidAadhaar } = require('../services/verification');
+const { hashAadhaar, isValidAadhaar, sendPartnerWelcomeEmail } = require('../services/verification');
 
 // @route   POST api/auth/google
 // @route   POST api/auth/google
@@ -140,10 +140,16 @@ router.post('/google', async (req, res) => {
           reviewsCount: 0,
           experienceYears: 1,
           totalJobsCompleted: 0,
-          aadhaarVerified: false
+          aadhaarVerified: false,
+          welcomeEmailSent: true,
+          welcomeEmailSentAt: new Date()
         } : undefined
       });
       await user.save();
+
+      if (normalizedRole === 'provider') {
+        sendPartnerWelcomeEmail(user).catch(err => console.error('[EMAIL] Failed to send partner welcome letter on Google sign-up:', err.message));
+      }
     }
 
     // Sign Application JWT
@@ -217,11 +223,17 @@ router.post('/register', async (req, res) => {
         reviewsCount: 0,
         experienceYears: 1,
         totalJobsCompleted: 0,
-        aadhaarVerified: false
+        aadhaarVerified: false,
+        welcomeEmailSent: true,
+        welcomeEmailSentAt: new Date()
       } : undefined
     });
 
     await user.save();
+
+    if (normalizedRole === 'provider') {
+      sendPartnerWelcomeEmail(user).catch(err => console.error('[EMAIL] Failed to send partner welcome letter on registration:', err.message));
+    }
 
     const payload = { user: { id: user.id, role: user.role } };
     jwt.sign(payload, process.env.JWT_SECRET || 'secret123', { expiresIn: '5h' }, (err, token) => {
@@ -465,6 +477,13 @@ router.put('/me', auth, async (req, res) => {
       if (!user.phoneVerified && !p.aadhaarVerified) missing.push('Phone or Aadhaar Verification');
 
       user.providerDetails.isProfileComplete = (missing.length === 0);
+
+      // If provider profile is now 100% complete and welcome email hasn't been sent yet, send official welcome letter
+      if (user.providerDetails.isProfileComplete && !user.providerDetails.welcomeEmailSent) {
+        user.providerDetails.welcomeEmailSent = true;
+        user.providerDetails.welcomeEmailSentAt = new Date();
+        sendPartnerWelcomeEmail(user).catch(err => console.error('[EMAIL] Failed to send partner welcome letter on profile complete:', err.message));
+      }
     }
     
     await user.save();
