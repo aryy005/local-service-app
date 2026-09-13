@@ -67,13 +67,13 @@ const Header = () => {
 
   return (
     <header className="header">
-      <div className="container header-content">
+      <div className="header-content">
         {user?.role === 'provider' ? (
           /* Provider Brand Group */
           <div className="provider-brand-group">
             <Link to={getHomeLink()} className="logo">
               <div className="logo-mark">LF</div>
-              <span className="logo-text">LocalFixr</span>
+              <span className="logo-text">Localfixr</span>
             </Link>
             <div className="provider-header-badge">
               💼 Provider Workstation
@@ -81,65 +81,25 @@ const Header = () => {
           </div>
         ) : (
           <>
-            {/* Logo */}
-            <Link to={getHomeLink()} className="logo">
-              <div className="logo-mark">LF</div>
-              <span className="logo-text">LocalFixr</span>
-            </Link>
+        {/* Logo */}
+        <Link to={getHomeLink()} className="logo">
+          <span className="logo-text">Localfixr</span>
+        </Link>
 
-            {/* Location selector (UC-style) */}
-            <div className="location-selector" onClick={handleLocateMe}>
-              <MapPin size={16} className="loc-icon" />
-              <span className="loc-text">{locationValue || 'Select City'}</span>
-              <ChevronDown size={14} />
-            </div>
+        {/* Center Navigation Links (Matching mockup) */}
+        <nav className="desktop-center-nav">
+          <Link to="/" className="nav-link">Home</Link>
+          <Link to="/search" className="nav-link">Services</Link>
+          <a href="#about" className="nav-link" onClick={(e) => { e.preventDefault(); navigate('/search'); }}>About</a>
+          <a href="#contact" className="nav-link" onClick={(e) => { e.preventDefault(); navigate('/search'); }}>Contact</a>
+        </nav>
 
-            {/* Search bar */}
-            <div className="search-bar" onClick={() => { if (searchQuery.trim()) navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`); }}>
-              <Search size={18} className="search-icon" style={{ cursor: 'pointer' }} />
-              <input 
-                type="text" 
-                placeholder="Search for services" 
-                className="search-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchQuery.trim()) {
-                    navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-                  }
-                }}
-              />
-            </div>
-          </>
-        )}
-
-        {/* Navigation */}
+        {/* Navigation / Actions */}
         <nav className="desktop-nav">
-          {user?.role === 'provider' ? (
-            <Link to="/provider-dashboard" className="nav-link" style={{ fontWeight: 700, color: '#6366f1' }}>
-              My Jobs & Orders
-            </Link>
-          ) : (
-            <Link to="/search" className="nav-link">
-              Services
-            </Link>
-          )}
-          
           <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme" title="Toggle Dark/Light Mode">
             {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
           </button>
-          
-          <select 
-            value={lang} 
-            onChange={(e) => setLang(e.target.value)}
-            className="header-lang-select"
-            aria-label="Language Selector"
-          >
-            <option value="en">EN</option>
-            <option value="hi">HI</option>
-          </select>
-          
+
           {user ? (
             <div className="profile-dropdown-container" ref={profileRef}>
               <button 
@@ -185,18 +145,20 @@ const Header = () => {
               )}
             </div>
           ) : (
-            <>
-              <Link to="/auth/login" className="nav-link">Login</Link>
-              <Link to="/auth/signup" className="btn btn-primary btn-sm">
-                Register
+            <div className="auth-header-buttons">
+              <Link to="/auth/login" className="nav-link nav-login-link">Login</Link>
+              <Link to="/auth/signup" className="get-started-btn-lime">
+                Get Started
               </Link>
-            </>
+            </div>
           )}
         </nav>
         
         <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
+          </>
+        )}
       </div>
 
       {/* Mobile Navigation Panel */}

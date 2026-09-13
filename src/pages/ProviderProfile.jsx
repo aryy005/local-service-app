@@ -88,17 +88,23 @@ const ProviderProfile = () => {
                   <MapPin size={18} />
                   {provider.providerDetails.location}
                 </div>
-                {provider.providerDetails.experienceYears > 0 && (
-                  <div className="meta-item location" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
-                    💼 <strong>{provider.providerDetails.experienceYears}</strong> Years Exp.
-                  </div>
-                )}
-                {provider.providerDetails.totalJobsCompleted > 0 && (
-                  <div className="meta-item location" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
-                    🏆 <strong>{provider.providerDetails.totalJobsCompleted}</strong> Jobs Done
-                  </div>
-                )}
               </div>
+            </div>
+          </div>
+
+          {/* Stats Blocks (Matching Screen 3) */}
+          <div className="provider-stats-grid">
+            <div className="stat-card">
+              <span className="stat-value">{provider.providerDetails.experienceYears || 5}+</span>
+              <span className="stat-label">Years Experience</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-value">{provider.providerDetails.totalJobsCompleted || 100}+</span>
+              <span className="stat-label">Jobs Completed</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-value">{provider.providerDetails.location || 'Chandigarh'}</span>
+              <span className="stat-label">Service Location</span>
             </div>
           </div>
 
@@ -254,7 +260,7 @@ const ProviderProfile = () => {
             ) : (
               <>
                 <button 
-                  className="btn btn-primary btn-lg w-full mt-4"
+                  className="btn btn-lime btn-lg w-full mt-4"
                   onClick={() => setIsBookingOpen(true)}
                 >
                   Book Now

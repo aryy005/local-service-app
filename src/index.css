@@ -1,61 +1,68 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Oswald:wght@600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 :root {
-  /* UC-inspired palette with LocalFixr identity */
-  --bg-color: #ffffff;
-  --bg-secondary: #f7f7f7;
+  /* Industrial Editorial Palette matching user mockup */
+  --hero-bg-warm: #EBEAE5;
+  --neon-accent: #D2FE00;
+  --neon-accent-hover: #b8e000;
+  --dark-bar-bg: #141414;
+  --font-display: 'Oswald', 'Inter', sans-serif;
+  --font-sans: 'Space Grotesk', 'Inter', sans-serif;
+
+  /* LocalPro Brutalist Palette */
+  --bg-color: #F4F4F0;
+  --bg-secondary: #EBEAE5;
   --surface-color: #ffffff;
-  --surface-border: #e8e8e8;
-  --primary-color: #7c3aed;     /* Violet - our brand color */
-  --primary-hover: #6d28d9;
-  --primary-light: #ede9fe;
-  --text-main: #1a1a2e;
+  --surface-border: #DCDBCF;
+  --primary-color: #141414;     /* Black primary */
+  --primary-hover: #262626;
+  --primary-light: #EBEAE5;
+  --text-main: #141414;
   --text-secondary: #333333;
-  --text-muted: #757575;
-  --accent-color: #00C853;       /* Trust green (UC-style) */
-  --accent-light: #e8f5e9;
+  --text-muted: #666666;
+  --accent-color: #D2FE00;       /* Electric Lime accent */
+  --accent-hover: #b8e000;
+  --accent-light: rgba(210, 254, 0, 0.15);
   --warning-color: #ffc107;
   --danger-color: #ef4444;
   --card-bg: #ffffff;
-  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  --card-shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.1);
   
   /* Typography */
-  --h1-gradient: linear-gradient(135deg, #1a1a2e 0%, #7c3aed 100%);
-  --logo-gradient: linear-gradient(135deg, #1a1a2e 0%, var(--primary-color) 100%);
+  --h1-gradient: none;
+  --logo-gradient: none;
   
   /* Layout */
-  --border-radius: 12px;
-  --border-radius-sm: 8px;
-  --border-radius-lg: 16px;
-  --border-radius-xl: 24px;
-  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --border-radius: 8px;
+  --border-radius-sm: 6px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --max-width: 1280px;
   
-  /* Glass (for header) */
-  --glass-bg: rgba(255, 255, 255, 0.95);
-  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --glass-backdrop: blur(20px);
+  /* Glass / Sticky header */
+  --glass-bg: #EBEAE5;
+  --glass-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  --glass-backdrop: none;
 }
 
 /* Dark theme */
 [data-theme="dark"] {
-  --bg-color: #0f0f14;
-  --bg-secondary: #1a1a22;
-  --surface-color: #1e1e28;
-  --surface-border: rgba(255, 255, 255, 0.08);
-  --text-main: #f0f0f5;
-  --text-secondary: #c8c8d0;
-  --text-muted: #8b8b9b;
-  --card-bg: #1e1e28;
-  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-  --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.4);
-  --primary-light: rgba(124, 58, 237, 0.15);
-  --accent-light: rgba(0, 200, 83, 0.1);
-  --h1-gradient: linear-gradient(135deg, #f0f0f5 0%, #a78bfa 100%);
-  --logo-gradient: linear-gradient(135deg, #f0f0f5 0%, var(--primary-color) 100%);
-  --glass-bg: rgba(15, 15, 20, 0.92);
-  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --bg-color: #0d0d0d;
+  --bg-secondary: #141414;
+  --surface-color: #1a1a1a;
+  --surface-border: #2a2a2a;
+  --text-main: #f5f5f5;
+  --text-secondary: #cccccc;
+  --text-muted: #888888;
+  --card-bg: #141414;
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --card-shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.6);
+  --primary-light: rgba(210, 254, 0, 0.1);
+  --accent-light: rgba(210, 254, 0, 0.15);
+  --glass-bg: #141414;
+  --glass-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -136,14 +143,26 @@ a {
 }
 
 .btn-primary {
-  background-color: var(--primary-color);
-  color: white;
+  background-color: var(--primary-color, #141414);
+  color: #ffffff;
+  font-weight: 700;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-hover);
+  background-color: #2a2a2a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
+}
+
+.btn-lime {
+  background-color: var(--neon-accent, #D2FE00);
+  color: #121212;
+  font-weight: 700;
+  border: none;
+}
+
+.btn-lime:hover:not(:disabled) {
+  background-color: var(--neon-accent-hover, #b8e000);
+  transform: translateY(-1px);
 }
 
 .btn-outline {

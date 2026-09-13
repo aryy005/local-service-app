@@ -87,10 +87,10 @@
 }
 
 .role-btn.active {
-  background: var(--card-bg);
-  color: var(--primary-color);
+  background: var(--neon-accent, #D2FE00);
+  color: #121212;
+  font-weight: 800;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  font-weight: 600;
 }
 
 .auth-redirect {

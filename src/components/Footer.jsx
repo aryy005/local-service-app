@@ -8,58 +8,59 @@ const Footer = () => {
   return (
     <footer style={{
       marginTop: 'auto',
-      padding: '2.5rem 0 1.5rem',
-      borderTop: '1px solid var(--surface-border)',
-      background: 'var(--bg-secondary)',
+      padding: '3rem 0 1.5rem',
+      background: '#141414',
+      color: '#ffffff',
+      borderTop: '1px solid #262626'
     }}>
       <div className="container" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
         gap: '2rem',
-        marginBottom: '2rem',
+        marginBottom: '2.5rem',
       }}>
         {/* Brand */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' }}>
             <div style={{
-              width: '28px', height: '28px', background: 'var(--primary-color)', color: 'white',
-              borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: '800', fontSize: '0.65rem'
-            }}>LF</div>
-            <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>LocalFixr</span>
+              width: '30px', height: '30px', background: '#D2FE00', color: '#121212',
+              borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: '900', fontSize: '0.85rem'
+            }}>LP</div>
+            <span style={{ fontWeight: 800, fontSize: '1.25rem', color: '#ffffff', fontFamily: "var(--font-sans, 'Space Grotesk', sans-serif)" }}>LocalPro</span>
           </div>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+          <p style={{ fontSize: '0.85rem', color: '#aaaaaa', lineHeight: 1.6 }}>
             {isProvider 
-              ? 'LocalFixr Partner Portal. Manage client bookings, track revenue, and receive instant payouts.' 
-              : "Your neighborhood's trusted service marketplace. Verified professionals, fair prices."}
+              ? 'LocalPro Partner Portal. Manage client bookings, track revenue, and receive instant payouts.' 
+              : "Local Services. Real People. Skilled professionals, verified and nearby to help — just around the corner."}
           </p>
         </div>
 
         {/* Company */}
         <div>
-          <h4 style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>Company</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>About LocalFixr</Link>
-            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Partner Guidelines</Link>
+          <h4 style={{ fontSize: '0.82rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#D2FE00', marginBottom: '1rem' }}>Company</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: '#dddddd' }}>About LocalPro</Link>
+            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: '#dddddd' }}>Partner Guidelines</Link>
           </div>
         </div>
 
         {/* Workspace Quick Links */}
         <div>
-          <h4 style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+          <h4 style={{ fontSize: '0.82rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#D2FE00', marginBottom: '1rem' }}>
             {isProvider ? 'Partner Workstation' : 'For Customers'}
           </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {isProvider ? (
               <>
-                <Link to="/provider-dashboard" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>My Jobs & Orders</Link>
-                <Link to="/provider-dashboard" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Earnings & Withdrawals</Link>
-                <Link to="/provider-dashboard" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Profile & Verification</Link>
+                <Link to="/provider-dashboard" style={{ fontSize: '0.88rem', color: '#dddddd' }}>My Jobs & Orders</Link>
+                <Link to="/provider-dashboard" style={{ fontSize: '0.88rem', color: '#dddddd' }}>Earnings & Withdrawals</Link>
+                <Link to="/provider-dashboard" style={{ fontSize: '0.88rem', color: '#dddddd' }}>Profile & Verification</Link>
               </>
             ) : (
               <>
-                <Link to="/search" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Browse Services</Link>
-                <Link to="/" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>How it Works</Link>
+                <Link to="/search" style={{ fontSize: '0.88rem', color: '#dddddd' }}>Browse Services</Link>
+                <Link to="/" style={{ fontSize: '0.88rem', color: '#dddddd' }}>How it Works</Link>
               </>
             )}
           </div>
@@ -67,30 +68,30 @@ const Footer = () => {
 
         {/* Support */}
         <div>
-          <h4 style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>Help & Support</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Partner Support</Link>
-            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Safety & Trust</Link>
+          <h4 style={{ fontSize: '0.82rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#D2FE00', marginBottom: '1rem' }}>Help & Support</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: '#dddddd' }}>Partner Support</Link>
+            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: '#dddddd' }}>Safety & Trust</Link>
           </div>
         </div>
       </div>
 
       <div className="container" style={{
-        paddingTop: '1rem',
-        borderTop: '1px solid var(--surface-border)',
+        paddingTop: '1.25rem',
+        borderTop: '1px solid #262626',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: '0.5rem',
       }}>
-        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-          © {new Date().getFullYear()} LocalFixr. All rights reserved.
+        <p style={{ fontSize: '0.8rem', color: '#888888' }}>
+          © {new Date().getFullYear()} LocalPro. All rights reserved.
         </p>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <a href="#" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Privacy</a>
-          <a href="#" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Terms</a>
-          <a href="#" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Contact</a>
+        <div style={{ display: 'flex', gap: '1.25rem' }}>
+          <a href="#" style={{ fontSize: '0.8rem', color: '#888888' }}>Privacy</a>
+          <a href="#" style={{ fontSize: '0.8rem', color: '#888888' }}>Terms</a>
+          <a href="#" style={{ fontSize: '0.8rem', color: '#888888' }}>Contact</a>
         </div>
       </div>
     </footer>

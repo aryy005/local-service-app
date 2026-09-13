@@ -18,9 +18,9 @@ import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen w-full bg-[#EBEAE5]">
       <Header />
-      <main className="flex-grow container z-10" style={{ paddingTop: '1.5rem', paddingBottom: '2rem' }}>
+      <main className="flex-grow w-full z-10">
         <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Home />} />

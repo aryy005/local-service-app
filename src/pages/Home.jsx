@@ -1,581 +1,195 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import * as Icons from 'lucide-react';
-import { categories } from '../data/mockData';
+import { MapPin, ArrowRight, ArrowUpRight, ShieldCheck, CreditCard, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Home.css';
 
-// ─── Urban Company Featured Popular Services (with High-res Imagery) ────────
-const featuredServices = [
-  {
-    id: 'srv-1',
-    categoryId: 'cat-5',
-    categoryName: 'Electrician',
-    title: 'Switchboard, Wiring & Fan Fitting',
-    image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600',
-    rating: 4.86,
-    reviewsCount: '24.5K',
-    price: 199,
-    duration: '30 mins',
-    badge: '⚡ Bestseller',
-    description: 'Expert diagnostics, short circuit repairs, switchboards & appliance installations.'
-  },
-  {
-    id: 'srv-2',
-    categoryId: 'cat-6',
-    categoryName: 'Plumber',
-    title: 'Tap Leakage, Pipe & Drain Repair',
-    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=600',
-    rating: 4.89,
-    reviewsCount: '38.2K',
-    price: 249,
-    duration: '40 mins',
-    badge: '💧 Most Popular',
-    description: 'High-pressure jet unblocking, tap replacement, pipe leakage, and bathroom fixtures.'
-  },
-  {
-    id: 'srv-3',
-    categoryId: 'cat-8',
-    categoryName: 'Cleaning',
-    title: 'Full Bathroom & Kitchen Deep Clean',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=600',
-    rating: 4.92,
-    reviewsCount: '52.1K',
-    price: 399,
-    duration: '60 mins',
-    badge: '✨ Top Rated',
-    description: 'Hard water stain removal, machine floor scrubbing, tile sanitization & sparkling shine.'
-  },
-  {
-    id: 'srv-4',
-    categoryId: 'cat-2',
-    categoryName: 'Carpenter',
-    title: 'Furniture Assembly & Lock Repair',
-    image: 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&q=80&w=600',
-    rating: 4.83,
-    reviewsCount: '18.4K',
-    price: 299,
-    duration: '45 mins',
-    badge: '🔨 Expert Care',
-    description: 'Bed & wardrobe assembly, hinge adjustment, custom woodwork, and door lock fixes.'
-  },
-  {
-    id: 'srv-5',
-    categoryId: 'cat-3',
-    categoryName: 'Painter',
-    title: 'Accent Wall Painting & Waterproofing',
-    image: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=600',
-    rating: 4.88,
-    reviewsCount: '12.6K',
-    price: 499,
-    duration: '90 mins',
-    badge: '🎨 Premium Finish',
-    description: 'Laser-guided color consultation, Asian Paints premium finish, and damp-proof coating.'
-  },
-  {
-    id: 'srv-6',
-    categoryId: 'cat-1',
-    categoryName: 'Tailor',
-    title: 'Custom Stitching & Express Alteration',
-    image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=600',
-    rating: 4.85,
-    reviewsCount: '14.9K',
-    price: 199,
-    duration: '35 mins',
-    badge: '🪡 Doorstep Pickup',
-    description: 'Perfect-fit blouse, suit, trousers alterations with free doorstep pickup & drop.'
-  },
-  {
-    id: 'srv-7',
-    categoryId: 'cat-7',
-    categoryName: 'Laundry',
-    title: 'Wash, Steam Iron & Express Dry Clean',
-    image: 'https://images.unsplash.com/photo-1545173168-9f1947eebb7f?auto=format&fit=crop&q=80&w=600',
-    rating: 4.84,
-    reviewsCount: '16.3K',
-    price: 149,
-    duration: '24 hours',
-    badge: '👔 Crisp Finish',
-    description: 'Eco-friendly antibacterial washing, wrinkle-free steam press, and spotless dry cleaning.'
-  },
-  {
-    id: 'srv-8',
-    categoryId: 'cat-4',
-    categoryName: 'Cobbler',
-    title: 'Leather Shoe Spa, Resole & Stitching',
-    image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=600',
-    rating: 4.81,
-    reviewsCount: '9.2K',
-    price: 199,
-    duration: '30 mins',
-    badge: '👞 Premium Care',
-    description: 'Deep leather conditioning, anti-fungal deodorization, sole repairs, and polish.'
-  }
-];
+/* ─── SVG Icons matching reference exactly ─── */
+const IconBolt = () => (
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z" />
+  </svg>
+);
 
-// ─── Urban Company Verified Customer Reviews ────────────────────────────────
-const customerReviews = [
-  {
-    name: 'Ananya Sharma',
-    city: 'New Delhi',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120',
-    rating: 5,
-    service: 'Full Home Deep Clean',
-    review: 'Booked in under a minute. The professional arrived with high-end machines and left my apartment sparkling clean. Super transparent pricing with zero hassle!'
-  },
-  {
-    name: 'Vikram Mehta',
-    city: 'Mumbai',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120',
-    rating: 5,
-    service: 'Electrician & Switchboard Wiring',
-    review: 'The live GPS tracking is incredible! I could see the electrician approaching my building in real-time. He was polite, fixed the circuit in 20 mins, and charged exact standard rate.'
-  },
-  {
-    name: 'Pooja Iyer',
-    city: 'Bengaluru',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120',
-    rating: 5,
-    service: 'Tap & Pipeline Leakage Repair',
-    review: 'No more negotiating with local handymen. Background verified plumber, upfront pricing, and paid instantly via UPI QR code. Truly the Urban Company standard!'
-  }
+const IconFaucet = () => (
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 8h14" /><path d="M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+    <path d="M19 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+    <path d="M12 8v5" /><path d="M9 21v-4a3 3 0 0 1 6 0v4" />
+    <path d="M8 21h8" />
+  </svg>
+);
+
+const IconHammer = () => (
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m15 12-8.5 8.5a2.12 2.12 0 0 1-3-3L12 9" />
+    <path d="M17.64 15 22 10.64" />
+    <path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 0 0-3.94-1.64H9l.92.82A6.18 6.18 0 0 1 12 8.4v1.56l2 2h2.47l2.26 1.91" />
+  </svg>
+);
+
+const IconPaint = () => (
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="11" height="5" rx="1" />
+    <path d="M14 5h1a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-1" />
+    <path d="M8 8v13" /><line x1="5" y1="21" x2="11" y2="21" />
+  </svg>
+);
+
+const IconScissors = () => (
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" />
+    <line x1="20" y1="4" x2="8.12" y2="15.88" />
+    <line x1="14.47" y1="14.48" x2="20" y2="20" />
+    <line x1="8.12" y1="8.12" x2="12" y2="12" />
+  </svg>
+);
+
+const IconSnowflake = () => (
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="2" x2="12" y2="22" />
+    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <line x1="4.93" y1="19.07" x2="19.07" y2="4.93" />
+    <polyline points="8 2 12 6 16 2" />
+    <polyline points="2 16 6 12 2 8" />
+    <polyline points="16 22 12 18 8 22" />
+    <polyline points="22 8 18 12 22 16" />
+  </svg>
+);
+
+const popularServices = [
+  { id: 'ps-1', name: 'Electrician', icon: <IconBolt />,     categoryId: 'cat-5' },
+  { id: 'ps-2', name: 'Plumber',     icon: <IconFaucet />,   categoryId: 'cat-6' },
+  { id: 'ps-3', name: 'Carpenter',   icon: <IconHammer />,   categoryId: 'cat-2' },
+  { id: 'ps-4', name: 'Painter',     icon: <IconPaint />,    categoryId: 'cat-3' },
+  { id: 'ps-5', name: 'Tailor',      icon: <IconScissors />, categoryId: 'cat-1' },
+  { id: 'ps-6', name: 'AC Repair',   icon: <IconSnowflake />,categoryId: 'cat-7' },
 ];
 
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeBanner, setActiveBanner] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    if (user?.role === 'provider') {
-      navigate('/provider-dashboard', { replace: true });
-    }
-  }, [user, navigate]);
-
-  // Handle Book Now Click (Directly redirects guests to Sign Up)
-  const handleBookNow = (service) => {
-    if (!user) {
-      navigate(`/auth/signup?redirect=${encodeURIComponent(`/search?category=${service.categoryId}`)}`);
-    } else {
-      navigate(`/search?category=${service.categoryId}`);
-    }
-  };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    navigate(searchQuery.trim() ? `/search?q=${encodeURIComponent(searchQuery.trim())}` : '/search');
+  };
+
+  const handleServiceClick = (categoryId) => {
+    if (!user) {
+      navigate(`/auth/signup?redirect=${encodeURIComponent(`/search?category=${categoryId}`)}`);
     } else {
-      navigate('/search');
+      navigate(`/search?category=${categoryId}`);
     }
   };
 
-  const getIcon = (iconName) => {
-    const IconComponent = Icons[iconName] || Icons.HelpCircle;
-    return <IconComponent size={24} />;
-  };
-
   return (
-    <div className="home-page uc-home fade-in">
-      
-      {/* ─── 1. HERO SECTION (Urban Company Style) ─── */}
-      <section className="uc-hero-section">
-        <div className="uc-hero-container">
-          <div className="uc-hero-left">
-            <div className="uc-badge-pill">
-              <Icons.Sparkles size={14} className="text-yellow-400" />
-              <span>India's Most Trusted Home Services Platform</span>
-            </div>
+    <div className="lf-home">
 
-            <h1 className="uc-hero-title">
-              Home services,<br />
-              <span className="uc-gradient-text">on demand.</span>
+      {/* ═══ HERO — full-bleed background image ═══ */}
+      <section className="lf-hero">
+        <div className="lf-hero-bg">
+
+          {/* Text content overlaid on left */}
+          <div className="lf-hero-inner">
+            <h1 className="lf-hero-title">
+              LOCAL<br />
+              SERVICES.<br />
+              <span className="lf-lime">REAL PEOPLE.</span>
             </h1>
 
-            <p className="uc-hero-desc">
-              Book certified & background-verified professionals for electrical, plumbing, cleaning, carpentry, and home improvement.
+            <p className="lf-hero-sub">
+              Skilled professionals, verified and nearby<br />
+              to help — just around the corner.
             </p>
 
-            {/* Smart Search Bar */}
-            <form onSubmit={handleSearchSubmit} className="uc-search-form">
-              <div className="uc-search-input-wrap">
-                <Icons.Search size={20} className="uc-search-icon" />
-                <input 
+            <form onSubmit={handleSearchSubmit} className="lf-search-form">
+              <div className="lf-search-pill">
+                <MapPin size={18} className="lf-pin-icon" />
+                <input
                   type="text"
-                  placeholder="Search for 'Electrician', 'Deep Cleaning', 'Tap Leak'..."
+                  placeholder="Search for a service (e.g, electrician, plumber...)"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="uc-search-input"
+                  className="lf-search-input"
                 />
+                <button type="submit" className="lf-search-btn" aria-label="Search">
+                  <ArrowRight size={18} />
+                </button>
               </div>
-              <button type="submit" className="uc-search-btn">
-                Search Services
-              </button>
             </form>
-
-            {/* Quick Popular Pills */}
-            <div className="uc-quick-pills">
-              <span className="uc-pills-label">Popular:</span>
-              <button onClick={() => navigate('/search?category=cat-5')} className="uc-pill">⚡ Electrician</button>
-              <button onClick={() => navigate('/search?category=cat-6')} className="uc-pill">💧 Plumber</button>
-              <button onClick={() => navigate('/search?category=cat-8')} className="uc-pill">✨ Cleaning</button>
-              <button onClick={() => navigate('/search?category=cat-2')} className="uc-pill">🔨 Carpenter</button>
-            </div>
-
-            {/* Trust Badges Bar */}
-            <div className="uc-hero-trust-bar">
-              <div className="uc-trust-box">
-                <div className="uc-trust-icon-box">
-                  <Icons.ShieldCheck size={20} />
-                </div>
-                <div>
-                  <div className="uc-trust-val">100% Verified</div>
-                  <div className="uc-trust-lbl">Background Checked</div>
-                </div>
-              </div>
-
-              <div className="uc-trust-box">
-                <div className="uc-trust-icon-box">
-                  <Icons.Star size={20} />
-                </div>
-                <div>
-                  <div className="uc-trust-val">4.88 ★ Rating</div>
-                  <div className="uc-trust-lbl">Over 1M+ Bookings</div>
-                </div>
-              </div>
-
-              <div className="uc-trust-box">
-                <div className="uc-trust-icon-box">
-                  <Icons.Navigation size={20} />
-                </div>
-                <div>
-                  <div className="uc-trust-val">Live GPS Tracking</div>
-                  <div className="uc-trust-lbl">Doorstep in 30 Mins</div>
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* Hero Right Visual Showcase */}
-          <div className="uc-hero-right">
-            <div className="uc-hero-image-grid">
-              <div className="uc-hero-img-card card-main">
-                <img 
-                  src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600" 
-                  alt="Certified Electrician" 
-                />
-                <div className="uc-img-card-overlay">
-                  <span className="uc-img-tag">⚡ Verified Pro</span>
-                  <h4>Doorstep Electrical Repair</h4>
-                  <p>Starts at ₹199</p>
-                </div>
-              </div>
-
-              <div className="uc-hero-img-card card-sub">
-                <img 
-                  src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=600" 
-                  alt="Deep Cleaning" 
-                />
-                <div className="uc-img-card-overlay">
-                  <span className="uc-img-tag bg-emerald-600">✨ Deep Clean</span>
-                  <h4>Full Home Sanitization</h4>
-                  <p>Starts at ₹399</p>
-                </div>
-              </div>
+          {/* Trust badge — bottom-right corner on the photo */}
+          <div className="lf-trust-badge">
+            <div className="lf-badge-row">
+              <span>LOCAL</span>
+              <ArrowUpRight size={14} strokeWidth={3} />
+            </div>
+            <div>TRUSTED</div>
+            <div className="lf-badge-row">
+              <span>VERIFIED</span>
+              <ArrowUpRight size={14} strokeWidth={3} />
             </div>
           </div>
         </div>
+
+        {/* ─── Dark value strip ─── */}
+        <div className="lf-value-strip">
+          <div className="lf-strip-item">
+            <ShieldCheck size={22} className="lf-strip-icon" />
+            <div>
+              <div className="lf-strip-title">Verified Professionals</div>
+              <div className="lf-strip-sub">Background checked &amp; rated</div>
+            </div>
+          </div>
+          <div className="lf-strip-item">
+            <Clock size={22} className="lf-strip-icon" />
+            <div>
+              <div className="lf-strip-title">Quick &amp; Easy Booking</div>
+              <div className="lf-strip-sub">Book in a few clicks</div>
+            </div>
+          </div>
+          <div className="lf-strip-item">
+            <CreditCard size={22} className="lf-strip-icon" />
+            <div>
+              <div className="lf-strip-title">Secure Payments</div>
+              <div className="lf-strip-sub">Multiple payment options</div>
+            </div>
+          </div>
+          <button
+            className="lf-strip-cta"
+            onClick={() => { if (!user) navigate('/auth/signup'); else navigate('/search'); }}
+          >
+            <span>GET<br />STARTED</span>
+            <ArrowRight size={22} />
+          </button>
+        </div>
       </section>
 
-      {/* ─── 2. ADVERTISEMENT & PROMOTIONAL OFFERS (Urban Company Style) ─── */}
-      <section className="uc-promo-section">
-        <div className="uc-promo-grid">
-          <div className="uc-promo-card promo-gradient-purple">
-            <div className="uc-promo-text">
-              <span className="uc-promo-badge">NEW USER SPECIAL</span>
-              <h3>Flat 20% OFF On First Booking</h3>
-              <p>Use coupon code <strong>LOCALFIX20</strong> on your first service order.</p>
-              <button 
-                onClick={() => {
-                  if (!user) navigate('/auth/signup');
-                  else navigate('/search');
-                }}
-                className="uc-promo-btn"
+      {/* ═══ POPULAR SERVICES ═══ */}
+      <section className="lf-services-section">
+        <div className="lf-services-inner">
+          <div className="lf-services-head">
+            <h2 className="lf-services-title">Popular Services</h2>
+            <Link to="/search" className="lf-view-all">View all →</Link>
+          </div>
+          <div className="lf-services-grid">
+            {popularServices.map((svc) => (
+              <button
+                key={svc.id}
+                className="lf-service-card"
+                onClick={() => handleServiceClick(svc.categoryId)}
               >
-                Claim Offer Now →
+                <div className="lf-service-icon">{svc.icon}</div>
+                <span className="lf-service-name">{svc.name}</span>
               </button>
-            </div>
-            <div className="uc-promo-icon-art">
-              <Icons.Tag size={72} />
-            </div>
-          </div>
-
-          <div className="uc-promo-card promo-gradient-emerald">
-            <div className="uc-promo-text">
-              <span className="uc-promo-badge bg-emerald-900/60">100% QUALITY PROMISE</span>
-              <h3>The LocalFixr Safety Cover</h3>
-              <p>Aadhaar verified experts, transparent fixed pricing & 30-day rework warranty.</p>
-              <button 
-                onClick={() => {
-                  if (!user) navigate('/auth/signup');
-                  else navigate('/search');
-                }}
-                className="uc-promo-btn"
-              >
-                Explore Guarantee →
-              </button>
-            </div>
-            <div className="uc-promo-icon-art">
-              <Icons.ShieldCheck size={72} />
-            </div>
+            ))}
           </div>
         </div>
       </section>
-
-      {/* ─── 3. WHAT ARE YOU LOOKING FOR? (Categories Grid) ─── */}
-      <section className="uc-categories-section">
-        <div className="uc-section-head">
-          <div>
-            <h2 className="uc-section-title">Explore All Categories</h2>
-            <p className="uc-section-subtitle">Select a category to browse certified professionals & standard pricing</p>
-          </div>
-          <Link to="/search" className="uc-view-all-link">
-            View All Services <Icons.ChevronRight size={18} />
-          </Link>
-        </div>
-
-        <div className="uc-cat-icons-grid">
-          {categories.map((cat) => (
-            <div 
-              key={cat.id} 
-              onClick={() => {
-                if (!user) {
-                  navigate(`/auth/signup?redirect=${encodeURIComponent(`/search?category=${cat.id}`)}`);
-                } else {
-                  navigate(`/search?category=${cat.id}`);
-                }
-              }}
-              className="uc-cat-item-card"
-            >
-              <div className="uc-cat-icon-circle">
-                {getIcon(cat.icon)}
-              </div>
-              <span className="uc-cat-item-name">{cat.name}</span>
-              <span className="uc-cat-item-sub">{cat.description?.split(',')[0]}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── 4. TRENDING SERVICES (Urban Company Picture Cards + Book Now) ─── */}
-      <section className="uc-trending-section">
-        <div className="uc-section-head">
-          <div>
-            <div className="uc-section-tag">MOST BOOKED</div>
-            <h2 className="uc-section-title">Popular Services in Demand</h2>
-            <p className="uc-section-subtitle">Top-rated home services delivered with premium equipment and warranty</p>
-          </div>
-          <Link to="/search" className="uc-view-all-link">
-            See full catalog <Icons.ChevronRight size={18} />
-          </Link>
-        </div>
-
-        <div className="uc-services-grid">
-          {featuredServices.map((service) => (
-            <div key={service.id} className="uc-service-card">
-              <div className="uc-service-img-wrap">
-                <img src={service.image} alt={service.title} />
-                <span className="uc-service-card-badge">{service.badge}</span>
-                <span className="uc-service-card-duration">
-                  <Icons.Clock size={12} /> {service.duration}
-                </span>
-              </div>
-
-              <div className="uc-service-body">
-                <div className="uc-service-category-tag">
-                  {service.categoryName}
-                </div>
-
-                <h3 className="uc-service-title">{service.title}</h3>
-                <p className="uc-service-desc">{service.description}</p>
-
-                <div className="uc-service-rating-row">
-                  <span className="uc-rating-pill">
-                    <Icons.Star size={13} fill="#ffc107" color="#ffc107" />
-                    <strong>{service.rating}</strong>
-                  </span>
-                  <span className="uc-reviews-count">({service.reviewsCount} bookings)</span>
-                </div>
-
-                <div className="uc-service-footer">
-                  <div className="uc-price-block">
-                    <span className="uc-price-label">Starts at</span>
-                    <span className="uc-price-amount">₹{service.price}</span>
-                  </div>
-
-                  <button 
-                    onClick={() => handleBookNow(service)}
-                    className="uc-book-now-btn"
-                  >
-                    Book Now <Icons.ArrowRight size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── 5. WHY LOCALFIXR (The Urban Company Assurance) ─── */}
-      <section className="uc-why-section">
-        <div className="uc-why-container">
-          <div className="uc-why-header">
-            <span className="uc-section-tag">WHY CHOOSE US</span>
-            <h2>The LocalFixr Quality Assurance</h2>
-            <p>We take full responsibility for your experience from booking to completion</p>
-          </div>
-
-          <div className="uc-why-grid">
-            <div className="uc-why-card">
-              <div className="uc-why-icon-box icon-purple">
-                <Icons.UserCheck size={28} />
-              </div>
-              <h3>Aadhaar & Background Verified</h3>
-              <p>Every technician undergoes comprehensive ID verification, criminal background check, and skill audit.</p>
-            </div>
-
-            <div className="uc-why-card">
-              <div className="uc-why-icon-box icon-emerald">
-                <Icons.DollarSign size={28} />
-              </div>
-              <h3>Transparent Fixed Pricing</h3>
-              <p>No sudden price jumps or hidden fees. Transparent hourly rates and standard rate cards before you book.</p>
-            </div>
-
-            <div className="uc-why-card">
-              <div className="uc-why-icon-box icon-blue">
-                <Icons.Navigation size={28} />
-              </div>
-              <h3>Live GPS En-Route Tracking</h3>
-              <p>Know exactly where your service partner is with real-time Socket.io and Leaflet map GPS tracking.</p>
-            </div>
-
-            <div className="uc-why-card">
-              <div className="uc-why-icon-box icon-amber">
-                <Icons.RotateCcw size={28} />
-              </div>
-              <h3>Free Re-Work Guarantee</h3>
-              <p>Not 100% satisfied? We offer a free 30-day inspection and rework guarantee on all completed services.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── 6. HOW IT WORKS (3 Simple Steps) ─── */}
-      <section className="uc-steps-section">
-        <div className="uc-steps-header">
-          <span className="uc-section-tag">EASY 3 STEPS</span>
-          <h2>How LocalFixr Works</h2>
-          <p>Get doorstep repairs and professional services in 3 seamless steps</p>
-        </div>
-
-        <div className="uc-steps-timeline">
-          <div className="uc-step-box">
-            <div className="uc-step-num">1</div>
-            <div className="uc-step-illustration">
-              <Icons.Smartphone size={32} />
-            </div>
-            <h3>Choose Service & Slot</h3>
-            <p>Pick from our extensive service catalog and choose your preferred date and time slot.</p>
-          </div>
-
-          <div className="uc-step-divider-line" />
-
-          <div className="uc-step-box">
-            <div className="uc-step-num">2</div>
-            <div className="uc-step-illustration">
-              <Icons.Truck size={32} />
-            </div>
-            <h3>Track Expert Arrival</h3>
-            <p>Your certified professional arrives on time. Track their live GPS location right from your screen.</p>
-          </div>
-
-          <div className="uc-step-divider-line" />
-
-          <div className="uc-step-box">
-            <div className="uc-step-num">3</div>
-            <div className="uc-step-illustration">
-              <Icons.CheckCircle2 size={32} />
-            </div>
-            <h3>Pay Securely & Relax</h3>
-            <p>Inspect the completed work, pay via instant UPI QR code or card, and rate your experience.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── 7. CUSTOMER REVIEWS & TESTIMONIALS ─── */}
-      <section className="uc-testimonials-section">
-        <div className="uc-section-head">
-          <div>
-            <div className="uc-section-tag">CUSTOMER LOVE</div>
-            <h2 className="uc-section-title">What Our Customers Say</h2>
-            <p className="uc-section-subtitle">Real experiences from verified homeowners across India</p>
-          </div>
-        </div>
-
-        <div className="uc-reviews-grid">
-          {customerReviews.map((rev, index) => (
-            <div key={index} className="uc-review-card">
-              <div className="uc-review-stars">
-                {[...Array(rev.rating)].map((_, i) => (
-                  <Icons.Star key={i} size={16} fill="#ffc107" color="#ffc107" />
-                ))}
-              </div>
-
-              <p className="uc-review-text">"{rev.review}"</p>
-
-              <div className="uc-review-author">
-                <img src={rev.avatar} alt={rev.name} className="uc-author-avatar" />
-                <div>
-                  <div className="uc-author-name">{rev.name}</div>
-                  <div className="uc-author-city">{rev.city} • <span className="text-emerald-500 font-semibold">{rev.service}</span></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── 8. PARTNER ONBOARDING BANNER (Hidden for logged in users) ─── */}
-      {!user && (
-        <section className="uc-partner-cta">
-          <div className="uc-partner-content">
-            <div className="uc-partner-left">
-              <span className="uc-promo-badge">LOCALFIXR FOR PROFESSIONALS</span>
-              <h2>Are you an experienced service professional?</h2>
-              <p>
-                Join thousands of verified electricians, plumbers, carpenters, and technicians earning ₹40,000+ monthly with guaranteed instant UPI payouts.
-              </p>
-              <div className="uc-partner-perks">
-                <span>✓ Zero Joining Fee</span>
-                <span>✓ Flexible Hours</span>
-                <span>✓ Weekly & Instant Payouts</span>
-                <span>✓ High Value Orders</span>
-              </div>
-              <Link to="/auth/signup" className="uc-partner-join-btn">
-                Register as a Service Partner →
-              </Link>
-            </div>
-            <div className="uc-partner-right">
-              <div className="uc-partner-stat-box">
-                <div className="stat-big">₹45,000+</div>
-                <div className="stat-desc">Average monthly partner earnings</div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
 
     </div>
   );

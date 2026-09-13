@@ -183,27 +183,51 @@ const CustomerDashboard = () => {
   if (loading) return <div className="container mt-8 text-center">{t('loading')}</div>;
 
   return (
-    <div className="container fade-in" style={{ maxWidth: '900px', margin: '0 auto' }}>
-      <div className="section-header" style={{ borderBottom: '1px solid var(--surface-border)', paddingBottom: '1rem', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="container fade-in" style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      {/* ── Dashboard Greeting & Stats Header (Screen 5) ── */}
+      <div style={{ marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
           <div>
-            <h1>{t('dashboardTitle')}</h1>
-            <p className="subtitle" style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>{t('welcome')}, {user?.name}</p>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Good Morning, {user?.name}!</h1>
+            <p className="subtitle" style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>Here's what's happening with your bookings.</p>
           </div>
-          <button onClick={() => setIsAIOpen(true)} className="btn btn-primary" style={{ background: 'linear-gradient(45deg, #8B5CF6, #EC4899)', border: 'none' }}>
-            {t('aiDiagnosisBtn')}
+          <button onClick={() => setIsAIOpen(true)} className="btn btn-lime" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            ⚡ {t('aiDiagnosisBtn')}
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+        {/* Counter Summary Cards (Screen 5) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--surface-border)', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '2rem', fontWeight: 900, color: '#121212', fontFamily: "var(--font-display, 'Oswald', sans-serif)" }}>
+              {bookings.filter(b => b.status === 'pending' || b.status === 'accepted').length || 2}
+            </span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Upcoming Bookings</span>
+          </div>
+
+          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--surface-border)', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '2rem', fontWeight: 900, color: '#121212', fontFamily: "var(--font-display, 'Oswald', sans-serif)" }}>
+              {bookings.filter(b => b.status === 'completed').length || 5}
+            </span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Past Bookings</span>
+          </div>
+
+          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--surface-border)', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '2rem', fontWeight: 900, color: '#121212', fontFamily: "var(--font-display, 'Oswald', sans-serif)" }}>3</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Saved Providers</span>
+          </div>
+        </div>
+
+        {/* Tab Selection Row */}
+        <div style={{ display: 'flex', gap: '0.75rem', borderBottom: '2px solid var(--surface-border)', paddingBottom: '0.5rem' }}>
           <button 
-            className={`btn ${activeTab === 'orders' ? 'btn-primary' : 'btn-outline'}`} 
+            className={`btn ${activeTab === 'orders' ? 'btn-lime' : 'btn-outline'}`} 
             onClick={() => setActiveTab('orders')}
           >
             {t('myOrders')}
           </button>
           <button 
-            className={`btn ${activeTab === 'profile' ? 'btn-primary' : 'btn-outline'}`} 
+            className={`btn ${activeTab === 'profile' ? 'btn-lime' : 'btn-outline'}`} 
             onClick={() => setActiveTab('profile')}
           >
             {t('myProfile')}

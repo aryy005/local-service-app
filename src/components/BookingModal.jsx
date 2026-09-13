@@ -250,8 +250,8 @@ const BookingModal = ({ provider, onClose }) => {
 
               <div className="modal-footer">
                 <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
-                  {loading ? 'Booking...' : 'Confirm Booking'}
+                <button type="submit" className="btn btn-lime" disabled={loading}>
+                  {loading ? 'Booking...' : 'Confirm Booking →'}
                 </button>
               </div>
             </form>
