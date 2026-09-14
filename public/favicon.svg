@@ -30,9 +30,7 @@
   <!-- Brutalist Heavy Solid Black Border -->
   <rect x="1.5" y="1.5" width="61" height="61" rx="12.5" fill="none" stroke="#111111" stroke-width="3"/>
 
-  <!-- 'L' in Solid Black (Half Black) -->
+  <!-- 'L' and 'F' both in Solid Black -->
   <path d="M 13 16 H 22 V 40 H 32 V 48 H 13 Z" fill="#111111"/>
-
-  <!-- 'F' in Vibrant Electric Neon Lime (Half Neon) -->
-  <path d="M 35.5 16 H 52.5 V 24 H 44 V 28.5 H 49 V 35.5 H 44 V 48 H 35.5 Z" fill="#D2FE00"/>
+  <path d="M 35.5 16 H 52.5 V 24 H 44 V 28.5 H 49 V 35.5 H 44 V 48 H 35.5 Z" fill="#111111"/>
 </svg>
