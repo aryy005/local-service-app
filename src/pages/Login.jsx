@@ -63,11 +63,12 @@ const Login = () => {
 
   return (
     <div className="auth-page fade-in">
-      <div className="auth-card glass-panel">
-        <h1 className="auth-title">Welcome Back</h1>
-        <p className="auth-subtitle">Sign in to your account</p>
+      <div className="auth-card">
+        <div className="auth-tag">ACCESS PORTAL</div>
+        <h1 className="auth-title">WELCOME BACK</h1>
+        <p className="auth-subtitle">Sign in to manage your bookings and services</p>
         
-        {error && <div className="error-alert">{error}</div>}
+        {error && <div className="error-alert">⚠️ {error}</div>}
 
         <div className="role-selector">
           <button 
@@ -86,7 +87,7 @@ const Login = () => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form mt-4">
+        <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label>Email Address</label>
             <input 
@@ -99,9 +100,9 @@ const Login = () => {
             />
           </div>
           <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
               <label style={{ margin: 0 }}>Password</label>
-              <Link to="/forgot-password" style={{ fontSize: '0.78rem', color: '#818cf8', fontWeight: 600, textDecoration: 'none' }}>
+              <Link to="/forgot-password" className="auth-forgot-link">
                 Forgot Password?
               </Link>
             </div>
@@ -114,28 +115,34 @@ const Login = () => {
               placeholder="••••••••"
             />
           </div>
-          <button type="submit" className="btn btn-primary w-full mt-4" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+          <button type="submit" className="auth-submit-btn" disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign In →'}
           </button>
         </form>
 
-        <div className="google-auth-container mt-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', width: '100%', margin: '0.5rem 0' }}>
-            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.2)' }}></div>
-            <span style={{ padding: '0 0.75rem', fontSize: '0.85rem', opacity: 0.7 }}>OR</span>
-            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.2)' }}></div>
-          </div>
+        <div className="auth-divider">
+          <span>OR CONTINUE WITH</span>
+        </div>
+
+        <div className="google-auth-wrapper">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
-            theme="filled_blue"
-            shape="pill"
+            theme="outline"
+            shape="rectangular"
             text="continue_with"
+            width="100%"
           />
         </div>
         
-        <p className="auth-redirect mt-6">
-          Don't have an account? <Link to={redirectUrl ? `/auth/signup?redirect=${encodeURIComponent(redirectUrl)}` : '/auth/signup'}>Sign up</Link>
+        <p className="auth-redirect">
+          Don't have an account?{' '}
+          <Link 
+            to={redirectUrl ? `/auth/signup?redirect=${encodeURIComponent(redirectUrl)}` : '/auth/signup'}
+            className="auth-redirect-link"
+          >
+            Sign up
+          </Link>
         </p>
       </div>
     </div>
