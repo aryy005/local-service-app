@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
+import './AdminLogin.css';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -35,30 +36,30 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="admin-login-page fade-in flex items-center justify-center min-h-[75vh] px-4">
-      <div className="glass-panel w-full max-w-md p-8 rounded-2xl shadow-2xl border border-indigo-500/20 bg-slate-900/90 text-white">
+    <div className="admin-login-wrapper fade-in">
+      <div className="admin-login-card">
         
-        <div className="text-center mb-8">
-          <div className="inline-flex p-4 bg-indigo-600/20 border border-indigo-500/40 rounded-full mb-4 text-indigo-400">
-            <ShieldCheck size={36} />
+        <div className="admin-login-header">
+          <div className="admin-shield-icon-wrap">
+            <ShieldCheck size={32} />
           </div>
-          <h1 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+          <h1 className="admin-login-title">
             LocalFixr Admin Portal
           </h1>
-          <p className="text-sm text-slate-400 mt-1">Restricted Security Console</p>
+          <p className="admin-login-subtitle">Restricted Security Console</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-950/60 border border-red-500/50 rounded-xl text-red-300 text-sm font-semibold flex items-center gap-2">
+          <div className="admin-login-error">
             <span>⚠️ {error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Admin Email</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+        <form onSubmit={handleSubmit} className="admin-login-form">
+          <div className="admin-form-group">
+            <label className="admin-form-label">Admin Email</label>
+            <div className="admin-input-wrapper">
+              <div className="admin-input-icon">
                 <Mail size={18} />
               </div>
               <input 
@@ -67,15 +68,15 @@ const AdminLogin = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@localfixr.com"
-                className="w-full pl-10 pr-4 py-3 bg-slate-800/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition-all"
+                className="admin-input-field"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Password</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <div className="admin-form-group">
+            <label className="admin-form-label">Password</label>
+            <div className="admin-input-wrapper">
+              <div className="admin-input-icon">
                 <Lock size={18} />
               </div>
               <input 
@@ -84,16 +85,16 @@ const AdminLogin = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 bg-slate-800/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition-all"
+                className="admin-input-field"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>Admin: <strong className="text-slate-300">admin@localfixr.com</strong></span>
+          <div className="admin-credentials-row">
+            <span>Admin: <strong style={{ color: '#E2E8F0' }}>admin@localfixr.com</strong></span>
             <button 
               type="button" 
-              className="text-indigo-400 hover:text-indigo-300 font-semibold underline"
+              className="admin-quick-fill-btn"
               onClick={() => { setEmail('admin@localfixr.com'); setPassword('password123'); }}
             >
               Fill Credentials
@@ -103,24 +104,25 @@ const AdminLogin = () => {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+            className="admin-submit-btn"
           >
             {loading ? <Loader2 className="animate-spin" size={18} /> : <>Sign In to Console <ArrowRight size={18} /></>}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="admin-back-row">
           <button 
             type="button" 
             onClick={() => navigate('/login')}
-            className="text-slate-400 hover:text-slate-200 text-xs transition-colors"
+            className="admin-back-btn"
           >
             ← Return to Customer & Provider Login
           </button>
         </div>
 
-        <div className="mt-6 pt-5 border-t border-slate-800 text-center text-xs text-slate-500">
-          🔒 Secure 256-bit Encrypted Administration Channel
+        <div className="admin-security-badge">
+          <span>🔒</span>
+          <span>Secure 256-bit Encrypted Administration Channel</span>
         </div>
       </div>
     </div>
