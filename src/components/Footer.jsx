@@ -26,12 +26,12 @@ const Footer = () => {
               width: '30px', height: '30px', background: '#D2FE00', color: '#121212',
               borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontWeight: '900', fontSize: '0.85rem'
-            }}>LP</div>
-            <span style={{ fontWeight: 800, fontSize: '1.25rem', color: '#ffffff', fontFamily: "var(--font-sans, 'Space Grotesk', sans-serif)" }}>LocalPro</span>
+            }}>LF</div>
+            <span style={{ fontWeight: 800, fontSize: '1.25rem', color: '#ffffff', fontFamily: "var(--font-sans, 'Space Grotesk', sans-serif)" }}>Localfixr</span>
           </div>
           <p style={{ fontSize: '0.85rem', color: '#aaaaaa', lineHeight: 1.6 }}>
             {isProvider 
-              ? 'LocalPro Partner Portal. Manage client bookings, track revenue, and receive instant payouts.' 
+              ? 'Localfixr Partner Portal. Manage client bookings, track revenue, and receive instant payouts.' 
               : "Local Services. Real People. Skilled professionals, verified and nearby to help — just around the corner."}
           </p>
         </div>
@@ -40,7 +40,7 @@ const Footer = () => {
         <div>
           <h4 style={{ fontSize: '0.82rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#D2FE00', marginBottom: '1rem' }}>Company</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: '#dddddd' }}>About LocalPro</Link>
+            <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: '#dddddd' }}>About Localfixr</Link>
             <Link to={isProvider ? '/provider-dashboard' : '/'} style={{ fontSize: '0.88rem', color: '#dddddd' }}>Partner Guidelines</Link>
           </div>
         </div>
@@ -86,7 +86,7 @@ const Footer = () => {
         gap: '0.5rem',
       }}>
         <p style={{ fontSize: '0.8rem', color: '#888888' }}>
-          © {new Date().getFullYear()} LocalPro. All rights reserved.
+          © {new Date().getFullYear()} Localfixr. All rights reserved.
         </p>
         <div style={{ display: 'flex', gap: '1.25rem' }}>
           <a href="#" style={{ fontSize: '0.8rem', color: '#888888' }}>Privacy</a>

@@ -65,6 +65,11 @@ const Header = () => {
     return '/';
   };
 
+  // When logged in, top navigation heading is completely hidden
+  if (user) {
+    return null;
+  }
+
   return (
     <header className="header">
       <div className="header-content">

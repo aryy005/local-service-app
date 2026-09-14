@@ -9,10 +9,16 @@ const ProtectedRoute = ({ children, requireRole }) => {
   }
 
   if (!token) {
+    if (requireRole === 'admin') {
+      return <Navigate to="/admin/login" replace />;
+    }
     return <Navigate to="/auth/login" replace />;
   }
 
   if (requireRole && user?.role !== requireRole) {
+    if (requireRole === 'admin') {
+      return <Navigate to="/admin/login" replace />;
+    }
     return <Navigate to="/" replace />; // Redirect to home if role does not match
   }
 

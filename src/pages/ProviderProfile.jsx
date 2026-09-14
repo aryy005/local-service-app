@@ -1,21 +1,93 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Star, MapPin, CheckCircle, ArrowLeft, Clock, Shield, ShieldCheck, AlertTriangle, Lock } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { 
+  Star, MapPin, CheckCircle, ArrowLeft, ShieldCheck, Heart, 
+  Search, Bell, User, Calendar, Clock, Award, Shield, Check
+} from 'lucide-react';
 import BookingModal from '../components/BookingModal';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
-import toast from 'react-hot-toast';
+import { isProviderSaved, toggleSaveProvider } from '../utils/savedProviders';
+import UserMenuPill from '../components/UserMenuPill';
 import './ProviderProfile.css';
+
+// Default service checklist per category
+const categoryServiceChecklist = {
+  'cat-5': ['Wiring & Rewiring', 'Switchboard Installation', 'Fan Installation', 'AC Installation & Repair'],
+  'cat-6': ['Pipe Fitting & Replacement', 'Leak Fixes & Drain Cleaning', 'Bathroom Fittings', 'Water Tank Repair'],
+  'cat-2': ['Custom Furniture Making', 'Door & Window Lock Repair', 'Cabinetry & Wardrobe Work', 'Wood Polishing'],
+  'cat-3': ['Interior Wall Painting', 'Exterior Waterproofing', 'Texture & Stencil Design', 'Wood & Metal Enamel'],
+  'cat-1': ['Custom Suit Stitching', 'Pant & Shirt Alterations', 'Traditional & Designer Wear', 'Zip & Button Repairs'],
+  'cat-7': ['AC Deep Servicing & Cleaning', 'Gas Refilling & Leak Check', 'Cooling Coil Replacement', 'AC Uninstallation & Fitting']
+};
+
+const defaultServices = [
+  'Wiring & Rewiring',
+  'Switchboard Installation',
+  'Fan Installation',
+  'AC Installation & Repair'
+];
+
+// Helper to generate the next 5 days
+const getUpcomingDays = () => {
+  const days = [];
+  const now = new Date();
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  for (let i = 0; i < 5; i++) {
+    const d = new Date();
+    d.setDate(now.getDate() + i);
+    days.push({
+      dateStr: `${monthNames[d.getMonth()]} ${d.getDate()}`,
+      month: monthNames[d.getMonth()],
+      dayNum: d.getDate(),
+      dayName: dayNames[d.getDay()],
+      fullDate: d.toISOString().split('T')[0]
+    });
+  }
+  return days;
+};
+
+const timeSlots = [
+  '09:00 AM',
+  '10:00 AM',
+  '11:00 AM',
+  '12:00 PM',
+  '01:00 PM',
+  '02:00 PM'
+];
+
+const categoryLabels = {
+  'cat-1': 'Tailor',
+  'cat-2': 'Carpenter',
+  'cat-3': 'Painter',
+  'cat-4': 'Cobbler',
+  'cat-5': 'Electrician',
+  'cat-6': 'Plumber',
+  'cat-7': 'AC Repair',
+  'cat-8': 'House Cleaning',
+  'cat-9': 'Pest Control',
+  'cat-10': 'Other Services'
+};
 
 const ProviderProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, token } = useAuth();
+
   const [provider, setProvider] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [portfolio, setPortfolio] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [activeTab, setActiveTab] = useState('about'); // 'about' | 'reviews' | 'photos'
+  const [saved, setSaved] = useState(false);
+
+  // Date & Time Picker State
+  const daysList = getUpcomingDays();
+  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('10:00 AM');
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
   useEffect(() => {
@@ -32,11 +104,20 @@ const ProviderProfile = () => {
           fetch(`${API_URL}/providers/${id}/portfolio`)
         ]);
         
-        if (provRes.ok) setProvider(await provRes.json());
+        if (provRes.ok) {
+          const provData = await provRes.json();
+          setProvider(provData);
+          setSaved(isProviderSaved(provData._id || id, user?.email));
+        } else {
+          setProvider(null);
+          setSaved(false);
+        }
+
         if (revRes.ok) setReviews(await revRes.json());
         if (portRes.ok) setPortfolio(await portRes.json());
       } catch (err) {
         console.error(err);
+        setProvider(null);
       } finally {
         setLoading(false);
       }
@@ -44,238 +125,306 @@ const ProviderProfile = () => {
     fetchProviderData();
   }, [id, user, navigate]);
 
-  if (loading) return <div className="container mt-8 text-center">Loading provider profile...</div>;
+  const handleToggleSave = () => {
+    if (!provider) return;
+    const newState = toggleSaveProvider(provider, user?.email || 'guest');
+    setSaved(newState);
+  };
 
-  if (!provider || !provider.providerDetails) {
+  const handleBookNow = () => {
+    if (!user) {
+      navigate(`/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+    setIsBookingOpen(true);
+  };
+
+  if (loading) return <div className="container mt-8 text-center" style={{ padding: '3rem' }}>Loading provider profile...</div>;
+
+  if (!provider) {
     return (
-      <div className="container mt-8">
-        <h2>Provider not found</h2>
-        <button className="btn btn-outline mt-4" onClick={() => navigate('/search')}>Back to Search</button>
+      <div className="container mt-8 text-center" style={{ padding: '4rem 1rem' }}>
+        <User size={48} color="#999" style={{ margin: '0 auto 1rem', opacity: 0.6 }} />
+        <h2>Provider Not Found</h2>
+        <p style={{ color: '#666', marginBottom: '1.5rem' }}>The requested service provider profile is not available.</p>
+        <button className="btn btn-outline" onClick={() => navigate('/search')}>Back to Services</button>
       </div>
     );
   }
 
+  const pDetails = provider.providerDetails || {};
+  const categoryTitle = pDetails.categoryName || categoryLabels[pDetails.category] || 'Service Professional';
+  const locationTitle = pDetails.location || provider.city || provider.addressDetails?.city || 'Local';
+  const servicesList = (pDetails.skills && pDetails.skills.length > 0) 
+    ? pDetails.skills 
+    : (categoryServiceChecklist[pDetails.category] || defaultServices);
+  const selectedDateObj = daysList[selectedDayIndex];
+
   return (
-    <div className="provider-profile fade-in">
-      <button className="back-btn" onClick={() => navigate(-1)}>
-        <ArrowLeft size={20} />
-        Back
-      </button>
-      
-      <div className="profile-layout">
-        {/* Left Column: Details */}
-        <div className="profile-main-column">
-          <div className="glass-panel profile-header-card">
-            <div className="profile-img-wrapper">
-              <img src={provider.providerDetails.avatarUrl} alt={provider.name} className="profile-hero-img" />
-            </div>
-            
-            <div className="profile-primary-info">
-              <h1>
-                {provider.name}
-                {provider.providerDetails.aadhaarVerified && (
-                  <span className="verified-badge large" style={{ marginLeft: '0.75rem', verticalAlign: 'middle' }}>
-                    <ShieldCheck size={18} /> Aadhaar Verified
-                  </span>
-                )}
-              </h1>
-              <div className="profile-meta">
-                <div className="meta-item rating">
-                  <Star fill="var(--warning-color)" color="var(--warning-color)" size={18} />
-                  <strong>{provider.providerDetails.rating}</strong> ({provider.providerDetails.reviewsCount || 0} reviews)
-                </div>
-                <div className="meta-item location">
-                  <MapPin size={18} />
-                  {provider.providerDetails.location}
+    <div className="lp-profile-page fade-in">
+      {/* ─── Top Sub-Nav (Matching Image 2 header) ─── */}
+      <div className="lp-profile-topbar">
+        <div className="lp-topbar-inner">
+          <button 
+            type="button"
+            className="lp-topbar-brand"
+            onClick={() => navigate('/search')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            LocalFixr
+          </button>
+
+          <div className="lp-topbar-actions">
+            <button className="lp-icon-btn" onClick={() => navigate('/search')} title="Search Services">
+              <Search size={18} />
+            </button>
+            <UserMenuPill />
+          </div>
+        </div>
+      </div>
+
+      <div className="lp-profile-container">
+        {/* Back button */}
+        <button className="lp-back-btn" onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} />
+          <span>Back</span>
+        </button>
+
+        {/* ═══ Provider Hero Card (Image 2) ═══ */}
+        <div className="lp-profile-hero-card">
+          <div className="lp-hero-photo-wrap">
+            <img 
+              src={pDetails.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=300&h=300'} 
+              alt={provider.name} 
+              className="lp-hero-photo"
+            />
+          </div>
+
+          <div className="lp-hero-details">
+            <div className="lp-hero-title-row">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <h1 className="lp-provider-name">{provider.name}</h1>
+                <div className="lp-verified-check" title="Verified Professional">
+                  <Check size={12} strokeWidth={3} />
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Stats Blocks (Matching Screen 3) */}
-          <div className="provider-stats-grid">
-            <div className="stat-card">
-              <span className="stat-value">{provider.providerDetails.experienceYears || 5}+</span>
-              <span className="stat-label">Years Experience</span>
+              <button 
+                className={`lp-save-pill-btn ${saved ? 'saved' : ''}`} 
+                onClick={handleToggleSave}
+                title={saved ? 'Remove from Saved' : 'Save Provider for Future'}
+              >
+                <Heart size={16} fill={saved ? '#ef4444' : 'none'} color={saved ? '#ef4444' : '#111111'} />
+                <span>{saved ? 'Saved' : 'Save'}</span>
+              </button>
             </div>
-            <div className="stat-card">
-              <span className="stat-value">{provider.providerDetails.totalJobsCompleted || 100}+</span>
-              <span className="stat-label">Jobs Completed</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-value">{provider.providerDetails.location || 'Chandigarh'}</span>
-              <span className="stat-label">Service Location</span>
-            </div>
-          </div>
 
-          <div className="glass-panel profile-section">
-            <h2>About</h2>
-            <p className="profile-desc">{provider.providerDetails.description}</p>
-          </div>
-
-          <div className="glass-panel profile-section">
-            <h2>Skills & Expertise</h2>
-            <div className="skills-grid">
-              {(provider.providerDetails.skills || []).map(skill => (
-                <div key={skill} className="skill-badge">
-                  <CheckCircle size={16} color="var(--accent-color)" />
-                  {skill}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {portfolio && portfolio.length > 0 && (
-            <div className="glass-panel profile-section">
-              <h2>Past Work Gallery</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
-                {portfolio.map((imgUrl, idx) => (
-                  <img key={idx} src={imgUrl} alt={`Completed Job ${idx}`} style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px' }} />
-                ))}
+            {/* Rating, Reviews & Distance */}
+            <div className="lp-meta-row">
+              <div className="lp-rating-tag">
+                <Star size={16} fill="#f59e0b" color="#f59e0b" />
+                <strong>{pDetails.rating ? Number(pDetails.rating).toFixed(1) : 'New'}</strong>
+                {pDetails.reviewsCount ? <span>({pDetails.reviewsCount} reviews)</span> : <span style={{ color: '#6b7280' }}>(New Partner)</span>}
               </div>
-            </div>
-          )}
-
-          <div className="glass-panel profile-section">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <h2 style={{ margin: 0 }}>Customer Reviews & Ratings ({reviews.length})</h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(255, 193, 7, 0.12)', border: '1px solid rgba(255, 193, 7, 0.3)', padding: '0.3rem 0.65rem', borderRadius: '2rem' }}>
-                <Star size={15} fill="#ffc107" color="#ffc107" />
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#d97706' }}>
-                  {provider.providerDetails.rating || '5.0'} / 5.0 Rating
-                </span>
+              <span className="lp-dot">•</span>
+              <div className="lp-distance-tag">
+                <MapPin size={15} />
+                <span>{pDetails.distance || locationTitle}</span>
               </div>
             </div>
 
-            <div className="reviews-list">
-              {reviews.length === 0 ? (
-                <div style={{ padding: '1.5rem', textAlign: 'center', background: 'var(--bg-secondary)', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--surface-border)' }}>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
-                    No reviews yet for this service professional. Reviews are submitted by customers after booking completion.
-                  </p>
-                </div>
-              ) : (
-                reviews.map(review => (
-                  <div key={review._id} style={{
-                    padding: '1rem', background: 'var(--bg-secondary)',
-                    borderRadius: 'var(--border-radius-sm)',
-                    border: '1px solid var(--surface-border)',
-                    marginBottom: '0.75rem'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                      <strong style={{ fontSize: '0.9rem' }}>{review.customer?.name || 'Verified Customer'}</strong>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                        <Star size={13} fill="#ffc107" color="#ffc107" />
-                        <span style={{ fontSize: '0.82rem', fontWeight: 700 }}>{review.rating}</span>
-                      </div>
-                    </div>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: 1.5, margin: 0 }}>{review.comment}</p>
-                  </div>
-                ))
-              )}
+            {/* Profession Title */}
+            <h2 className="lp-profession-title">{categoryTitle}</h2>
+
+            {/* Badges Row */}
+            <div className="lp-badges-row">
+              <span className="lp-badge-dark">
+                <Check size={13} strokeWidth={3} /> Verified
+              </span>
+              <span className="lp-badge-blue">
+                <Shield size={13} /> Background Checked
+              </span>
+              <span className="lp-badge-purple">
+                <Award size={13} /> Local Professional
+              </span>
+            </div>
+
+            {/* Tagline / Experience statement */}
+            <div className="lp-tagline-block">
+              <div>{pDetails.description ? pDetails.description.slice(0, 90) : `Professional ${categoryTitle} Services`}</div>
+              <div>Safe, Verified, and Background Checked.</div>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Booking Widget */}
-        <aside className="profile-sidebar">
-          <div className="glass-panel sticky-booking-card">
-            <div className="booking-price" style={{ paddingBottom: '0.75rem', borderBottom: '1px solid var(--surface-border)', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)', display: 'block' }}>
-                Service Base Price
-              </span>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem', marginTop: '0.2rem' }}>
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Starts from</span>
-                <span className="price" style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                  ₹{provider.providerDetails.hourlyRate || 199}
-                </span>
-              </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0', lineHeight: 1.4 }}>
-                *Base inspection / standard starting rate. Final quote tailored on-site.
-              </p>
+        {/* ═══ 3-Item Stats Bar (Image 2) ═══ */}
+        <div className="lp-profile-stats-bar">
+          <div className="lp-stat-col">
+            <div className="lp-stat-val">{(pDetails.experienceYears !== undefined && pDetails.experienceYears !== null && Number(pDetails.experienceYears) > 0) ? `${pDetails.experienceYears}+` : '1+'}</div>
+            <div className="lp-stat-lbl">Years Experience</div>
+          </div>
+          <div className="lp-stat-col">
+            <div className="lp-stat-val">{(pDetails.totalJobsCompleted !== undefined && pDetails.totalJobsCompleted !== null && Number(pDetails.totalJobsCompleted) > 0) ? `${pDetails.totalJobsCompleted}+` : '0+'}</div>
+            <div className="lp-stat-lbl">Jobs Completed</div>
+          </div>
+          <div className="lp-stat-col">
+            <div className="lp-stat-val">{locationTitle}</div>
+            <div className="lp-stat-lbl">Service Location</div>
+          </div>
+        </div>
+
+        {/* ═══ 2-Column Split: Details Left & Date/Time Booking Right ═══ */}
+        <div className="lp-profile-grid">
+          {/* Left Column */}
+          <div className="lp-grid-left">
+            {/* Tabs Row */}
+            <div className="lp-profile-tabs">
+              <button 
+                className={`lp-tab-link ${activeTab === 'about' ? 'active' : ''}`}
+                onClick={() => setActiveTab('about')}
+              >
+                About
+              </button>
+              <button 
+                className={`lp-tab-link ${activeTab === 'reviews' ? 'active' : ''}`}
+                onClick={() => setActiveTab('reviews')}
+              >
+                Reviews
+              </button>
+              <button 
+                className={`lp-tab-link ${activeTab === 'photos' ? 'active' : ''}`}
+                onClick={() => setActiveTab('photos')}
+              >
+                Photos
+              </button>
             </div>
-            
-            <div className="booking-features">
-              <div className="feature-item">
-                <Clock size={16} />
-                <span>Responds in ~1 hr</span>
+
+            {/* About Tab Content */}
+            {activeTab === 'about' && (
+              <div className="lp-tab-pane">
+                <p className="lp-about-bio">
+                  {pDetails.description || `${provider.name} is a verified ${categoryTitle} based in ${locationTitle}. Dedicated to high quality work, safety, and customer satisfaction.`}
+                </p>
+
+                <div className="lp-services-subhead">Services Offered</div>
+                <div className="lp-services-list">
+                  {servicesList.map((svc, idx) => (
+                    <div key={idx} className="lp-service-bullet">
+                      <span className="lp-bullet-dot"></span>
+                      <span>{svc}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="feature-item">
-                {provider.providerDetails.aadhaarVerified ? (
-                  <>
-                    <ShieldCheck size={16} color="#10b981" />
-                    <span style={{ color: '#10b981', fontWeight: 600 }}>Aadhaar Verified</span>
-                  </>
+            )}
+
+            {/* Reviews Tab Content */}
+            {activeTab === 'reviews' && (
+              <div className="lp-tab-pane">
+                {reviews.length === 0 ? (
+                  <div style={{ padding: '2rem 0', color: '#666', fontSize: '0.92rem' }}>
+                    No reviews yet. Completed bookings and customer testimonials will be listed here.
+                  </div>
                 ) : (
-                  <>
-                    <AlertTriangle size={16} color="#f59e0b" />
-                    <span style={{ color: '#f59e0b' }}>Not Verified</span>
-                  </>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+                    {reviews.map(r => (
+                      <div key={r._id} style={{ background: '#ffffff', border: '1px solid #e5e5e0', padding: '1rem 1.25rem', borderRadius: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                          <strong style={{ fontSize: '0.95rem' }}>{r.customer?.name || 'Verified Customer'}</strong>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: '#f59e0b', fontSize: '0.85rem', fontWeight: 700 }}>
+                            <Star size={14} fill="#f59e0b" /> {r.rating}
+                          </div>
+                        </div>
+                        <p style={{ margin: 0, color: '#555', fontSize: '0.88rem', lineHeight: 1.5 }}>{r.comment}</p>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
-            </div>
+            )}
 
-            {!user ? (
-              <div style={{ marginTop: '1rem', background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.25)', padding: '1rem', borderRadius: '0.75rem', textAlign: 'center' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', background: '#EEF2FF', color: '#4F46E5', borderRadius: '50%', marginBottom: '0.5rem' }}>
-                  <Lock size={18} />
-                </div>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', margin: '0 0 0.25rem 0', fontWeight: 700 }}>
-                  Account Required to Book
-                </p>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0 0 0.85rem 0', lineHeight: 1.4 }}>
-                  Please sign in or create an account to book {provider.name} and track live GPS updates.
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <button 
-                    className="btn btn-primary btn-md w-full"
-                    style={{ fontWeight: 700 }}
-                    onClick={() => navigate(`/auth/login?redirect=${encodeURIComponent(location.pathname)}`)}
-                  >
-                    Sign In to Book
-                  </button>
-                  <button 
-                    className="btn btn-outline btn-sm w-full"
-                    onClick={() => navigate(`/auth/signup?redirect=${encodeURIComponent(location.pathname)}`)}
-                  >
-                    Create Free Account
-                  </button>
+            {/* Photos Tab Content */}
+            {activeTab === 'photos' && (
+              <div className="lp-tab-pane">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.75rem', marginTop: '1rem' }}>
+                  {(portfolio && portfolio.length > 0 ? portfolio : [
+                    'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=300&h=300',
+                    'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=300&h=300',
+                    'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&q=80&w=300&h=300'
+                  ]).map((img, i) => (
+                    <img key={i} src={img} alt="Job sample" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #ddd' }} />
+                  ))}
                 </div>
               </div>
-            ) : user?.role === 'provider' ? (
-              <div style={{ marginTop: '1rem', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.85rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-main)', margin: '0 0 0.5rem 0', fontWeight: 600 }}>
-                  🔒 Service Provider Account
-                </p>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 0.75rem 0' }}>
-                  Provider accounts cannot book services. You can only manage incoming jobs on your dashboard.
-                </p>
-                <button 
-                  className="btn btn-primary btn-sm w-full"
-                  onClick={() => navigate('/provider-dashboard')}
-                >
-                  Manage My Orders
-                </button>
-              </div>
-            ) : (
-              <>
-                <button 
-                  className="btn btn-lime btn-lg w-full mt-4"
-                  onClick={() => setIsBookingOpen(true)}
-                >
-                  Book Now
-                </button>
-                <p className="booking-note text-center mt-2 text-muted">You won't be charged yet</p>
-              </>
             )}
           </div>
-        </aside>
+
+          {/* Right Column: "Select Date & Time" Card (Image 2) */}
+          <div className="lp-grid-right">
+            <div className="lp-datetime-card">
+              <h3 className="lp-datetime-title">Select Date &amp; Time</h3>
+
+              {/* Day carousel */}
+              <div className="lp-days-carousel">
+                {daysList.map((day, idx) => {
+                  const isSelected = idx === selectedDayIndex;
+                  return (
+                    <button
+                      key={day.fullDate}
+                      type="button"
+                      className={`lp-day-pill ${isSelected ? 'active' : ''}`}
+                      onClick={() => setSelectedDayIndex(idx)}
+                    >
+                      <div className="lp-day-month">{day.month}</div>
+                      <div className="lp-day-num">{day.dayNum}</div>
+                      <div className="lp-day-name">{day.dayName}</div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Time slots grid */}
+              <div className="lp-time-slots-grid">
+                {timeSlots.map(slot => {
+                  const isSelected = slot === selectedTimeSlot;
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      className={`lp-slot-btn ${isSelected ? 'active' : ''}`}
+                      onClick={() => setSelectedTimeSlot(slot)}
+                    >
+                      {slot}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Book Now Button */}
+              <button className="lp-book-now-cta" onClick={handleBookNow}>
+                Book Now
+              </button>
+
+              <div style={{ textAlign: 'center', marginTop: '0.75rem', fontSize: '0.8rem', color: '#777' }}>
+                Base rate: ₹{pDetails.hourlyRate || 25}/hr • Pay after inspection
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* ── Booking Confirmation Modal ── */}
       {isBookingOpen && (
         <BookingModal 
           provider={provider} 
+          initialDate={selectedDateObj.fullDate}
+          initialTime={selectedTimeSlot}
           onClose={() => setIsBookingOpen(false)} 
+          onSuccess={() => {
+            alert('Booking requested successfully!');
+            setIsBookingOpen(false);
+            navigate('/customer-dashboard');
+          }} 
         />
       )}
     </div>

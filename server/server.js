@@ -125,6 +125,33 @@ async function seedDatabase() {
     });
     console.log('✓ System Admin created: admin@localfixr.com / password123');
   }
+
+  // Remove any fake / seed providers created by previous seeds so database is 100% real
+  await User.deleteMany({
+    $or: [
+      {
+        email: {
+          $in: [
+            'arun.electrician@localfixr.com',
+            'deepak.plumber@localfixr.com',
+            'vikram.carpenter@localfixr.com',
+            'anil.painter@localfixr.com',
+            'rajesh.tailor@localfixr.com',
+            'sunil.ac@localfixr.com',
+            'pooja.cleaning@localfixr.com',
+            'rakesh.pest@localfixr.com',
+            'rajesh@example.com',
+            'vikram@example.com',
+            'anil@example.com',
+            'sham@example.com',
+            'arun@example.com',
+            'deepak@example.com'
+          ]
+        }
+      },
+      { email: { $regex: '^(real_test_|realcarpenter_|realuser_|test)' } }
+    ]
+  });
 }
 
 connectDB();

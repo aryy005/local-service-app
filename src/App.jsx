@@ -15,11 +15,14 @@ import AdminLogin from './pages/AdminLogin';
 import ForgotPassword from './pages/ForgotPassword';
 import NotFound from './pages/NotFound';
 import { Toaster } from 'react-hot-toast';
+import { useAuth } from './context/AuthContext';
 
 function App() {
+  const { user } = useAuth();
+
   return (
     <div className="flex flex-col min-h-screen w-full bg-[#EBEAE5]">
-      <Header />
+      {!user && <Header />}
       <main className="flex-grow w-full z-10">
         <ErrorBoundary>
           <Routes>
@@ -57,11 +60,27 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <ProtectedRoute requireRole="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute requireRole="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </ErrorBoundary>
       </main>
-      <Footer />
+      {!user && <Footer />}
       <Toaster 
         position="bottom-right" 
         toastOptions={{

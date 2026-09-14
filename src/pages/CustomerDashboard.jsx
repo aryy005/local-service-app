@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Edit2, Save, Phone, MessageSquare, CreditCard, FileText, CheckCircle, Navigation, MessageCircle, Star, Heart } from 'lucide-react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { 
+  Calendar, Clock, Edit2, Save, Phone, MessageSquare, CreditCard, 
+  FileText, CheckCircle, Navigation, MessageCircle, Star, Heart, 
+  User, Settings, LogOut, ArrowRight, ArrowLeft, ShieldCheck, Sparkles, Plus, Trash2, MapPin, LayoutDashboard, Search
+} from 'lucide-react';
 import { API_URL } from '../config';
 import ChatModal from '../components/ChatModal';
 import BookingModal from '../components/BookingModal';
@@ -10,16 +14,27 @@ import PaymentModal from '../components/PaymentModal';
 import InvoiceModal from '../components/InvoiceModal';
 import ServiceTrackerModal from '../components/ServiceTrackerModal';
 import ReviewTipModal from '../components/ReviewTipModal';
-import { openWhatsAppChat, formatWhatsAppBookingMessage } from '../utils/whatsapp';
+import UserMenuPill from '../components/UserMenuPill';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
+import { getSavedProviders, toggleSaveProvider } from '../utils/savedProviders';
+import './CustomerDashboard.css';
 
 const CustomerDashboard = () => {
-  const { user, token, updateProfile, addAddress, updateAddress, deleteAddress } = useAuth();
+  const { user, token, logout, updateProfile, addAddress, updateAddress, deleteAddress } = useAuth();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const { t, lang, setLang } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
+
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'profile'
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'dashboard'); // 'dashboard' | 'bookings' | 'messages' | 'saved' | 'profile' | 'settings'
+  const [bookingFilter, setBookingFilter] = useState('all'); // 'all' | 'upcoming' | 'past'
+
+  const [savedProviders, setSavedProviders] = useState([]);
+
+  // Modals state
   const [activeChat, setActiveChat] = useState(null);
   const [activeBookingProvider, setActiveBookingProvider] = useState(null);
   const [isAIOpen, setIsAIOpen] = useState(false);
@@ -39,7 +54,7 @@ const CustomerDashboard = () => {
     pincode: ''
   });
 
-  // Add New Address Modal State
+  // Add Address Modal State
   const [showNewAddressModal, setShowNewAddressModal] = useState(false);
   const [newAddressData, setNewAddressData] = useState({
     label: 'Home',
@@ -58,6 +73,24 @@ const CustomerDashboard = () => {
   const [phoneLoading, setPhoneLoading] = useState(false);
   const [phoneError, setPhoneError] = useState('');
 
+  // Load saved providers
+  const refreshSaved = () => {
+    setSavedProviders(getSavedProviders(user?.email || 'guest'));
+  };
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['dashboard', 'bookings', 'messages', 'saved', 'profile', 'settings'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    refreshSaved();
+    window.addEventListener('saved_providers_changed', refreshSaved);
+    return () => window.removeEventListener('saved_providers_changed', refreshSaved);
+  }, [user?.email]);
+
   useEffect(() => {
     if (!user) {
       navigate('/auth/login');
@@ -69,27 +102,30 @@ const CustomerDashboard = () => {
       return;
     }
 
-    if (user) {
-      setFormData({ 
-        name: user.name || '', 
-        phone: user.phone || '',
-        street: user.addressDetails?.street || '',
-        city: user.city || user.addressDetails?.city || '',
-        state: user.addressDetails?.state || '',
-        pincode: user.addressDetails?.pincode || ''
-      });
-      setPhoneInput(user.phone || '');
-    }
+    setFormData({ 
+      name: user.name || '', 
+      phone: user.phone || '',
+      street: user.addressDetails?.street || '',
+      city: user.city || user.addressDetails?.city || '',
+      state: user.addressDetails?.state || '',
+      pincode: user.addressDetails?.pincode || ''
+    });
+    setPhoneInput(user.phone || '');
 
     const fetchBookings = async () => {
       try {
         const res = await fetch(`${API_URL}/bookings`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await res.json();
-        if (res.ok) setBookings(data);
+        if (res.ok) {
+          const data = await res.json();
+          setBookings(Array.isArray(data) ? data : []);
+        } else {
+          setBookings([]);
+        }
       } catch (err) {
         console.error(err);
+        setBookings([]);
       } finally {
         setLoading(false);
       }
@@ -98,45 +134,68 @@ const CustomerDashboard = () => {
   }, [user, token, navigate]);
 
   const handleSendPhoneOtp = async (channel = 'sms') => {
-    if (!phoneInput) { setPhoneError('Enter your mobile number'); return; }
-    setPhoneLoading(true); setPhoneError('');
+    if (!phoneInput || phoneInput.trim().length < 10) {
+      setPhoneError('Please enter a valid 10-digit phone number');
+      return;
+    }
+    setPhoneLoading(true);
+    setPhoneError('');
     try {
       const res = await fetch(`${API_URL}/verify/phone/send-otp`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phoneInput, channel })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ phone: phoneInput.trim(), channel })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-      setPhoneOtpSent(true);
-      if (data.demo_otp) setPhoneDemoOtp(data.demo_otp);
-    } catch (err) { setPhoneError(err.message); }
-    finally { setPhoneLoading(false); }
+      if (res.ok) {
+        setPhoneOtpSent(true);
+        setPhoneDemoOtp(data.demoOtp || '');
+      } else {
+        setPhoneError(data.error || 'Failed to send OTP');
+      }
+    } catch {
+      setPhoneError('Network error while sending OTP');
+    } finally {
+      setPhoneLoading(false);
+    }
   };
 
   const handleVerifyPhoneOtp = async () => {
-    if (phoneOtp.length < 6) { setPhoneError('Enter 6-digit OTP'); return; }
-    setPhoneLoading(true); setPhoneError('');
+    if (!phoneOtp || phoneOtp.trim().length < 6) {
+      setPhoneError('Please enter the 6-digit OTP');
+      return;
+    }
+    setPhoneLoading(true);
+    setPhoneError('');
     try {
       const res = await fetch(`${API_URL}/verify/phone/verify-otp`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phoneInput, otp: phoneOtp })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ otp: phoneOtp.trim() })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-      await updateProfile({ phone: phoneInput, phoneVerified: true });
-      setPhoneOtpSent(false);
-      alert('Phone number verified successfully!');
-    } catch (err) { setPhoneError(err.message); }
-    finally { setPhoneLoading(false); }
+      if (res.ok) {
+        setPhoneOtpSent(false);
+        setPhoneOtp('');
+        setPhoneDemoOtp('');
+        if (updateProfile) updateProfile({ phone: phoneInput.trim(), phoneVerified: true });
+        alert('Phone verified successfully!');
+      } else {
+        setPhoneError(data.error || 'Invalid OTP');
+      }
+    } catch {
+      setPhoneError('Network error while verifying OTP');
+    } finally {
+      setPhoneLoading(false);
+    }
   };
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     try {
-      await updateProfile({ 
-        name: formData.name, 
+      await updateProfile({
+        name: formData.name,
         phone: formData.phone,
-        city: formData.city,
         addressDetails: {
           street: formData.street,
           city: formData.city,
@@ -145,634 +204,853 @@ const CustomerDashboard = () => {
         }
       });
       setIsEditing(false);
-      alert('Profile details updated successfully!');
+      alert('Profile updated successfully!');
     } catch (err) {
-      alert(err.message);
+      alert(err.message || 'Failed to update profile');
     }
   };
 
-  const handleAddNewAddressSubmit = async (e) => {
+  const handleAddAddress = async (e) => {
     e.preventDefault();
     try {
       await addAddress(newAddressData);
       setShowNewAddressModal(false);
-      setNewAddressData({ label: 'Home', street: '', city: user.city || '', state: '', pincode: '', isDefault: false });
+      setNewAddressData({ label: 'Home', street: '', city: '', state: '', pincode: '', isDefault: false });
     } catch (err) {
-      alert(err.message);
+      alert(err.message || 'Failed to add address');
     }
   };
 
-  const handleSetDefaultAddress = async (addrId) => {
-    try {
-      await updateAddress(addrId, { isDefault: true });
-    } catch (err) {
-      alert(err.message);
-    }
+  const handleUnsave = (provider) => {
+    toggleSaveProvider(provider, user?.email || 'guest');
+    refreshSaved();
   };
 
-  const handleDeleteAddress = async (addrId) => {
-    if (window.confirm('Are you sure you want to remove this address?')) {
-      try {
-        await deleteAddress(addrId);
-      } catch (err) {
-        alert(err.message);
-      }
-    }
+  // Derived bookings
+  const upcomingList = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed' || b.status === 'accepted' || b.status === 'in_progress');
+  const pastList = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
+
+  const upcomingCount = upcomingList.length;
+  const pastCount = pastList.length;
+  const savedCount = savedProviders.length;
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
   };
 
-  if (loading) return <div className="container mt-8 text-center">{t('loading')}</div>;
+  // Real activities generated from user's actual bookings
+  const recentActivities = bookings.slice(0, 5).map((b) => {
+    const prov = b.providerId || {};
+    const dateFormatted = b.createdAt 
+      ? new Date(b.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) 
+      : (b.date || 'Recent');
+    let title = `Booking placed for ${prov.name || 'Service Provider'}`;
+    if (b.status === 'completed') {
+      title = `Service completed with ${prov.name || 'Service Provider'}`;
+    } else if (b.status === 'confirmed' || b.status === 'accepted') {
+      title = `Booking confirmed with ${prov.name || 'Service Provider'}`;
+    } else if (b.status === 'cancelled') {
+      title = `Booking cancelled for ${prov.name || 'Service Provider'}`;
+    } else if (b.status === 'in_progress') {
+      title = `Service in progress with ${prov.name || 'Service Provider'}`;
+    }
+    return {
+      id: b._id,
+      title,
+      time: `${dateFormatted}${b.timePreference ? ` • ${b.timePreference}` : ''}`
+    };
+  });
+
+  if (loading) return <div className="container mt-8 text-center" style={{ padding: '3rem' }}>{t('loading')}</div>;
 
   return (
-    <div className="container fade-in" style={{ maxWidth: '1100px', margin: '0 auto' }}>
-      {/* ── Dashboard Greeting & Stats Header (Screen 5) ── */}
-      <div style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Good Morning, {user?.name}!</h1>
-            <p className="subtitle" style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>Here's what's happening with your bookings.</p>
-          </div>
-          <button onClick={() => setIsAIOpen(true)} className="btn btn-lime" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            ⚡ {t('aiDiagnosisBtn')}
-          </button>
-        </div>
+    <div className="lp-dash-container fade-in">
+      {/* ═══ Left Sidebar (Screen 5 - Image 1) ═══ */}
+      <aside className="lp-dash-sidebar">
+        <button 
+          type="button" 
+          className="lp-sidebar-brand" 
+          onClick={() => navigate('/search')}
+          style={{ background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', padding: 0 }}
+        >
+          LocalFixr
+        </button>
 
-        {/* Counter Summary Cards (Screen 5) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--surface-border)', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '2rem', fontWeight: 900, color: '#121212', fontFamily: "var(--font-display, 'Oswald', sans-serif)" }}>
-              {bookings.filter(b => b.status === 'pending' || b.status === 'accepted').length || 2}
-            </span>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Upcoming Bookings</span>
-          </div>
-
-          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--surface-border)', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '2rem', fontWeight: 900, color: '#121212', fontFamily: "var(--font-display, 'Oswald', sans-serif)" }}>
-              {bookings.filter(b => b.status === 'completed').length || 5}
-            </span>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Past Bookings</span>
-          </div>
-
-          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--surface-border)', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '2rem', fontWeight: 900, color: '#121212', fontFamily: "var(--font-display, 'Oswald', sans-serif)" }}>3</span>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Saved Providers</span>
-          </div>
-        </div>
-
-        {/* Tab Selection Row */}
-        <div style={{ display: 'flex', gap: '0.75rem', borderBottom: '2px solid var(--surface-border)', paddingBottom: '0.5rem' }}>
+        <nav className="lp-sidebar-nav">
           <button 
-            className={`btn ${activeTab === 'orders' ? 'btn-lime' : 'btn-outline'}`} 
-            onClick={() => setActiveTab('orders')}
+            className={`lp-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveTab('dashboard')}
           >
-            {t('myOrders')}
+            <LayoutDashboard size={18} />
+            <span>Dashboard</span>
           </button>
+
           <button 
-            className={`btn ${activeTab === 'profile' ? 'btn-lime' : 'btn-outline'}`} 
+            type="button"
+            className="lp-nav-item"
+            onClick={() => navigate('/search')}
+          >
+            <Search size={18} />
+            <span>Explore Services</span>
+          </button>
+
+          <button 
+            className={`lp-nav-item ${activeTab === 'bookings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('bookings')}
+          >
+            <Calendar size={18} />
+            <span>My Bookings</span>
+          </button>
+
+          <button 
+            className={`lp-nav-item ${activeTab === 'messages' ? 'active' : ''}`}
+            onClick={() => setActiveTab('messages')}
+          >
+            <MessageSquare size={18} />
+            <span>Messages</span>
+          </button>
+
+          <button 
+            className={`lp-nav-item ${activeTab === 'saved' ? 'active' : ''}`}
+            onClick={() => setActiveTab('saved')}
+          >
+            <Heart size={18} />
+            <span>Saved Providers</span>
+          </button>
+
+          <button 
+            className={`lp-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
             onClick={() => setActiveTab('profile')}
           >
-            {t('myProfile')}
+            <User size={18} />
+            <span>Profile</span>
           </button>
-        </div>
-      </div>
 
-      {/* ── Phone Verification Banner for Customers ── */}
-      {!user?.phoneVerified && (
-        <div style={{ background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '1rem', padding: '1.25rem 1.5rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <h3 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-main)', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              📱 Add & Verify Your Phone Number
-            </h3>
-            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Verify your mobile number via OTP so service providers can reach you for bookings.
-            </p>
-          </div>
-          <button className="btn btn-primary btn-sm" onClick={() => setActiveTab('profile')}>
-            Verify Phone Number
+          <button 
+            className={`lp-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            <Settings size={18} />
+            <span>Settings</span>
           </button>
-        </div>
-      )}
+        </nav>
 
-      {/* ── 1. Orders Tab ── */}
-      {activeTab === 'orders' && (
-        <div className="bookings-layout" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
-          {bookings && bookings.length > 0 ? bookings.map(booking => (
-            <div key={booking._id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                <span style={{ fontWeight: 800, color: '#6366f1', fontSize: '0.88rem', background: 'rgba(99, 102, 241, 0.1)', padding: '0.2rem 0.5rem', borderRadius: '0.4rem', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                  ID: {booking.orderId || ('ORD-' + booking._id?.slice(-6).toUpperCase())}
-                </span>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ 
-                    fontWeight: 600, 
-                    textTransform: 'capitalize',
-                    color: booking.status === 'pending' ? 'var(--warning-color)' : booking.status === 'accepted' ? 'var(--accent-color)' : booking.status === 'completed' ? 'var(--primary-color)' : 'var(--text-muted)'
-                  }}>{booking.status}</span>
-                  
-                  {/* Payment Badge */}
-                  {booking.paymentStatus === 'paid' ? (
-                    <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <CheckCircle size={12} /> Paid (₹{booking.paidAmount || booking.finalPrice})
-                    </span>
-                  ) : (
-                    <span style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700 }}>
-                      Unpaid: ₹{booking.finalPrice || booking.providerId?.providerDetails?.hourlyRate || 25}
-                    </span>
-                  )}
-                </div>
-              </div>
-              
-              <h3 style={{ marginBottom: '0.25rem' }}>{booking.providerId?.name || 'Unknown Provider'}</h3>
-              <p style={{ margin: '0 0 1rem 0', color: 'var(--text-muted)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Phone size={14}/> {booking.providerId?.phone || 'No phone provided'}
-              </p>
-              <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1rem' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Calendar size={16} /> {booking.date}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Clock size={16} /> {booking.timePreference}</span>
-              </div>
-              
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexDirection: 'column' }}>
-                {/* Track Service Button */}
-                <button 
-                  onClick={() => setActiveTrackerBooking(booking)}
-                  className="btn btn-primary btn-sm" 
-                  style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'linear-gradient(135deg, #6366F1, #4F46E5)', border: 'none', fontWeight: 700 }}
-                >
-                  <Navigation size={16} /> Track Service Progress 📍
-                </button>
+        <button className="lp-logout-btn" onClick={() => { logout(); navigate('/'); }}>
+          <LogOut size={18} />
+          <span>Logout</span>
+        </button>
+      </aside>
 
-                {/* Pay Now Button (Always available for unpaid bookings) */}
-                {booking.paymentStatus !== 'paid' && (
-                  <button 
-                    onClick={() => setActivePaymentBooking(booking)}
-                    className="btn btn-primary btn-sm" 
-                    style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'linear-gradient(135deg, #10B981, #059669)', border: 'none', fontWeight: 700 }}
-                  >
-                    <CreditCard size={16} /> Pay Now (₹{booking.finalPrice || booking.providerId?.providerDetails?.hourlyRate || 25})
-                  </button>
-                )}
-
-                {/* View Invoice Button if Paid */}
-                {booking.paymentStatus === 'paid' && (
-                  <button 
-                    onClick={() => setActiveInvoiceBooking(booking)}
-                    className="btn btn-outline btn-sm" 
-                    style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', borderColor: '#10B981', color: '#10B981' }}
-                  >
-                    <FileText size={16} /> View Tax Invoice
-                  </button>
-                )}
-
-                {/* Rate & Review Button ONLY when Service is fully completed */}
-                {booking.status === 'completed' && !booking.customerReview && (
-                  <button 
-                    onClick={() => setActiveReviewBooking(booking)}
-                    className="btn btn-outline btn-sm" 
-                    style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', borderColor: '#f59e0b', color: '#f59e0b', fontWeight: 700 }}
-                  >
-                    <Star size={16} className="fill-amber-400 text-amber-400" /> Rate & Review Completed Service
-                  </button>
-                )}
-
-                {booking.status === 'completed' && booking.customerReview && (
-                  <div style={{ fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', padding: '0.4rem', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '6px' }}>
-                    <CheckCircle size={14} /> Review Submitted ({booking.customerReview.rating} ★)
-                  </div>
-                )}
-
-                {booking.status === 'completed' && (
-                  <button 
-                    onClick={() => setActiveBookingProvider(booking.providerId)}
-                    className="btn btn-outline btn-sm" 
-                    style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}
-                  >
-                    {t('bookAgain')}
-                  </button>
-                )}
-                
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                  <button 
-                    onClick={() => setActiveChat(booking)}
-                    className="btn btn-outline btn-sm" 
-                    style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.35rem' }}
-                  >
-                    <MessageSquare size={14} /> Message
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const msg = formatWhatsAppBookingMessage(booking, false);
-                      openWhatsAppChat(booking.providerId?.phone, msg);
-                    }}
-                    className="btn btn-sm" 
-                    style={{ background: '#25D366', color: 'white', border: 'none', fontWeight: 700, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.35rem' }}
-                  >
-                    <MessageCircle size={14} /> WhatsApp
-                  </button>
-                </div>
-              </div>
-              <div style={{ background: 'var(--surface-color)', padding: '1rem', borderRadius: '0.5rem' }}>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>"{booking.description}"</p>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid var(--surface-border)', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
-                  <strong>Service Address:</strong> {booking.serviceAddress}
-                </div>
-              </div>
-            </div>
-          )) : (
-            <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', gridColumn: '1 / -1' }}>
-              <h3>{t('noBookings')}</h3>
-              <p className="text-muted mt-2">You haven't requested any services so far.</p>
-              <button className="btn btn-primary mt-4" onClick={() => navigate('/search')}>{t('findPro')}</button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── 2. Profile & Addresses Tab ── */}
-      {activeTab === 'profile' && (
-        <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-            <h2>Profile & Addresses</h2>
-            {!isEditing && (
-              <button className="btn btn-outline btn-sm" onClick={() => {
-                setFormData({
-                  name: user.name || '',
-                  phone: user.phone || '',
-                  street: user.addressDetails?.street || '',
-                  city: user.city || user.addressDetails?.city || '',
-                  state: user.addressDetails?.state || '',
-                  pincode: user.addressDetails?.pincode || ''
-                });
-                setIsEditing(true);
-              }}>
-                <Edit2 size={16} /> Edit Profile Info
-              </button>
-            )}
+      {/* ═══ Main Content Area ═══ */}
+      <main className="lp-dash-main">
+        {/* ─── Topbar with Image 3 User Capsule ─── */}
+        <div className="lp-dash-topbar">
+          <div className="lp-dash-breadcrumb">
+            <span className="lp-dash-brand-tag" onClick={() => navigate('/search')} style={{ cursor: 'pointer' }}>
+              LocalFixr
+            </span>
+            <span className="lp-dash-sep">/</span>
+            <span className="lp-dash-curr-tab">
+              {activeTab === 'dashboard' ? 'Overview' :
+               activeTab === 'bookings' ? 'My Bookings' :
+               activeTab === 'messages' ? 'Messages' :
+               activeTab === 'saved' ? 'Saved Providers' :
+               activeTab === 'profile' ? 'Profile & Addresses' : 'Settings'}
+            </span>
           </div>
 
-          {isEditing ? (
-            <form onSubmit={handleProfileSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
-                <div className="form-group">
-                  <label>Full Name</label>
-                  <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="form-control" />
-                </div>
-                <div className="form-group">
-                  <label>Phone Number</label>
-                  <input type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="form-control" />
-                </div>
+          <div className="lp-dash-topbar-actions">
+            <button 
+              type="button" 
+              className="lp-dash-browse-btn"
+              onClick={() => navigate('/search')}
+              title="Explore all services"
+            >
+              <Search size={15} />
+              <span>Browse Services</span>
+            </button>
+            <UserMenuPill />
+          </div>
+        </div>
+        {/* ─── 1. DASHBOARD OVERVIEW (Image 1) ─── */}
+        {activeTab === 'dashboard' && (
+          <>
+            <header className="lp-dash-header">
+              <h1>{getGreeting()}, {user?.name || 'User'}!</h1>
+              <p>Here's what's happening with your bookings.</p>
+            </header>
+
+            {/* 3 Stat Cards */}
+            <div className="lp-stats-grid">
+              <div className="lp-stat-card" style={{ cursor: 'pointer' }} onClick={() => { setActiveTab('bookings'); setBookingFilter('upcoming'); }}>
+                <div className="lp-stat-num">{upcomingCount}</div>
+                <div className="lp-stat-title">Upcoming Bookings</div>
               </div>
 
-              {/* Primary Address Edit */}
-              <div style={{ borderTop: '1px solid var(--surface-border)', paddingTop: '1.25rem', marginBottom: '1.5rem' }}>
-                <h4 style={{ margin: '0 0 1rem 0', color: '#6366f1', fontSize: '0.95rem', fontWeight: 700 }}>
-                  📍 Primary Doorstep Address
-                </h4>
-                <div className="form-group mb-3">
-                  <label>Street / Flat / House Address</label>
-                  <input 
-                    type="text" 
-                    value={formData.street || ''} 
-                    onChange={e => setFormData({...formData, street: e.target.value})} 
-                    placeholder="e.g. Flat 402, Green Avenue"
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
-                  <div className="form-group">
-                    <label>City</label>
-                    <input 
-                      type="text" 
-                      value={formData.city || ''} 
-                      onChange={e => setFormData({...formData, city: e.target.value})} 
-                      placeholder="e.g. Ludhiana"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>State</label>
-                    <input 
-                      type="text" 
-                      value={formData.state || ''} 
-                      onChange={e => setFormData({...formData, state: e.target.value})} 
-                      placeholder="e.g. Punjab"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Pincode</label>
-                    <input 
-                      type="text" 
-                      value={formData.pincode || ''} 
-                      onChange={e => setFormData({...formData, pincode: e.target.value})} 
-                      placeholder="e.g. 141001"
-                    />
-                  </div>
-                </div>
+              <div className="lp-stat-card" style={{ cursor: 'pointer' }} onClick={() => { setActiveTab('bookings'); setBookingFilter('past'); }}>
+                <div className="lp-stat-num">{pastCount}</div>
+                <div className="lp-stat-title">Past Bookings</div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button type="submit" className="btn btn-primary"><Save size={18} /> Save Changes</button>
-                <button type="button" className="btn btn-outline" onClick={() => setIsEditing(false)}>Cancel</button>
+              <div className="lp-stat-card" style={{ cursor: 'pointer' }} onClick={() => setActiveTab('saved')}>
+                <div className="lp-stat-num">{savedCount}</div>
+                <div className="lp-stat-title">Saved Providers</div>
               </div>
-            </form>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem' }}>
-                <div>
-                  <p className="text-muted" style={{ margin: 0, fontSize: '0.85rem' }}>Full Name</p>
-                  <p style={{ fontSize: '1.05rem', fontWeight: 600, marginTop: '0.25rem' }}>{user?.name}</p>
-                </div>
-                <div>
-                  <p className="text-muted" style={{ margin: 0, fontSize: '0.85rem' }}>Email Address</p>
-                  <p style={{ fontSize: '1.05rem', fontWeight: 600, marginTop: '0.25rem' }}>{user?.email}</p>
-                </div>
-                <div>
-                  <p className="text-muted" style={{ margin: 0, fontSize: '0.85rem' }}>Phone Number</p>
-                  <p style={{ fontSize: '1.05rem', fontWeight: 600, marginTop: '0.25rem' }}>{user?.phone || 'Not provided'}</p>
-                </div>
-                <div>
-                  <p className="text-muted" style={{ margin: 0, fontSize: '0.85rem' }}>Current City</p>
-                  <p style={{ fontSize: '1.05rem', fontWeight: 600, marginTop: '0.25rem', color: '#6366f1' }}>
-                    📍 {user?.city || user?.addressDetails?.city || 'Not specified'}
+            </div>
+
+            {/* Upcoming Bookings Section */}
+            <section>
+              <div className="lp-section-head">
+                <h2>Upcoming Bookings</h2>
+                {upcomingList.length > 0 && (
+                  <button className="lp-view-all" onClick={() => { setActiveTab('bookings'); setBookingFilter('upcoming'); }}>
+                    View all <ArrowRight size={15} />
+                  </button>
+                )}
+              </div>
+
+              {upcomingList.length === 0 ? (
+                <div className="glass-panel" style={{ padding: '2.5rem 1.5rem', textAlign: 'center', borderRadius: '12px', background: '#fff', border: '1px solid #e5e7eb', marginBottom: '2rem' }}>
+                  <Calendar size={36} color="#6b7280" style={{ margin: '0 auto 0.75rem', opacity: 0.7 }} />
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: '600', marginBottom: '0.35rem', color: '#111827' }}>No upcoming bookings</h3>
+                  <p style={{ color: '#6b7280', fontSize: '0.875rem', maxWidth: '380px', margin: '0 auto 1.25rem' }}>
+                    You have no active appointments scheduled. Search verified service professionals in your area to get started.
                   </p>
-                </div>
-              </div>
-
-              {/* ── Saved Addresses Section ── */}
-              <div style={{ borderTop: '1px solid var(--surface-border)', paddingTop: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      🏠 Saved Doorstep Addresses
-                    </h3>
-                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      Manage delivery & service addresses for instant booking checkout
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      setNewAddressData({ label: 'Home', street: '', city: user?.city || '', state: '', pincode: '', isDefault: false });
-                      setShowNewAddressModal(true);
-                    }}
-                    className="btn btn-primary btn-sm"
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                  <Link 
+                    to="/search" 
+                    className="lp-cat-item" 
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.6rem 1.25rem', background: '#0047FF', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontWeight: 500, fontSize: '0.9rem' }}
                   >
-                    + Add New Address
-                  </button>
+                    <span>Browse Services</span>
+                    <ArrowRight size={15} />
+                  </Link>
                 </div>
+              ) : (
+                upcomingList.slice(0, 3).map((b) => {
+                  const prov = b.providerId || {};
+                  const pDetails = prov.providerDetails || {};
+                  const isConfirmed = b.status === 'confirmed' || b.status === 'accepted';
+                  return (
+                    <div key={b._id} className="lp-booking-card">
+                      <div className="lp-booking-info">
+                        <img 
+                          src={pDetails.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150&h=150'} 
+                          alt={prov.name || 'Provider'} 
+                          className="lp-booking-avatar" 
+                        />
+                        <div>
+                          <div className="lp-booking-name">{prov.name || 'Service Provider'}</div>
+                          <div className="lp-booking-meta">
+                            {pDetails.categoryName || 'Service'} • {b.date || 'Upcoming'} • {b.timePreference || 'Anytime'}
+                          </div>
+                        </div>
+                      </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-                  {/* Active Primary Address Card */}
-                  {user?.addressDetails && (user.addressDetails.street || user.addressDetails.city) && (
-                    <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '0.75rem', border: '1.5px solid #6366f1', background: 'rgba(99, 102, 241, 0.04)', position: 'relative' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', background: '#6366f1', color: 'white', padding: '0.15rem 0.5rem', borderRadius: '0.3rem' }}>
-                          Primary / Default
+                      <div className="lp-booking-actions">
+                        <span className={`lp-status-pill ${isConfirmed ? 'confirmed' : 'pending'}`}>
+                          {isConfirmed ? 'Confirmed' : (b.status === 'in_progress' ? 'In Progress' : 'Pending')}
                         </span>
                       </div>
-                      <p style={{ margin: '0 0 0.25rem 0', fontWeight: 700, fontSize: '0.95rem' }}>
-                        {user.addressDetails.street || 'Main Address'}
-                      </p>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                        {user.addressDetails.city}{user.addressDetails.state ? `, ${user.addressDetails.state}` : ''} {user.addressDetails.pincode ? `- ${user.addressDetails.pincode}` : ''}
-                      </p>
                     </div>
-                  )}
+                  );
+                })
+              )}
+            </section>
 
-                  {/* Additional Saved Addresses */}
-                  {user?.savedAddresses && user.savedAddresses.length > 0 ? (
-                    user.savedAddresses.map((addr) => (
-                      <div key={addr._id} className="glass-panel" style={{ padding: '1.25rem', borderRadius: '0.75rem', border: addr.isDefault ? '1.5px solid #10b981' : '1px solid var(--surface-border)', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            {/* Recent Activity Section */}
+            <section>
+              <div className="lp-section-head">
+                <h2>Recent Activity</h2>
+              </div>
+
+              {recentActivities.length === 0 ? (
+                <div className="glass-panel" style={{ padding: '1.75rem', textAlign: 'center', borderRadius: '12px', background: '#fff', border: '1px solid #e5e7eb' }}>
+                  <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
+                    No recent activity yet. Your booking confirmations, updates, and payments will appear here.
+                  </p>
+                </div>
+              ) : (
+                recentActivities.map((act) => (
+                  <div key={act.id} className="lp-activity-item">
+                    <div className="lp-activity-icon">
+                      <CheckCircle size={20} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <div className="lp-activity-title">{act.title}</div>
+                      <div className="lp-activity-time">{act.time}</div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </section>
+          </>
+        )}
+
+        {/* ─── 2. SAVED PROVIDERS VIEW ─── */}
+        {activeTab === 'saved' && (
+          <>
+            <header className="lp-dash-header">
+              <h1>Saved Providers</h1>
+              <p>Service professionals you've bookmarked for fast and easy future bookings.</p>
+            </header>
+
+            {savedProviders.length === 0 ? (
+              <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', borderRadius: '12px' }}>
+                <Heart size={40} color="#999" style={{ margin: '0 auto 1rem' }} />
+                <h3 style={{ marginBottom: '0.5rem' }}>No saved providers yet</h3>
+                <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+                  Browse services and click the heart icon on any provider profile to save them here for quick booking.
+                </p>
+                <Link to="/search" className="btn btn-lime">Explore Providers</Link>
+              </div>
+            ) : (
+              <div className="lp-saved-grid">
+                {savedProviders.map((p) => {
+                  const details = p.providerDetails || {};
+                  const catTitle = details.categoryName || 'Service Provider';
+                  const locTitle = details.location || p.city || 'Local Area';
+                  return (
+                    <div key={p._id || p.id} className="lp-saved-card">
+                      <div className="lp-saved-top">
+                        <img 
+                          src={details.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200&h=200'} 
+                          alt={p.name} 
+                          className="lp-saved-avatar" 
+                        />
                         <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', background: 'var(--bg-secondary)', padding: '0.15rem 0.5rem', borderRadius: '0.3rem' }}>
-                              {addr.label === 'Work' ? '💼 Work' : addr.label === 'Other' ? '📍 Other' : '🏠 Home'}
+                          <div className="lp-saved-name">{p.name}</div>
+                          <div className="lp-saved-cat">{catTitle} • {locTitle}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '4px', fontSize: '0.85rem', fontWeight: 600 }}>
+                            <Star size={14} fill="#f59e0b" color="#f59e0b" />
+                            <span>{details.rating ? Number(details.rating).toFixed(1) : 'New'}</span>
+                            {details.reviewsCount ? <span style={{ color: '#888' }}>({details.reviewsCount} reviews)</span> : null}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="lp-saved-bottom">
+                        <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>
+                          {details.hourlyRate ? <>₹{details.hourlyRate}<span style={{ fontSize: '0.75rem', color: '#777', fontWeight: 500 }}>/hr</span></> : <span>Flexible Rate</span>}
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <button className="lp-unsave-btn" onClick={() => handleUnsave(p)} title="Remove from saved">
+                            <Heart size={18} fill="#ef4444" />
+                          </button>
+                          <Link to={`/provider/${p._id || p.id}`} className="lp-book-btn">
+                            Book Now
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ─── 3. MY BOOKINGS VIEW ─── */}
+        {activeTab === 'bookings' && (
+          <>
+            <header className="lp-dash-header">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h1>My Bookings</h1>
+                  <p>Track, manage, and pay for all your scheduled appointments.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button 
+                    className={`btn btn-sm ${bookingFilter === 'all' ? 'btn-lime' : 'btn-outline'}`}
+                    onClick={() => setBookingFilter('all')}
+                  >
+                    All ({bookings.length})
+                  </button>
+                  <button 
+                    className={`btn btn-sm ${bookingFilter === 'upcoming' ? 'btn-lime' : 'btn-outline'}`}
+                    onClick={() => setBookingFilter('upcoming')}
+                  >
+                    Upcoming ({upcomingCount})
+                  </button>
+                  <button 
+                    className={`btn btn-sm ${bookingFilter === 'past' ? 'btn-lime' : 'btn-outline'}`}
+                    onClick={() => setBookingFilter('past')}
+                  >
+                    Past ({pastCount})
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            {(() => {
+              const displayed = bookingFilter === 'upcoming' ? upcomingList : bookingFilter === 'past' ? pastList : bookings;
+              if (displayed.length === 0) {
+                return (
+                  <div className="glass-panel" style={{ padding: '3.5rem 2rem', textAlign: 'center', borderRadius: '12px' }}>
+                    <Calendar size={40} color="#999" style={{ margin: '0 auto 1rem', opacity: 0.6 }} />
+                    <h3 style={{ marginBottom: '0.5rem', fontSize: '1.15rem' }}>No bookings found</h3>
+                    <p style={{ color: '#666', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
+                      {bookingFilter === 'upcoming' 
+                        ? "You don't have any upcoming bookings at the moment."
+                        : bookingFilter === 'past'
+                        ? "You have not completed any past bookings yet."
+                        : "You have not scheduled any appointments yet. Explore available services to book your first provider."}
+                    </p>
+                    <Link to="/search" className="btn btn-lime" style={{ display: 'inline-block' }}>
+                      Browse Services
+                    </Link>
+                  </div>
+                );
+              }
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {displayed.map(booking => {
+                    const prov = booking.providerId || {};
+                    const pDetails = prov.providerDetails || {};
+                    return (
+                      <div key={booking._id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <span style={{ fontWeight: 800, color: '#111111', fontSize: '0.85rem', background: '#e5e5e0', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
+                            {booking.orderId || ('ORD-' + booking._id?.slice(-6).toUpperCase())}
+                          </span>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span className={`lp-status-pill ${booking.status}`}>
+                              {booking.status}
                             </span>
-                            {addr.isDefault && (
-                              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#10b981', background: '#ecfdf5', padding: '0.15rem 0.45rem', borderRadius: '0.3rem' }}>
-                                Default
+                            
+                            {booking.paymentStatus === 'paid' ? (
+                              <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <CheckCircle size={12} /> Paid (₹{booking.paidAmount || booking.finalPrice})
+                              </span>
+                            ) : (
+                              <span style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700 }}>
+                                Unpaid: ₹{booking.finalPrice || pDetails.hourlyRate || 25}
                               </span>
                             )}
                           </div>
-                          <p style={{ margin: '0 0 0.25rem 0', fontWeight: 600, fontSize: '0.92rem' }}>
-                            {addr.street}
-                          </p>
-                          <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                            {addr.city}, {addr.state} - {addr.pincode}
-                          </p>
                         </div>
+                        
+                        <h3 style={{ marginBottom: '0.25rem', fontSize: '1.15rem' }}>{prov.name || 'Service Provider'}</h3>
+                        {prov.phone && (
+                          <p style={{ margin: '0 0 0.85rem 0', color: 'var(--text-muted)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Phone size={14}/> {prov.phone}
+                          </p>
+                        )}
+                        <div style={{ display: 'flex', gap: '1.5rem', color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '1.25rem' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Calendar size={16} /> {booking.date}</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Clock size={16} /> {booking.timePreference}</span>
+                        </div>
+                    
+                    <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+                      <button 
+                        onClick={() => setActiveTrackerBooking(booking)}
+                        className="btn btn-primary btn-sm" 
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                      >
+                        <Navigation size={15} /> Track Service
+                      </button>
 
-                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', borderTop: '1px solid var(--surface-border)', paddingTop: '0.5rem' }}>
-                          {!addr.isDefault && (
-                            <button 
-                              onClick={() => handleSetDefaultAddress(addr._id)}
-                              className="btn btn-outline btn-sm"
-                              style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                            >
-                              Set as Default
-                            </button>
-                          )}
-                          <button 
-                            onClick={() => handleDeleteAddress(addr._id)}
-                            className="btn btn-sm"
-                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', color: '#ef4444', background: 'rgba(239, 68, 68, 0.08)', border: 'none', marginLeft: 'auto' }}
-                          >
-                            Delete
-                          </button>
+                      {booking.paymentStatus !== 'paid' && (
+                        <button 
+                          onClick={() => setActivePaymentBooking(booking)}
+                          className="btn btn-lime btn-sm" 
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                        >
+                          <CreditCard size={15} /> Pay Now (₹{booking.finalPrice || pDetails.hourlyRate || 25})
+                        </button>
+                      )}
+
+                      {booking.paymentStatus === 'paid' && (
+                        <button 
+                          onClick={() => setActiveInvoiceBooking(booking)}
+                          className="btn btn-outline btn-sm" 
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                        >
+                          <FileText size={15} /> Invoice
+                        </button>
+                      )}
+
+                      <button 
+                        onClick={() => setActiveChat({
+                          bookingId: booking._id,
+                          receiverId: prov._id,
+                          receiverName: prov.name
+                        })}
+                        className="btn btn-outline btn-sm"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                      >
+                        <MessageCircle size={15} /> Chat
+                      </button>
+
+                      {booking.status === 'completed' && !booking.customerReview && (
+                        <button 
+                          onClick={() => setActiveReviewBooking(booking)}
+                          className="btn btn-outline btn-sm" 
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#f59e0b', color: '#b45309' }}
+                        >
+                          <Star size={15} fill="#f59e0b" color="#f59e0b" /> Review Service
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+          </>
+        )}
+
+        {/* ─── 4. MESSAGES TAB ─── */}
+        {activeTab === 'messages' && (
+          <>
+            <header className="lp-dash-header">
+              <h1>Messages</h1>
+              <p>Direct live chat with your assigned technicians and service specialists.</p>
+            </header>
+
+            {bookings.length === 0 ? (
+              <div className="glass-panel" style={{ padding: '3.5rem 2rem', textAlign: 'center', borderRadius: '12px' }}>
+                <MessageSquare size={40} color="#999" style={{ margin: '0 auto 1rem', opacity: 0.6 }} />
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '1.15rem' }}>No messages yet</h3>
+                <p style={{ color: '#666', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
+                  Direct chat unlocks automatically once you schedule a service appointment with any professional.
+                </p>
+                <Link to="/search" className="btn btn-lime" style={{ display: 'inline-block' }}>
+                  Browse Services
+                </Link>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {bookings.slice(0, 5).map((b) => {
+                  const prov = b.providerId || {};
+                  return (
+                    <div 
+                      key={b._id} 
+                      className="lp-booking-card" 
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setActiveChat({
+                        bookingId: b._id,
+                        receiverId: prov._id,
+                        receiverName: prov.name
+                      })}
+                    >
+                      <div className="lp-booking-info">
+                        <img 
+                          src={prov.providerDetails?.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150&h=150'} 
+                          alt={prov.name || 'Provider'} 
+                          className="lp-booking-avatar" 
+                        />
+                        <div>
+                          <div className="lp-booking-name">{prov.name || 'Service Provider'}</div>
+                          <div className="lp-booking-meta">Service booking #{b.orderId || b._id?.slice(-6).toUpperCase()} • {b.date || 'Scheduled'}</div>
                         </div>
                       </div>
-                    ))
+                      <button className="btn btn-lime btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <MessageSquare size={15} /> Open Chat
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ─── 5. PROFILE TAB ─── */}
+        {activeTab === 'profile' && (
+          <>
+            <header className="lp-dash-header">
+              <h1>Profile & Addresses</h1>
+              <p>Manage your contact details, service locations, and account verification.</p>
+            </header>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+              {/* Profile Details Card */}
+              <div className="glass-panel" style={{ padding: '1.75rem', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                  <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Contact Information</h3>
+                  {!isEditing ? (
+                    <button className="btn btn-outline btn-sm" onClick={() => setIsEditing(true)}>
+                      <Edit2 size={14} /> Edit
+                    </button>
                   ) : (
-                    (!user?.addressDetails?.street && !user?.addressDetails?.city) && (
-                      <div style={{ gridColumn: '1 / -1', padding: '1.5rem', textAlign: 'center', background: 'var(--bg-secondary)', borderRadius: '0.75rem', border: '1px dashed var(--surface-border)' }}>
-                        <p style={{ margin: '0 0 0.5rem 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                          No saved addresses found. Add an address to book services seamlessly!
-                        </p>
-                        <button 
-                          onClick={() => setShowNewAddressModal(true)}
-                          className="btn btn-outline btn-sm"
-                        >
-                          + Add Address
+                    <button className="btn btn-primary btn-sm" onClick={handleProfileSubmit}>
+                      <Save size={14} /> Save
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#666' }}>Full Name</label>
+                    <input 
+                      type="text" 
+                      value={formData.name} 
+                      disabled={!isEditing}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      style={{ marginTop: '4px' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#666' }}>Email Address</label>
+                    <input 
+                      type="email" 
+                      value={user?.email || ''} 
+                      disabled
+                      style={{ marginTop: '4px', opacity: 0.7 }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#666' }}>Phone Number</label>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '4px' }}>
+                      <input 
+                        type="tel" 
+                        value={phoneInput} 
+                        onChange={(e) => setPhoneInput(e.target.value)}
+                        placeholder="10-digit mobile number"
+                      />
+                      {!user?.phoneVerified && (
+                        <button className="btn btn-primary btn-sm" onClick={() => handleSendPhoneOtp('sms')} disabled={phoneLoading}>
+                          Verify
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {phoneOtpSent && (
+                    <div style={{ background: '#fefce8', border: '1px solid #fde047', borderRadius: '8px', padding: '1rem' }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>Enter 6-digit verification code:</div>
+                      {phoneDemoOtp && (
+                        <div style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 700, marginBottom: '0.5rem' }}>
+                          Test OTP: {phoneDemoOtp}
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input 
+                          type="text" 
+                          value={phoneOtp} 
+                          onChange={(e) => setPhoneOtp(e.target.value)}
+                          placeholder="6-digit code"
+                          maxLength={6}
+                        />
+                        <button className="btn btn-lime btn-sm" onClick={handleVerifyPhoneOtp} disabled={phoneLoading}>
+                          Confirm
                         </button>
                       </div>
-                    )
+                      {phoneError && <div style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '0.4rem' }}>{phoneError}</div>}
+                    </div>
                   )}
                 </div>
               </div>
 
-              {/* Verification Badges */}
-              <div style={{ borderTop: '1px solid var(--surface-border)', paddingTop: '1.5rem' }}>
-                <p className="text-muted" style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.75rem' }}>Security & Verification</p>
-                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                  <span className={user?.emailVerified ? 'verified-badge large' : 'unverified-badge'}>
-                    ✉ Email {user?.emailVerified ? '✓ Verified' : '✗ Not Verified'}
-                  </span>
-                  <span className={user?.phoneVerified ? 'verified-badge large' : 'unverified-badge'}>
-                    📱 Phone {user?.phoneVerified ? '✓ Verified' : '✗ Not Verified'}
-                  </span>
+              {/* Addresses Card */}
+              <div className="glass-panel" style={{ padding: '1.75rem', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                  <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Saved Addresses</h3>
+                  <button className="btn btn-lime btn-sm" onClick={() => setShowNewAddressModal(true)}>
+                    <Plus size={14} /> Add Address
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {user?.addresses && user.addresses.length > 0 ? (
+                    user.addresses.map((addr) => (
+                      <div key={addr._id} style={{ border: '1px solid #e5e5e0', borderRadius: '8px', padding: '0.85rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <MapPin size={15} /> {addr.label || 'Home'}
+                            {addr.isDefault && <span style={{ fontSize: '0.7rem', background: '#D2FE00', padding: '1px 6px', borderRadius: '4px' }}>Default</span>}
+                          </div>
+                          <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '2px' }}>
+                            {addr.street}, {addr.city} {addr.pincode}
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => deleteAddress(addr._id)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                          title="Delete address"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ color: '#777', fontSize: '0.9rem', fontStyle: 'italic' }}>
+                      No saved addresses. Click "Add Address" to store your home or office location.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          )}
-        </div>
-      )}
+          </>
+        )}
 
-      {/* ── Add New Address Modal ── */}
-      {showNewAddressModal && (
-        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '1rem' }}>
-          <div className="glass-panel" style={{ background: 'var(--card-bg)', width: '100%', maxWidth: '480px', padding: '2rem', borderRadius: '1.25rem', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid var(--surface-border)' }}>
-            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.35rem', color: 'var(--text-main)' }}>
-              📍 Add New Address
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-              Add a new doorstep address for quick scheduling and booking
-            </p>
+        {/* ─── 6. SETTINGS TAB ─── */}
+        {activeTab === 'settings' && (
+          <>
+            <header className="lp-dash-header">
+              <h1>Settings</h1>
+              <p>Configure preferences and user controls.</p>
+            </header>
 
-            <form onSubmit={handleAddNewAddressSubmit}>
-              <div className="form-group mb-3">
-                <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Address Label</label>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
-                  {['Home', 'Work', 'Other'].map(lbl => (
-                    <button 
-                      key={lbl}
-                      type="button" 
-                      onClick={() => setNewAddressData({...newAddressData, label: lbl})}
-                      className={`btn btn-sm ${newAddressData.label === lbl ? 'btn-primary' : 'btn-outline'}`}
-                      style={{ flex: 1 }}
-                    >
-                      {lbl === 'Work' ? '💼 Work' : lbl === 'Other' ? '📍 Other' : '🏠 Home'}
-                    </button>
-                  ))}
+            <div className="glass-panel" style={{ padding: '1.75rem', borderRadius: '12px', maxWidth: '600px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 0', borderBottom: '1px solid #eee' }}>
+                <div>
+                  <div style={{ fontWeight: 700 }}>Appearance</div>
+                  <div style={{ fontSize: '0.85rem', color: '#666' }}>Switch between dark and light color modes</div>
                 </div>
-              </div>
-
-              <div className="form-group mb-3">
-                <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>House / Flat / Street Address *</label>
-                <input 
-                  type="text" 
-                  value={newAddressData.street} 
-                  onChange={e => setNewAddressData({...newAddressData, street: e.target.value})} 
-                  required 
-                  placeholder="e.g. House No. 124, Sector 15"
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <div className="form-group">
-                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>City *</label>
-                  <input 
-                    type="text" 
-                    value={newAddressData.city} 
-                    onChange={e => setNewAddressData({...newAddressData, city: e.target.value})} 
-                    required 
-                    placeholder="e.g. Ludhiana"
-                  />
-                </div>
-                <div className="form-group">
-                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>State *</label>
-                  <input 
-                    type="text" 
-                    value={newAddressData.state} 
-                    onChange={e => setNewAddressData({...newAddressData, state: e.target.value})} 
-                    required 
-                    placeholder="e.g. Punjab"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group mb-3">
-                <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Pincode *</label>
-                <input 
-                  type="text" 
-                  value={newAddressData.pincode} 
-                  onChange={e => setNewAddressData({...newAddressData, pincode: e.target.value})} 
-                  required 
-                  placeholder="e.g. 141001"
-                />
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                <input 
-                  type="checkbox" 
-                  id="setAsDefault" 
-                  checked={newAddressData.isDefault} 
-                  onChange={e => setNewAddressData({...newAddressData, isDefault: e.target.checked})}
-                  style={{ width: 'auto', margin: 0, cursor: 'pointer' }}
-                />
-                <label htmlFor="setAsDefault" style={{ fontSize: '0.85rem', cursor: 'pointer', margin: 0 }}>
-                  Set as primary / default address
-                </label>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <button 
-                  type="button" 
-                  className="btn btn-outline" 
-                  style={{ flex: 1 }}
-                  onClick={() => setShowNewAddressModal(false)}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary" 
-                  style={{ flex: 1.5 }}
-                >
-                  Save Address
+                <button className="btn btn-outline btn-sm" onClick={toggleTheme}>
+                  {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 0', borderBottom: '1px solid #eee' }}>
+                <div>
+                  <div style={{ fontWeight: 700 }}>Language</div>
+                  <div style={{ fontSize: '0.85rem', color: '#666' }}>Select preferred display language</div>
+                </div>
+                <select 
+                  value={lang} 
+                  onChange={(e) => setLang(e.target.value)}
+                  style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', border: '1px solid #ccc' }}
+                >
+                  <option value="en">English (EN)</option>
+                  <option value="hi">हिंदी (HI)</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 0' }}>
+                <div>
+                  <div style={{ fontWeight: 700, color: '#ef4444' }}>Sign Out</div>
+                  <div style={{ fontSize: '0.85rem', color: '#666' }}>End your session on this device</div>
+                </div>
+                <button className="btn btn-outline btn-sm" style={{ borderColor: '#ef4444', color: '#ef4444' }} onClick={() => { logout(); navigate('/'); }}>
+                  Logout
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </main>
+
+      {/* ── Modals ── */}
+      {activeChat && (
+        <ChatModal 
+          bookingId={activeChat.bookingId} 
+          receiverId={activeChat.receiverId} 
+          receiverName={activeChat.receiverName} 
+          onClose={() => setActiveChat(null)} 
+        />
       )}
 
-      <ChatModal 
-        isOpen={!!activeChat} 
-        booking={activeChat} 
-        onClose={() => setActiveChat(null)} 
-      />
       {activeBookingProvider && (
         <BookingModal 
           provider={activeBookingProvider} 
           onClose={() => setActiveBookingProvider(null)} 
+          onSuccess={() => {
+            alert('Booking requested successfully!');
+            setActiveBookingProvider(null);
+          }} 
         />
       )}
+
       {isAIOpen && (
         <AIDiagnosisModal onClose={() => setIsAIOpen(false)} />
       )}
+
       {activePaymentBooking && (
         <PaymentModal 
           booking={activePaymentBooking} 
           onClose={() => setActivePaymentBooking(null)} 
-          onSuccess={(updatedBooking) => {
-            setBookings(prev => prev.map(b => b._id === updatedBooking._id ? { ...b, ...updatedBooking } : b));
-          }}
+          onSuccess={() => {
+            alert('Payment received successfully!');
+            setActivePaymentBooking(null);
+          }} 
         />
       )}
+
       {activeInvoiceBooking && (
         <InvoiceModal 
           booking={activeInvoiceBooking} 
           onClose={() => setActiveInvoiceBooking(null)} 
         />
       )}
+
       {activeTrackerBooking && (
         <ServiceTrackerModal 
           booking={activeTrackerBooking} 
           onClose={() => setActiveTrackerBooking(null)} 
-          onUpdateBooking={(updated) => {
-            setActiveTrackerBooking(updated);
-            setBookings(prev => prev.map(b => b._id === updated._id ? { ...b, ...updated } : b));
-          }}
-          onOpenPayment={(b) => setActivePaymentBooking(b)}
-          onOpenInvoice={(b) => setActiveInvoiceBooking(b)}
         />
       )}
+
       {activeReviewBooking && (
-        <ReviewTipModal
-          booking={activeReviewBooking}
-          token={token}
-          onClose={() => setActiveReviewBooking(null)}
-          onReviewSubmitted={(bookingId, reviewData) => {
-            setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, customerReview: reviewData } : b));
-          }}
+        <ReviewTipModal 
+          booking={activeReviewBooking} 
+          onClose={() => setActiveReviewBooking(null)} 
+          onSuccess={() => {
+            alert('Thank you for your rating & review!');
+            setActiveReviewBooking(null);
+          }} 
         />
+      )}
+
+      {/* New Address Modal */}
+      {showNewAddressModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+          <div className="glass-panel" style={{ background: '#fff', padding: '2rem', borderRadius: '12px', maxWidth: '450px', width: '100%' }}>
+            <h3 style={{ marginBottom: '1rem' }}>Add Service Address</h3>
+            <form onSubmit={handleAddAddress} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <div>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Label (e.g. Home, Office)</label>
+                <input 
+                  type="text" 
+                  value={newAddressData.label} 
+                  onChange={(e) => setNewAddressData({ ...newAddressData, label: e.target.value })} 
+                  required 
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Street Address</label>
+                <input 
+                  type="text" 
+                  value={newAddressData.street} 
+                  onChange={(e) => setNewAddressData({ ...newAddressData, street: e.target.value })} 
+                  required 
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>City</label>
+                  <input 
+                    type="text" 
+                    value={newAddressData.city} 
+                    onChange={(e) => setNewAddressData({ ...newAddressData, city: e.target.value })} 
+                    required 
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Pincode</label>
+                  <input 
+                    type="text" 
+                    value={newAddressData.pincode} 
+                    onChange={(e) => setNewAddressData({ ...newAddressData, pincode: e.target.value })} 
+                    required 
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn btn-outline btn-sm" onClick={() => setShowNewAddressModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-lime btn-sm">Save Address</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -2,6 +2,7 @@
 
 :root {
   /* Industrial Editorial Palette matching user mockup */
+  --header-height: 58px;
   --hero-bg-warm: #EBEAE5;
   --neon-accent: #D2FE00;
   --neon-accent-hover: #b8e000;

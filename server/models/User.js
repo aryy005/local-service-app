@@ -48,6 +48,7 @@ const userSchema = new mongoose.Schema({
     experienceYears: { type: Number, default: 0 },
     totalJobsCompleted: { type: Number, default: 0 },
     category: { type: String },
+    categoryName: { type: String, default: '' },
     hourlyRate: { type: Number },
     location: { type: String },
     locationGeo: {
@@ -61,6 +62,14 @@ const userSchema = new mongoose.Schema({
     rating: { type: Number, default: 0 },
     reviewsCount: { type: Number, default: 0 },
     avatarUrl: { type: String, default: '' },
+    // Account & Verification Status
+    status: { type: String, enum: ['Pending', 'Verified', 'Suspended', 'Rejected'], default: 'Pending' },
+    documents: [{
+      title: { type: String, required: true },
+      status: { type: String, enum: ['Verified', 'Pending', 'Rejected'], default: 'Pending' },
+      fileUrl: { type: String, default: '' },
+      uploadedAt: { type: Date, default: Date.now }
+    }],
     // Aadhaar Verification (UIDAI)
     aadhaarHash: { type: String, default: '' },       // SHA-256 hashed Aadhaar for security
     aadhaarLastFour: { type: String, default: '' },   // Last 4 digits for display (XXXX-XXXX-1234)

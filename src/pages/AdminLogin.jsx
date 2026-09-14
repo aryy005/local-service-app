@@ -89,6 +89,17 @@ const AdminLogin = () => {
             </div>
           </div>
 
+          <div className="flex items-center justify-between text-xs text-slate-400">
+            <span>Admin: <strong className="text-slate-300">admin@localfixr.com</strong></span>
+            <button 
+              type="button" 
+              className="text-indigo-400 hover:text-indigo-300 font-semibold underline"
+              onClick={() => { setEmail('admin@localfixr.com'); setPassword('password123'); }}
+            >
+              Fill Credentials
+            </button>
+          </div>
+
           <button 
             type="submit" 
             disabled={loading}
@@ -98,7 +109,17 @@ const AdminLogin = () => {
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-slate-800 text-center text-xs text-slate-500">
+        <div className="mt-6 text-center">
+          <button 
+            type="button" 
+            onClick={() => navigate('/login')}
+            className="text-slate-400 hover:text-slate-200 text-xs transition-colors"
+          >
+            ← Return to Customer & Provider Login
+          </button>
+        </div>
+
+        <div className="mt-6 pt-5 border-t border-slate-800 text-center text-xs text-slate-500">
           🔒 Secure 256-bit Encrypted Administration Channel
         </div>
       </div>

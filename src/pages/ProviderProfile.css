@@ -1,236 +1,559 @@
-.provider-profile {
-  padding-bottom: 3rem;
+/* ═══════════════════════════════════════════════════════════════
+   LocalPro Provider Profile — Pixel-perfect matching Image 2
+═══════════════════════════════════════════════════════════════ */
+
+.lp-profile-page {
+  background-color: #F4F4F0;
+  min-height: 100vh;
+  padding-bottom: 4rem;
 }
 
-.back-btn {
+/* ─── Topbar ─── */
+.lp-profile-topbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #E3E2DD;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.lp-topbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lp-topbar-brand {
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: #111111;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+}
+
+.lp-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lp-icon-btn {
+  background: transparent;
+  border: none;
+  color: #222222;
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.lp-icon-btn:hover {
+  background-color: #eeeeea;
+}
+
+/* ─── Container ─── */
+.lp-profile-container {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.lp-back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: #222222;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
   cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
   margin-bottom: 1.25rem;
-  padding: 0.35rem 0;
-  transition: var(--transition-smooth);
-  font-family: inherit;
+  padding: 0;
+  transition: opacity 0.2s;
 }
 
-.back-btn:hover {
-  color: var(--primary-color);
+.lp-back-btn:hover {
+  opacity: 0.7;
 }
 
-.profile-layout {
-  display: flex;
-  gap: 1.5rem;
-  align-items: flex-start;
-}
-
-.profile-main-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  min-width: 0;
-}
-
-/* Header Card */
-.profile-header-card {
-  display: flex;
-  gap: 1.5rem;
-  align-items: center;
+/* ─── Provider Hero Card ─── */
+.lp-profile-hero-card {
+  background: #ffffff;
+  border: 1.5px solid #E3E2DD;
+  border-radius: 14px;
   padding: 1.75rem;
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
 }
 
-.profile-img-wrapper {
+.lp-hero-photo-wrap {
   flex-shrink: 0;
 }
 
-.profile-hero-img {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+.lp-hero-photo {
+  width: 175px;
+  height: 175px;
+  border-radius: 12px;
   object-fit: cover;
-  border: 3px solid var(--surface-border);
+  background-color: #e5e5e0;
 }
 
-.profile-primary-info h1 {
-  font-size: 1.5rem;
-  margin-bottom: 0.35rem;
-  background: none;
-  -webkit-text-fill-color: unset;
+.lp-hero-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.lp-hero-title-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.lp-provider-name {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #111111;
+  font-family: 'Space Grotesk', sans-serif;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.lp-verified-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #1A73E8;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lp-save-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  border: 1.5px solid #E3E2DD;
+  background: #ffffff;
+  color: #111111;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lp-save-pill-btn:hover {
+  border-color: #111111;
+  background-color: #f7f7f5;
+}
+
+.lp-save-pill-btn.saved {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+
+.lp-meta-row {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
+  font-size: 0.95rem;
+  color: #666666;
+  font-family: 'Space Grotesk', sans-serif;
+  margin-bottom: 0.65rem;
 }
 
-.profile-meta {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-}
-
-.meta-item {
+.lp-rating-tag {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.9rem;
-  color: var(--text-muted);
+  color: #111111;
 }
 
-.meta-item.rating {
-  color: var(--text-secondary);
-}
-
-.meta-item.rating strong {
+.lp-rating-tag strong {
   font-weight: 700;
 }
 
-/* Stats Blocks (Matching Screen 3) */
-.provider-stats-grid {
+.lp-rating-tag span {
+  color: #777777;
+}
+
+.lp-dot {
+  color: #888888;
+}
+
+.lp-distance-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #666666;
+}
+
+.lp-profession-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #111111;
+  font-family: 'Space Grotesk', sans-serif;
+  margin: 0 0 0.85rem 0;
+}
+
+/* Badges */
+.lp-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.15rem;
+}
+
+.lp-badge-dark {
+  background-color: #111111;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.lp-badge-blue {
+  background-color: #EBF3FE;
+  color: #1967D2;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid #D2E3FC;
+}
+
+.lp-badge-purple {
+  background-color: #E8F0FE;
+  color: #1A73E8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid #D2E3FC;
+}
+
+.lp-tagline-block {
+  font-size: 0.95rem;
+  color: #444444;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* ─── 3-Item Stats Bar ─── */
+.lp-profile-stats-bar {
+  background: #ffffff;
+  border: 1.5px solid #E3E2DD;
+  border-radius: 12px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+  padding: 1.25rem 2rem;
+  margin-bottom: 1.75rem;
+  text-align: left;
 }
 
-.stat-card {
-  background: var(--card-bg, #ffffff);
-  border: 1px solid var(--surface-border, #DCDBCF);
-  border-radius: 8px;
-  padding: 1.2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  box-shadow: var(--card-shadow);
+.lp-stat-col {
+  border-right: 1px solid #ecebe5;
+  padding-right: 1.5rem;
 }
 
-.stat-value {
-  font-family: var(--font-display, 'Oswald', sans-serif);
-  font-size: 1.6rem;
+.lp-stat-col:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+.lp-stat-col:not(:first-child) {
+  padding-left: 1.5rem;
+}
+
+.lp-stat-val {
+  font-size: 1.75rem;
   font-weight: 800;
-  color: #121212;
+  color: #111111;
+  font-family: 'Space Grotesk', sans-serif;
   line-height: 1.1;
   margin-bottom: 0.25rem;
 }
 
-.stat-label {
-  font-size: 0.78rem;
+.lp-stat-lbl {
+  font-size: 0.88rem;
   font-weight: 600;
-  color: var(--text-muted, #666666);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: #666666;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
-/* Profile Sections */
-.profile-section {
-  padding: 1.5rem;
+/* ─── 2-Column Split ─── */
+.lp-profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2rem;
+  align-items: flex-start;
 }
 
-.profile-section h2 {
-  font-size: 1.15rem;
+/* Left: Tabs & About */
+.lp-grid-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.lp-profile-tabs {
+  display: flex;
+  gap: 2rem;
+  border-bottom: 2px solid #E3E2DD;
+  margin-bottom: 1.5rem;
+}
+
+.lp-tab-link {
+  background: none;
+  border: none;
+  padding: 0.5rem 0 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  color: #777777;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.lp-tab-link:hover {
+  color: #111111;
+}
+
+.lp-tab-link.active {
+  color: #111111;
+}
+
+.lp-tab-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #111111;
+}
+
+.lp-tab-pane {
+  display: flex;
+  flex-direction: column;
+}
+
+.lp-about-bio {
+  font-size: 0.98rem;
+  color: #444444;
+  line-height: 1.65;
+  font-family: 'Space Grotesk', sans-serif;
+  margin: 0 0 1.75rem 0;
+}
+
+.lp-services-subhead {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111111;
+  font-family: 'Space Grotesk', sans-serif;
   margin-bottom: 1rem;
 }
 
-.profile-desc {
-  color: var(--text-secondary);
-  line-height: 1.7;
-  font-size: 0.95rem;
-}
-
-.skills-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.skill-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.85rem;
-  background: var(--accent-light);
-  color: var(--accent-color);
-  border-radius: 100px;
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-
-/* Reviews */
-.reviews-list {
+.lp-services-list {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
 }
 
-/* Sidebar */
-.profile-sidebar {
-  width: 340px;
+.lp-service-bullet {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #222222;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.lp-bullet-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #111111;
   flex-shrink: 0;
 }
 
-.sticky-booking-card {
+/* Right: Date & Time Card */
+.lp-grid-right {
   position: sticky;
   top: 80px;
-  padding: 1.5rem;
 }
 
-.booking-price {
+.lp-datetime-card {
+  background: #ffffff;
+  border: 1.5px solid #E3E2DD;
+  border-radius: 14px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.lp-datetime-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111111;
+  font-family: 'Space Grotesk', sans-serif;
+  margin: 0 0 1.25rem 0;
+}
+
+/* Days carousel */
+.lp-days-carousel {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
   margin-bottom: 1.25rem;
 }
 
-.booking-price .price {
-  font-size: 2rem;
-  font-weight: 800;
-  color: var(--text-main);
-}
-
-.booking-price .unit {
-  font-size: 1rem;
-  color: var(--text-muted);
-  font-weight: 400;
-}
-
-.booking-features {
+.lp-day-pill {
+  border: 1.5px solid #E3E2DD;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 0.65rem 0.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-}
-
-.feature-item {
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-  font-size: 0.88rem;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.booking-note {
-  font-size: 0.78rem;
+.lp-day-pill:hover {
+  border-color: #111111;
 }
 
+.lp-day-pill.active {
+  border-color: #1A73E8;
+  background-color: #EBF3FE;
+}
+
+.lp-day-month {
+  font-size: 0.72rem;
+  color: #1A73E8;
+  font-weight: 600;
+}
+
+.lp-day-pill.active .lp-day-month {
+  color: #1A73E8;
+}
+
+.lp-day-num {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #111111;
+  line-height: 1.2;
+}
+
+.lp-day-name {
+  font-size: 0.72rem;
+  color: #1A73E8;
+  font-weight: 600;
+}
+
+/* Time Slots */
+.lp-time-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.lp-slot-btn {
+  border: 1.5px solid #E3E2DD;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 0.6rem 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: 'Space Grotesk', sans-serif;
+  color: #333333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.lp-slot-btn:hover {
+  border-color: #111111;
+}
+
+.lp-slot-btn.active {
+  border: 2px solid #1A73E8;
+  background-color: #EBF3FE;
+  color: #1A73E8;
+  font-weight: 700;
+}
+
+/* Book Now CTA */
+.lp-book-now-cta {
+  background-color: #D2FE00;
+  color: #111111;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.lp-book-now-cta:hover {
+  background-color: #b8e000;
+  transform: translateY(-1px);
+}
+
+/* ─── Responsive ─── */
 @media (max-width: 900px) {
-  .profile-layout {
+  .lp-profile-hero-card {
     flex-direction: column;
-  }
-
-  .profile-sidebar {
-    width: 100%;
-  }
-
-  .sticky-booking-card {
-    position: static;
-  }
-
-  .profile-header-card {
-    flex-direction: column;
+    align-items: center;
     text-align: center;
   }
-
-  .profile-meta {
+  .lp-hero-title-row {
+    flex-direction: column;
+  }
+  .lp-meta-row, .lp-badges-row {
     justify-content: center;
+  }
+  .lp-profile-grid {
+    grid-template-columns: 1fr;
+  }
+  .lp-grid-right {
+    position: static;
   }
 }

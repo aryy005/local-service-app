@@ -162,9 +162,10 @@ const Home = () => {
           <button
             className="lf-strip-cta"
             onClick={() => { if (!user) navigate('/auth/signup'); else navigate('/search'); }}
+            aria-label="Get Started"
           >
-            <span>GET<br />STARTED</span>
-            <ArrowRight size={22} />
+            <span>GET<span className="lf-cta-space"> </span><br className="lf-cta-br" />STARTED</span>
+            <ArrowRight size={22} className="lf-cta-arrow" />
           </button>
         </div>
       </section>

@@ -1,0 +1,224 @@
+/* ═══════════════════════════════════════════════════════════════
+   User Navigation Capsule Pill — Matching Image 3
+═══════════════════════════════════════════════════════════════ */
+
+.lp-user-pill-wrapper {
+  position: relative;
+  display: inline-block;
+  user-select: none;
+}
+
+/* Capsule Pill Button */
+.lp-user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background-color: #EBEAE5;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+  padding: 3px 13px 3px 4px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  text-decoration: none;
+}
+
+.lp-user-pill:hover,
+.lp-user-pill.active {
+  background-color: #e2e1dc;
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Avatar Circle */
+.lp-pill-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #111111;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+/* User Name */
+.lp-pill-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #111111;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Chevron Down */
+.lp-pill-chevron {
+  color: #4b5563;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.lp-pill-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Guest Style */
+.lp-pill-guest {
+  padding: 5px 14px 5px 6px;
+}
+
+/* ─── Dropdown Menu ─── */
+.lp-pill-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 250px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.15), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  padding: 0.6rem;
+  z-index: 1000;
+  animation: lpPillSlideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes lpPillSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.lp-pill-menu-header {
+  padding: 0.5rem 0.65rem 0.6rem;
+}
+
+.lp-pill-menu-user-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lp-pill-avatar-lg {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #111111;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.lp-pill-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.lp-pill-user-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lp-pill-user-email {
+  font-size: 0.78rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.lp-pill-role-badge {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background-color: #D2FE00;
+  color: #111111;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lp-pill-divider {
+  height: 1px;
+  background-color: #f3f4f6;
+  margin: 0.4rem 0;
+}
+
+.lp-pill-menu-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lp-pill-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #374151;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.lp-pill-menu-item:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.lp-pill-menu-item svg {
+  color: #6b7280;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.lp-pill-menu-item:hover svg {
+  color: #111827;
+}
+
+.lp-pill-logout {
+  color: #dc2626 !important;
+}
+
+.lp-pill-logout svg {
+  color: #dc2626 !important;
+}
+
+.lp-pill-logout:hover {
+  background-color: #fef2f2 !important;
+}

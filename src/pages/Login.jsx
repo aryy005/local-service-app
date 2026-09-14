@@ -26,7 +26,7 @@ const Login = () => {
     } else if (redirectUrl && redirectUrl.startsWith('/')) {
       navigate(redirectUrl);
     } else {
-      navigate('/customer-dashboard');
+      navigate('/search');
     }
   };
 

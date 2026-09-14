@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
+import { Navigation, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { categories } from '../data/mockData';
+import { getCurrentDetailedAddress } from '../utils/geolocation';
 import './Auth.css';
 
 const Register = () => {
@@ -22,6 +24,8 @@ const Register = () => {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locationSuccessMsg, setLocationSuccessMsg] = useState('');
   
   const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
@@ -36,7 +40,7 @@ const Register = () => {
     } else if (redirectUrl && redirectUrl.startsWith('/')) {
       navigate(redirectUrl);
     } else {
-      navigate('/customer-dashboard');
+      navigate('/search');
     }
   };
 
@@ -45,14 +49,36 @@ const Register = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  const handleDetectLiveLocation = async () => {
+    setLocating(true);
+    setError('');
+    setLocationSuccessMsg('');
+    try {
+      const loc = await getCurrentDetailedAddress();
+      setFormData(prev => ({
+        ...prev,
+        street: loc.street || prev.street,
+        city: loc.city || prev.city,
+        state: loc.state || prev.state,
+        pincode: loc.pincode || prev.pincode
+      }));
+      setLocationSuccessMsg('Live location captured successfully!');
+      setTimeout(() => setLocationSuccessMsg(''), 4000);
+    } catch (err) {
+      setError(err.message || 'Could not auto-detect live location. Please enter manually.');
+    } finally {
+      setLocating(false);
+    }
+  };
+
   const [pendingGoogleCredential, setPendingGoogleCredential] = useState(null);
   const [showAddressModal, setShowAddressModal] = useState(false);
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setError('');
     
-    // Check if user has already filled in city and state on the registration form
-    if (!formData.city || !formData.state || !formData.pincode) {
+    // Check if user has already filled in all required fields
+    if (!formData.phone || !formData.street || !formData.city || !formData.state || !formData.pincode) {
       // Hold credential and show the Address Collection Modal
       setPendingGoogleCredential(credentialResponse.credential);
       setShowAddressModal(true);
@@ -87,8 +113,8 @@ const Register = () => {
 
   const handleAddressModalSubmit = (e) => {
     e.preventDefault();
-    if (!formData.city || !formData.state || !formData.pincode) {
-      setError('City, State, and Pincode are required to complete Google Sign-Up');
+    if (!formData.phone || !formData.street || !formData.city || !formData.state || !formData.pincode) {
+      setError('All fields are required. Please fill in Phone, Street Address, City, State, and Pincode.');
       return;
     }
     if (pendingGoogleCredential) {
@@ -104,8 +130,8 @@ const Register = () => {
     e.preventDefault();
     setError('');
 
-    if (!formData.name || !formData.email || !formData.password || !formData.city || !formData.state || !formData.pincode) {
-      setError('Please fill in all required fields including City, State, and Pincode');
+    if (!formData.name || !formData.email || !formData.phone || !formData.password || !formData.street || !formData.city || !formData.state || !formData.pincode) {
+      setError('All fields are required. Please fill in your name, email, phone, password, and complete service address.');
       return;
     }
 
@@ -186,7 +212,7 @@ const Register = () => {
           </div>
 
           <div className="form-group">
-            <label>Password</label>
+            <label>Password *</label>
             <input 
               type="password" 
               name="password" 
@@ -198,19 +224,61 @@ const Register = () => {
             />
           </div>
 
+          <div className="form-group">
+            <label>Phone Number *</label>
+            <input 
+              type="tel" 
+              name="phone" 
+              value={formData.phone} 
+              onChange={handleChange} 
+              required 
+              placeholder="e.g. 9876543210"
+            />
+          </div>
+
           {/* Location Precision Address Block (For both Customer and Provider) */}
           <div style={{ marginTop: '1rem', marginBottom: '1rem', borderTop: '1px solid var(--surface-border)', paddingTop: '1rem' }}>
-            <h4 style={{ margin: '0 0 0.75rem 0', color: '#6366f1', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              📍 Location & Address Precision
-            </h4>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h4 style={{ margin: 0, color: '#6366f1', fontSize: '0.9rem', fontWeight: 700 }}>
+                Service Location & Address
+              </h4>
+              <button
+                type="button"
+                onClick={handleDetectLiveLocation}
+                disabled={locating}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '0.35rem 0.75rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: '#6366f1',
+                  background: 'rgba(99, 102, 241, 0.1)',
+                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                  borderRadius: '6px',
+                  cursor: locating ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {locating ? <Loader2 size={13} className="animate-spin" /> : <Navigation size={13} />}
+                <span>{locating ? 'Detecting Location...' : 'Use Live Location'}</span>
+              </button>
+            </div>
+
+            {locationSuccessMsg && (
+              <div style={{ fontSize: '0.8rem', color: '#10b981', marginBottom: '0.5rem', fontWeight: 600 }}>
+                ✓ {locationSuccessMsg}
+              </div>
+            )}
             
             <div className="form-group mb-3">
-              <label>Street Address / House / Flat / Street No.</label>
+              <label>Street Address / House / Flat / Street No. *</label>
               <input 
                 type="text" 
                 name="street" 
                 value={formData.street} 
                 onChange={handleChange} 
+                required
                 placeholder="e.g. Flat 402, Model Town, GT Road"
               />
             </div>
@@ -330,31 +398,66 @@ const Register = () => {
         <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '1rem' }}>
           <div className="glass-panel" style={{ background: 'var(--card-bg)', width: '100%', maxWidth: '460px', padding: '2rem', borderRadius: '1.25rem', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid var(--surface-border)' }}>
             <h2 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.35rem', color: 'var(--text-main)' }}>
-              📍 Enter Your Service Address
+              Enter Your Service Address
             </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
               Please provide your address so nearby verified service professionals can reach your doorstep.
             </p>
 
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                Service Location
+              </span>
+              <button
+                type="button"
+                onClick={handleDetectLiveLocation}
+                disabled={locating}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '0.4rem 0.85rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: 'var(--primary, #0047FF)',
+                  background: 'rgba(0, 71, 255, 0.08)',
+                  border: '1px solid rgba(0, 71, 255, 0.25)',
+                  borderRadius: '8px',
+                  cursor: locating ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {locating ? <Loader2 size={13} className="animate-spin" /> : <Navigation size={13} />}
+                <span>{locating ? 'Detecting Location...' : 'Use Live Location'}</span>
+              </button>
+            </div>
+
+            {locationSuccessMsg && (
+              <div style={{ fontSize: '0.8rem', color: '#10b981', marginBottom: '0.75rem', fontWeight: 600 }}>
+                ✓ {locationSuccessMsg}
+              </div>
+            )}
+
             <form onSubmit={handleAddressModalSubmit}>
               <div className="form-group mb-3">
-                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Phone Number (Optional)</label>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Phone Number *</label>
                 <input 
                   type="tel" 
                   name="phone" 
                   value={formData.phone} 
                   onChange={handleChange} 
+                  required
                   placeholder="e.g. 9876543210"
                 />
               </div>
 
               <div className="form-group mb-3">
-                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>House / Flat / Street Address</label>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>House / Flat / Street Address *</label>
                 <input 
                   type="text" 
                   name="street" 
                   value={formData.street} 
                   onChange={handleChange} 
+                  required
                   placeholder="e.g. Flat 402, Green Avenue"
                 />
               </div>

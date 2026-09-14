@@ -220,12 +220,24 @@ router.post('/register', async (req, res) => {
       phoneVerified: false,
       providerDetails: normalizedRole === 'provider' ? {
         category: category || 'cat-5',
-        hourlyRate: Number(hourlyRate) || 20,
+        categoryName: ({
+          'cat-1': 'Tailor',
+          'cat-2': 'Carpenter',
+          'cat-3': 'Painter',
+          'cat-4': 'Cobbler',
+          'cat-5': 'Electrician',
+          'cat-6': 'Plumber',
+          'cat-7': 'AC Repair',
+          'cat-8': 'House Cleaning',
+          'cat-9': 'Pest Control',
+          'cat-10': 'Other'
+        }[category]) || 'Service Provider',
+        hourlyRate: Number(hourlyRate) || 25,
         location: formattedLocation,
-        description: description || `Professional ${category || 'service'} provider dedicated to quality work.`,
-        rating: 5.0,
+        description: description || '',
+        rating: 0,
         reviewsCount: 0,
-        experienceYears: 1,
+        experienceYears: 0,
         totalJobsCompleted: 0,
         aadhaarVerified: false,
         welcomeEmailSent: true,
@@ -448,7 +460,22 @@ router.put('/me', auth, async (req, res) => {
       if (!user.providerDetails) user.providerDetails = {};
 
       if (providerDetails) {
-        if (providerDetails.category !== undefined) user.providerDetails.category = providerDetails.category;
+        if (providerDetails.category !== undefined) {
+          user.providerDetails.category = providerDetails.category;
+          const catLabels = {
+            'cat-1': 'Tailor',
+            'cat-2': 'Carpenter',
+            'cat-3': 'Painter',
+            'cat-4': 'Cobbler',
+            'cat-5': 'Electrician',
+            'cat-6': 'Plumber',
+            'cat-7': 'AC Repair',
+            'cat-8': 'House Cleaning',
+            'cat-9': 'Pest Control',
+            'cat-10': 'Other'
+          };
+          user.providerDetails.categoryName = catLabels[providerDetails.category] || providerDetails.categoryName || 'Service Provider';
+        }
         if (providerDetails.hourlyRate !== undefined) user.providerDetails.hourlyRate = Number(providerDetails.hourlyRate) || 0;
         if (providerDetails.experienceYears !== undefined) user.providerDetails.experienceYears = Number(providerDetails.experienceYears) || 0;
         if (providerDetails.location !== undefined) user.providerDetails.location = providerDetails.location;
