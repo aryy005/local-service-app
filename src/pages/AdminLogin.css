@@ -1,97 +1,118 @@
 /* ═══════════════════════════════════════════════════════════════
-   LocalFixr — Admin Login Security Console
+   LocalFixr — Admin Login Security Console (Neo-Brutalist Theme)
 ═══════════════════════════════════════════════════════════════ */
 
 .admin-login-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 140px);
-  padding: 2.5rem 1rem;
-  background-color: #0B1120;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.12) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.08) 0px, transparent 50%);
+  min-height: calc(100vh - 58px);
+  padding: 3rem 1rem;
+  background-color: #EBEAE5;
 }
 
 .admin-login-card {
   width: 100%;
-  max-width: 440px;
-  background: #111827;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 2.25rem;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  color: #F8FAFC;
+  max-width: 450px;
+  background: #FFFFFF;
+  border: 2.5px solid #111111;
+  border-radius: 8px;
+  box-shadow: 6px 6px 0 #111111;
+  padding: 2.5rem 2.25rem;
+  margin: 0 auto;
   box-sizing: border-box;
 }
 
+.admin-tag {
+  display: inline-block;
+  background: #111111;
+  color: #D2FE00;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  border-radius: 3px;
+  margin-bottom: 0.75rem;
+}
+
 .admin-login-header {
-  text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
 }
 
 .admin-shield-icon-wrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: rgba(37, 99, 235, 0.15);
-  border: 1px solid rgba(37, 99, 235, 0.35);
-  color: #60A5FA;
-  margin-bottom: 1rem;
-  box-shadow: 0 0 20px rgba(37, 99, 235, 0.25);
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: #D2FE00;
+  border: 2px solid #111111;
+  color: #111111;
+  box-shadow: 2px 2px 0 #111111;
+  flex-shrink: 0;
 }
 
 .admin-login-title {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #FFFFFF;
-  margin: 0 0 0.35rem 0;
-  letter-spacing: -0.02em;
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: #111111;
+  margin: 0;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  line-height: 1.1;
 }
 
 .admin-login-subtitle {
-  font-size: 0.84rem;
-  color: #94A3B8;
-  margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.88rem;
+  color: #555555;
+  font-weight: 500;
+  margin: 0.35rem 0 0 0;
 }
 
 .admin-login-error {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  color: #FCA5A5;
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 2px solid #111111;
+  box-shadow: 3px 3px 0 #111111;
   padding: 0.75rem 1rem;
-  border-radius: 10px;
-  margin-bottom: 1.5rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 1.25rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 700;
 }
 
 .admin-login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
 }
 
 .admin-form-group {
   display: flex;
   flex-direction: column;
+  margin-bottom: 1.15rem;
 }
 
 .admin-form-label {
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #94A3B8;
-  margin-bottom: 0.45rem;
+  letter-spacing: 0.05em;
+  color: #111111;
+  margin-bottom: 0.4rem;
 }
 
 .admin-input-wrapper {
@@ -103,7 +124,7 @@
 .admin-input-icon {
   position: absolute;
   left: 12px;
-  color: #64748B;
+  color: #111111;
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -113,75 +134,96 @@
 .admin-input-field {
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
-  background: #1E293B;
-  border: 1px solid #334155;
-  border-radius: 10px;
-  color: #FFFFFF;
-  font-size: 0.92rem;
+  background: #FFFFFF;
+  border: 2px solid #111111;
+  border-radius: 5px;
+  color: #111111;
   font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: 2px 2px 0 #111111;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   box-sizing: border-box;
 }
 
 .admin-input-field::placeholder {
-  color: #64748B;
+  color: #888888;
 }
 
 .admin-input-field:focus {
-  border-color: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
-  background: #1E293B;
+  border-color: #111111;
+  box-shadow: 4px 4px 0 #D2FE00;
 }
 
 .admin-credentials-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 0.78rem;
-  color: #94A3B8;
-  padding: 0 0.1rem;
+  background: #F4F4F0;
+  border: 2px solid #111111;
+  border-radius: 6px;
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 1.25rem;
+  color: #555555;
+  box-sizing: border-box;
+}
+
+.admin-credentials-row strong {
+  color: #111111;
 }
 
 .admin-quick-fill-btn {
-  background: transparent;
+  background: #111111;
   border: none;
-  color: #60A5FA;
-  font-size: 0.78rem;
-  font-weight: 600;
+  color: #D2FE00;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.35rem 0.65rem;
+  border-radius: 4px;
   cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
-  transition: color 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .admin-quick-fill-btn:hover {
-  color: #93C5FD;
+  background: #D2FE00;
+  color: #111111;
+  box-shadow: 1px 1px 0 #111111;
 }
 
 .admin-submit-btn {
   width: 100%;
   padding: 0.85rem 1.25rem;
-  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+  background: #111111;
   color: #FFFFFF;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.92rem;
-  font-weight: 700;
+  border: 2px solid #111111;
+  border-radius: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
-  transition: all 0.18s ease;
+  box-shadow: 4px 4px 0 #D2FE00;
+  transition: all 0.15s ease;
   margin-top: 0.25rem;
 }
 
 .admin-submit-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1D4ED8, #1E40AF);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
-  transform: translateY(-1px);
+  background: #D2FE00;
+  color: #111111;
+  border-color: #111111;
+  box-shadow: 2px 2px 0 #111111;
+  transform: translate(2px, 2px);
 }
 
 .admin-submit-btn:disabled {
@@ -190,32 +232,51 @@
 }
 
 .admin-back-row {
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
   text-align: center;
 }
 
 .admin-back-btn {
   background: transparent;
   border: none;
-  color: #94A3B8;
+  font-family: 'Space Grotesk', sans-serif;
+  color: #111111;
   font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: background 0.15s ease;
+  padding: 0.2rem 0.4rem;
 }
 
 .admin-back-btn:hover {
-  color: #F1F5F9;
+  background: #D2FE00;
+  color: #111111;
 }
 
 .admin-security-badge {
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 2px solid #111111;
   text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 0.72rem;
-  color: #64748B;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #555555;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
+}
+
+@media (max-width: 768px) {
+  .admin-login-card {
+    padding: 1.75rem 1.25rem;
+    box-shadow: 4px 4px 0 #111111;
+  }
 }

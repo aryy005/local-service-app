@@ -40,13 +40,14 @@ const AdminLogin = () => {
       <div className="admin-login-card">
         
         <div className="admin-login-header">
-          <div className="admin-shield-icon-wrap">
-            <ShieldCheck size={32} />
+          <div className="admin-tag">SECURITY CONSOLE</div>
+          <div className="admin-header-row">
+            <div className="admin-shield-icon-wrap">
+              <ShieldCheck size={24} />
+            </div>
+            <h1 className="admin-login-title">ADMIN PORTAL</h1>
           </div>
-          <h1 className="admin-login-title">
-            LocalFixr Admin Portal
-          </h1>
-          <p className="admin-login-subtitle">Restricted Security Console</p>
+          <p className="admin-login-subtitle">Restricted access for system administrators</p>
         </div>
 
         {error && (
@@ -91,7 +92,7 @@ const AdminLogin = () => {
           </div>
 
           <div className="admin-credentials-row">
-            <span>Admin: <strong style={{ color: '#E2E8F0' }}>admin@localfixr.com</strong></span>
+            <span>Admin: <strong>admin@localfixr.com</strong></span>
             <button 
               type="button" 
               className="admin-quick-fill-btn"
