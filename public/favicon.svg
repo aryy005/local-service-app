@@ -1,16 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <defs>
-    <linearGradient id="lfBg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1a1a1a"/>
-      <stop offset="100%" stop-color="#0d0d0d"/>
+    <linearGradient id="brutalistBrown" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#945F3D"/>
+      <stop offset="100%" stop-color="#734226"/>
     </linearGradient>
   </defs>
-  <!-- Dark squircle base -->
-  <rect width="64" height="64" rx="14" fill="url(#lfBg)"/>
-  <!-- Neon lime subtle border -->
-  <rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#D2FE00" stroke-width="2" stroke-opacity="0.45"/>
-  <!-- 'L' in crisp white -->
-  <path d="M 13 16 H 21.5 V 40 H 31.5 V 48 H 13 Z" fill="#FFFFFF"/>
-  <!-- 'F' in vibrant electric lime -->
-  <path d="M 35.5 16 H 52.5 V 24.5 H 44 V 28.5 H 49 V 35.5 H 44 V 48 H 35.5 Z" fill="#D2FE00"/>
+  <!-- Brutalistic Brown Squircle Base -->
+  <rect width="64" height="64" rx="14" fill="url(#brutalistBrown)"/>
+  <!-- Brutalist Solid Black Stroke -->
+  <rect x="1.5" y="1.5" width="61" height="61" rx="12.5" fill="none" stroke="#000000" stroke-width="3"/>
+  <!-- Subtle Neon Accent Inner Corner Glow -->
+  <rect x="3" y="3" width="58" height="58" rx="11" fill="none" stroke="#D2FE00" stroke-width="1" stroke-opacity="0.3"/>
+  
+  <!-- 'L' in Pitch Black (Half Black) -->
+  <path d="M 13 16 H 22 V 40 H 32 V 48 H 13 Z" fill="#000000"/>
+  
+  <!-- 'F' in Electric Neon Lime (Half Neon) -->
+  <path d="M 35.5 16 H 52.5 V 24 H 44 V 28.5 H 49 V 35.5 H 44 V 48 H 35.5 Z" fill="#D2FE00"/>
 </svg>
