@@ -26,7 +26,7 @@ const SAMPLE_PORTFOLIO_PRESETS = [
 ];
 
 // Helper to validate complete provider profile
-export const checkProviderProfile = (user) => {
+const checkProviderProfile = (user) => {
   const p = user?.providerDetails || {};
   const addr = user?.addressDetails || {};
   
