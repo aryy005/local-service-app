@@ -65,6 +65,7 @@ const ProviderDashboard = () => {
   const [activeChat, setActiveChat] = useState(null);
   const [activeTrackerBooking, setActiveTrackerBooking] = useState(null);
   const [activeInvoiceBooking, setActiveInvoiceBooking] = useState(null);
+  const [reviews, setReviews] = useState([]);
 
   // Booking filters in bookings tab
   const [bookingFilter, setBookingFilter] = useState('all');
@@ -343,92 +344,58 @@ const ProviderDashboard = () => {
   const cancelledJobs = useMemo(() => jobs.filter(j => j.status === 'declined' || j.status === 'cancelled'), [jobs]);
 
   const totalEarnings = useMemo(() => {
-    return completedJobs.reduce((sum, j) => sum + (j.finalPrice || j.paidAmount || 650), 0);
+    return completedJobs.reduce((sum, j) => sum + (Number(j.finalPrice) || Number(j.paidAmount) || 0), 0);
   }, [completedJobs]);
 
-  // Display upcoming bookings list (real jobs if available, or clean placeholders matching screenshot)
+  // Display upcoming bookings list from real database bookings
   const displayUpcomingBookings = useMemo(() => {
-    if (jobs.length > 0) {
-      return jobs.slice(0, 5).map(j => ({
-        id: j.orderId || `#LP${j._id.slice(-4).toUpperCase()}`,
-        _id: j._id,
-        rawJob: j,
-        customerName: j.customerId?.name || 'Customer',
-        customerAvatar: j.customerId?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-        serviceName: j.description || j.serviceCategory || 'Electrical Repair',
-        category: user?.providerDetails?.category || 'Electrical Repair',
-        location: j.serviceAddress || j.customerId?.city || 'Sector 15, Chandigarh',
-        dateTime: j.date ? `${j.date} ${j.timePreference || '10:30 AM'}` : 'Today, 10:30 AM',
-        price: j.finalPrice || 500,
-        status: j.status === 'pending' ? 'PENDING' : j.serviceStage === 'in_progress' ? 'IN PROGRESS' : 'ACCEPTED',
-        statusKey: j.status === 'pending' ? 'pending' : j.serviceStage === 'in_progress' ? 'in_progress' : 'accepted'
-      }));
-    }
-
-    // Default reference mockup dataset for Raj Kumar matching image
-    return [
-      {
-        id: '#LP8291',
-        customerName: 'Aman Sharma',
-        customerAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-        serviceName: 'Electrical Repair',
-        category: 'Electrical Repair',
-        location: 'Sector 15, Chandigarh',
-        dateTime: 'Apr 26, 2025 10:30 AM',
-        price: 500,
-        status: 'PENDING',
-        statusKey: 'pending'
-      },
-      {
-        id: '#LP8287',
-        customerName: 'Neha Verma',
-        customerAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
-        serviceName: 'Plumbing',
-        category: 'Plumbing',
-        location: 'Phase 5, Mohali',
-        dateTime: 'Apr 26, 2025 12:00 PM',
-        price: 700,
-        status: 'ACCEPTED',
-        statusKey: 'accepted'
-      },
-      {
-        id: '#LP8280',
-        customerName: 'Rohit Singh',
-        customerAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
-        serviceName: 'AC Repair',
-        category: 'AC Repair',
-        location: 'Sector 22, Chandigarh',
-        dateTime: 'Apr 26, 2025 03:30 PM',
-        price: 600,
-        status: 'IN PROGRESS',
-        statusKey: 'in_progress'
-      },
-      {
-        id: '#LP8276',
-        customerName: 'Pooja Taneja',
-        customerAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150',
-        serviceName: 'Carpentry',
-        category: 'Carpentry',
-        location: 'Kharar',
-        dateTime: 'Apr 26, 2025 05:00 PM',
-        price: 1200,
-        status: 'PENDING',
-        statusKey: 'pending'
-      },
-      {
-        id: '#LP8269',
-        customerName: 'Sahil Mehta',
-        customerAvatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=150',
-        serviceName: 'Electrical Repair',
-        category: 'Electrical Repair',
-        location: 'Sector 17, Chandigarh',
-        dateTime: 'Apr 27, 2025 09:00 AM',
-        price: 450,
-        status: 'PENDING',
-        statusKey: 'pending'
-      }
-    ];
+    return jobs.slice(0, 5).map(j => ({
+      id: j.orderId || `#LP${j._id.slice(-4).toUpperCase()}`,
+      _id: j._id,
+      rawJob: j,
+      customerName: j.customerId?.name || 'Customer',
+      customerAvatar: j.customerId?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+      serviceName: j.description || j.serviceCategory || user?.providerDetails?.category || 'Service Request',
+      category: user?.providerDetails?.category || 'Service',
+      location: j.serviceAddress || j.customerId?.city || user?.providerDetails?.location || 'Local Area',
+      dateTime: j.date ? `${j.date} ${j.timePreference || ''}` : 'Schedule Pending',
+      price: Number(j.finalPrice) || 0,
+      status: j.status === 'pending' ? 'PENDING' : j.serviceStage === 'in_progress' ? 'IN PROGRESS' : (j.status ? j.status.toUpperCase() : 'PENDING'),
+      statusKey: j.status === 'pending' ? 'pending' : j.serviceStage === 'in_progress' ? 'in_progress' : (j.status ? j.status.toLowerCase() : 'pending')
+    }));
   }, [jobs, user]);
+
+  // Real today's jobs for Today's Schedule timeline
+  const todayJobs = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    return jobs.filter(j => {
+      if (!j.date) return false;
+      return j.date === todayStr || j.date.startsWith(todayStr);
+    });
+  }, [jobs]);
+
+  // Weekly earnings breakdown for the bar chart
+  const weeklyBars = useMemo(() => {
+    const weeks = [0, 0, 0, 0];
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    completedJobs.forEach(j => {
+      const d = new Date(j.date || j.createdAt || now);
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+        const day = d.getDate();
+        const weekIdx = Math.min(3, Math.floor((day - 1) / 7));
+        weeks[weekIdx] += (Number(j.finalPrice) || Number(j.paidAmount) || 0);
+      }
+    });
+    const max = Math.max(...weeks, 1);
+    return weeks.map(w => ({
+      amount: w,
+      heightPct: totalEarnings > 0 ? Math.max(12, Math.round((w / max) * 100)) : 8
+    }));
+  }, [completedJobs, totalEarnings]);
+
+  const isVerified = Boolean(user?.phoneVerified || user?.providerDetails?.aadhaarVerified);
 
   return (
     <div className="lp-provider-portal">
@@ -461,7 +428,7 @@ const ProviderDashboard = () => {
               {activeTab === 'bookings' && <span className="lp-nav-active-pill"></span>}
               <Calendar size={16} />
               <span>Bookings</span>
-              <span className="lp-nav-badge">{pendingJobs.length || 5}</span>
+              {pendingJobs.length > 0 && <span className="lp-nav-badge">{pendingJobs.length}</span>}
             </button>
 
             <button 
@@ -522,7 +489,7 @@ const ProviderDashboard = () => {
               {activeTab === 'messages' && <span className="lp-nav-active-pill"></span>}
               <MessageSquare size={16} />
               <span>Messages</span>
-              <span className="lp-nav-badge">3</span>
+              {jobs.filter(j => j.customerId).length > 0 && <span className="lp-nav-badge">{jobs.filter(j => j.customerId).length}</span>}
             </button>
 
             <button 
@@ -573,7 +540,7 @@ const ProviderDashboard = () => {
           <div className="lp-topbar-right">
             <button type="button" className="lp-notif-bell-btn" title="Notifications">
               <Bell size={18} />
-              <span className="lp-notif-dot">3</span>
+              {pendingJobs.length > 0 && <span className="lp-notif-dot">{pendingJobs.length}</span>}
             </button>
 
             <div className="lp-provider-profile-pill" onClick={() => setActiveTab('profile')}>
@@ -608,8 +575,8 @@ const ProviderDashboard = () => {
                   <div className="lp-kpi-icon-wrap"><Calendar size={16} /></div>
                   <span className="lp-kpi-label">TODAY'S BOOKINGS</span>
                 </div>
-                <div className="lp-kpi-val">{activeJobs.length || 3}</div>
-                <div className="lp-kpi-sub green">▲ +2 from yesterday</div>
+                <div className="lp-kpi-val">{todayJobs.length}</div>
+                <div className="lp-kpi-sub green">{todayJobs.length > 0 ? `${todayJobs.length} scheduled today` : 'No bookings today'}</div>
               </div>
 
               <div className="lp-kpi-card c-orange">
@@ -617,8 +584,8 @@ const ProviderDashboard = () => {
                   <div className="lp-kpi-icon-wrap"><Clock size={16} /></div>
                   <span className="lp-kpi-label">PENDING REQUESTS</span>
                 </div>
-                <div className="lp-kpi-val">{pendingJobs.length || 5}</div>
-                <div className="lp-kpi-sub orange">Needs your action</div>
+                <div className="lp-kpi-val">{pendingJobs.length}</div>
+                <div className="lp-kpi-sub orange">{pendingJobs.length > 0 ? 'Needs your action' : 'All caught up'}</div>
               </div>
 
               <div className="lp-kpi-card c-blue">
@@ -626,8 +593,8 @@ const ProviderDashboard = () => {
                   <div className="lp-kpi-icon-wrap"><Star size={16} /></div>
                   <span className="lp-kpi-label">AVERAGE RATING</span>
                 </div>
-                <div className="lp-kpi-val">{user?.providerDetails?.rating || 4.8} ★</div>
-                <div className="lp-kpi-sub">Based on 124 reviews</div>
+                <div className="lp-kpi-val">{user?.providerDetails?.rating ? Number(user.providerDetails.rating).toFixed(1) : (reviews.length > 0 ? (reviews.reduce((a, c) => a + (c.rating || 5), 0) / reviews.length).toFixed(1) : 'New')} ★</div>
+                <div className="lp-kpi-sub">Based on {user?.providerDetails?.reviewsCount || reviews.length} reviews</div>
               </div>
 
               <div className="lp-kpi-card c-cyan">
@@ -635,8 +602,8 @@ const ProviderDashboard = () => {
                   <div className="lp-kpi-icon-wrap"><IndianRupee size={16} /></div>
                   <span className="lp-kpi-label">TOTAL EARNINGS</span>
                 </div>
-                <div className="lp-kpi-val">₹{totalEarnings.toLocaleString('en-IN') || '12,480'}</div>
-                <div className="lp-kpi-sub">This month</div>
+                <div className="lp-kpi-val">₹{totalEarnings.toLocaleString('en-IN')}</div>
+                <div className="lp-kpi-sub">{completedJobs.length} completed {completedJobs.length === 1 ? 'job' : 'jobs'}</div>
               </div>
             </div>
 
@@ -654,60 +621,59 @@ const ProviderDashboard = () => {
                   </div>
 
                   <div className="lp-upcoming-bookings-list">
-                    {displayUpcomingBookings.map((b, idx) => (
-                      <div key={b.id || idx} className="lp-booking-row">
-                        <div className="lp-bk-cust">
-                          <img src={b.customerAvatar} alt={b.customerName} className="lp-bk-avatar" />
-                          <div>
-                            <div className="lp-bk-name">{b.customerName}</div>
-                            <div className="lp-bk-id">{b.id}</div>
-                          </div>
-                        </div>
-
-                        <div className="lp-bk-service">
-                          <Zap size={15} color="#111111" />
-                          <div>
-                            <div className="lp-bk-srv-title">{b.serviceName}</div>
-                            <div className="lp-bk-srv-loc">{b.location}</div>
-                          </div>
-                        </div>
-
-                        <div className="lp-bk-time">
-                          <div>{b.dateTime}</div>
-                        </div>
-
-                        <div className="lp-bk-price">₹{b.price}</div>
-
-                        <div>
-                          <span className={`lp-status-pill ${b.statusKey}`}>
-                            {b.status}
-                          </span>
-                        </div>
-
-                        <div style={{ textAlign: 'right' }}>
-                          <button 
-                            type="button" 
-                            className="lp-btn-view"
-                            onClick={() => {
-                              if (b.rawJob) setSelectedJobDetail(b.rawJob);
-                              else setSelectedJobDetail({
-                                _id: 'sample-' + idx,
-                                orderId: b.id,
-                                description: b.serviceName,
-                                date: b.dateTime,
-                                finalPrice: b.price,
-                                status: b.statusKey,
-                                serviceStage: b.statusKey,
-                                serviceAddress: b.location,
-                                customerId: { name: b.customerName, phone: '+91 98140 00000', city: b.location }
-                              });
-                            }}
-                          >
-                            View
-                          </button>
-                        </div>
+                    {displayUpcomingBookings.length === 0 ? (
+                      <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#666' }}>
+                        <Calendar size={28} style={{ color: '#999', margin: '0 auto 0.5rem', display: 'block' }} />
+                        <div style={{ fontWeight: 800, fontSize: '0.85rem', color: '#111' }}>No Upcoming Bookings</div>
+                        <p style={{ fontSize: '0.72rem', margin: '4px 0 0', color: '#777' }}>
+                          When customers request your services, new live bookings will appear here.
+                        </p>
                       </div>
-                    ))}
+                    ) : (
+                      displayUpcomingBookings.map((b, idx) => (
+                        <div key={b.id || idx} className="lp-booking-row">
+                          <div className="lp-bk-cust">
+                            <img src={b.customerAvatar} alt={b.customerName} className="lp-bk-avatar" />
+                            <div>
+                              <div className="lp-bk-name">{b.customerName}</div>
+                              <div className="lp-bk-id">{b.id}</div>
+                            </div>
+                          </div>
+
+                          <div className="lp-bk-service">
+                            <Zap size={15} color="#111111" />
+                            <div>
+                              <div className="lp-bk-srv-title">{b.serviceName}</div>
+                              <div className="lp-bk-srv-loc">{b.location}</div>
+                            </div>
+                          </div>
+
+                          <div className="lp-bk-time">
+                            <div>{b.dateTime}</div>
+                          </div>
+
+                          <div className="lp-bk-price">₹{b.price}</div>
+
+                          <div>
+                            <span className={`lp-status-pill ${b.statusKey}`}>
+                              {b.status}
+                            </span>
+                          </div>
+
+                          <div style={{ textAlign: 'right' }}>
+                            <button 
+                              type="button" 
+                              className="lp-btn-view"
+                              onClick={() => {
+                                if (b.rawJob) setSelectedJobDetail(b.rawJob);
+                              }}
+                            >
+                              View
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -721,47 +687,38 @@ const ProviderDashboard = () => {
                   </div>
 
                   <div className="lp-reviews-grid">
-                    <div className="lp-rev-card">
-                      <div>
-                        <div className="lp-rev-user">
-                          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150" alt="Neha" className="lp-rev-avatar" />
-                          <div>
-                            <div className="lp-rev-name">Neha Verma</div>
-                            <div className="lp-stars-row">★★★★★</div>
-                          </div>
-                        </div>
-                        <p className="lp-rev-comment">"Very professional and on time. Highly recommended!"</p>
+                    {reviews.length === 0 ? (
+                      <div style={{ padding: '1.5rem 0.5rem', textAlign: 'center', gridColumn: '1 / -1' }}>
+                        <Star size={24} style={{ color: '#CBD5E1', margin: '0 auto 0.4rem', display: 'block' }} />
+                        <div style={{ fontWeight: 700, fontSize: '0.78rem', color: '#111' }}>No customer reviews yet</div>
+                        <div style={{ fontSize: '0.68rem', color: '#777', marginTop: '2px' }}>Verified customer ratings will appear here as you complete jobs.</div>
                       </div>
-                      <span className="lp-rev-date">Apr 24, 2025</span>
-                    </div>
-
-                    <div className="lp-rev-card">
-                      <div>
-                        <div className="lp-rev-user">
-                          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150" alt="Rahul" className="lp-rev-avatar" />
+                    ) : (
+                      reviews.slice(0, 3).map((r, idx) => (
+                        <div key={r._id || idx} className="lp-rev-card">
                           <div>
-                            <div className="lp-rev-name">Rahul Mehta</div>
-                            <div className="lp-stars-row">★★★★☆</div>
+                            <div className="lp-rev-user">
+                              <img 
+                                src={r.customer?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'} 
+                                alt={r.customer?.name || 'Customer'} 
+                                className="lp-rev-avatar" 
+                              />
+                              <div>
+                                <div className="lp-rev-name">{r.customer?.name || 'Verified Customer'}</div>
+                                <div className="lp-stars-row">
+                                  {'★'.repeat(Math.min(5, Math.max(1, r.rating || 5)))}
+                                  {'☆'.repeat(Math.max(0, 5 - (r.rating || 5)))}
+                                </div>
+                              </div>
+                            </div>
+                            <p className="lp-rev-comment">"{r.comment || 'Great service!'}"</p>
                           </div>
+                          <span className="lp-rev-date">
+                            {r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'}
+                          </span>
                         </div>
-                        <p className="lp-rev-comment">"Good work, but took a little longer than expected."</p>
-                      </div>
-                      <span className="lp-rev-date">Apr 22, 2025</span>
-                    </div>
-
-                    <div className="lp-rev-card">
-                      <div>
-                        <div className="lp-rev-user">
-                          <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150" alt="Simran" className="lp-rev-avatar" />
-                          <div>
-                            <div className="lp-rev-name">Simran Kaur</div>
-                            <div className="lp-stars-row">★★★★★</div>
-                          </div>
-                        </div>
-                        <p className="lp-rev-comment">"Excellent service! Will book again."</p>
-                      </div>
-                      <span className="lp-rev-date">Apr 20, 2025</span>
-                    </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -779,45 +736,27 @@ const ProviderDashboard = () => {
                   </div>
 
                   <div className="lp-timeline-list">
-                    <div className="lp-timeline-item">
-                      <span className="lp-timeline-time">10:30 AM</span>
-                      <span className="lp-timeline-node green"></span>
-                      <div className="lp-timeline-info">
-                        <div className="lp-timeline-title">Aman Sharma</div>
-                        <div className="lp-timeline-sub">Electrical Repair</div>
+                    {todayJobs.length === 0 ? (
+                      <div style={{ padding: '1.5rem 0.5rem', textAlign: 'center' }}>
+                        <Clock size={24} style={{ color: '#999', margin: '0 auto 0.4rem', display: 'block' }} />
+                        <div style={{ fontWeight: 700, fontSize: '0.78rem', color: '#111' }}>No bookings scheduled today</div>
+                        <div style={{ fontSize: '0.68rem', color: '#777', marginTop: '2px' }}>Your daily service schedule is clear.</div>
                       </div>
-                      <span className="lp-status-pill pending">PENDING</span>
-                    </div>
-
-                    <div className="lp-timeline-item">
-                      <span className="lp-timeline-time">12:00 PM</span>
-                      <span className="lp-timeline-node blue"></span>
-                      <div className="lp-timeline-info">
-                        <div className="lp-timeline-title">Neha Verma</div>
-                        <div className="lp-timeline-sub">Plumbing</div>
-                      </div>
-                      <span className="lp-status-pill accepted">ACCEPTED</span>
-                    </div>
-
-                    <div className="lp-timeline-item">
-                      <span className="lp-timeline-time">03:30 PM</span>
-                      <span className="lp-timeline-node blue"></span>
-                      <div className="lp-timeline-info">
-                        <div className="lp-timeline-title">Rohit Singh</div>
-                        <div className="lp-timeline-sub">AC Repair</div>
-                      </div>
-                      <span className="lp-status-pill in_progress">IN PROGRESS</span>
-                    </div>
-
-                    <div className="lp-timeline-item">
-                      <span className="lp-timeline-time">05:00 PM</span>
-                      <span className="lp-timeline-node amber"></span>
-                      <div className="lp-timeline-info">
-                        <div className="lp-timeline-title">Pooja Taneja</div>
-                        <div className="lp-timeline-sub">Carpentry</div>
-                      </div>
-                      <span className="lp-status-pill pending">PENDING</span>
-                    </div>
+                    ) : (
+                      todayJobs.slice(0, 5).map((j, idx) => (
+                        <div key={j._id || idx} className="lp-timeline-item">
+                          <span className="lp-timeline-time">{j.timePreference || '10:00 AM'}</span>
+                          <span className={`lp-timeline-node ${j.status === 'accepted' ? 'green' : j.serviceStage === 'in_progress' ? 'blue' : 'amber'}`}></span>
+                          <div className="lp-timeline-info">
+                            <div className="lp-timeline-title">{j.customerId?.name || 'Customer'}</div>
+                            <div className="lp-timeline-sub">{j.description || j.serviceCategory || 'Service Job'}</div>
+                          </div>
+                          <span className={`lp-status-pill ${j.serviceStage || j.status}`}>
+                            {(j.serviceStage || j.status || 'PENDING').replace('_', ' ').toUpperCase()}
+                          </span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -894,24 +833,25 @@ const ProviderDashboard = () => {
                         
                         {/* Center location pin */}
                         <circle cx="110" cy="65" r="5" fill="#111111" />
-                        <text x="120" y="69" fontSize="9" fontWeight="800" fill="#111111">Chandigarh</text>
+                        <text x="120" y="69" fontSize="9" fontWeight="800" fill="#111111">{user?.addressDetails?.city || user?.providerDetails?.location || user?.city || "Chandigarh"}</text>
                         
-                        {/* Active booking markers */}
-                        <circle cx="85" cy="50" r="3" fill="#10B981" />
-                        <circle cx="140" cy="45" r="3" fill="#2563EB" />
-                        <circle cx="130" cy="85" r="3" fill="#2563EB" />
-                        <circle cx="75" cy="80" r="3" fill="#2563EB" />
+                        {/* Real active booking markers */}
+                        {activeJobs.map((_, i) => {
+                          const pts = [{ cx: 85, cy: 50 }, { cx: 140, cy: 45 }, { cx: 130, cy: 85 }, { cx: 75, cy: 80 }];
+                          const pt = pts[i % pts.length];
+                          return <circle key={i} cx={pt.cx} cy={pt.cy} r="3" fill="#2563EB" />;
+                        })}
                       </svg>
                     </div>
 
                     <div className="lp-radar-legend">
                       <div className="lp-legend-item">
                         <span className="lp-legend-dot loc"></span>
-                        <span>Your Location (Chandigarh)</span>
+                        <span>Your Location ({user?.addressDetails?.city || user?.providerDetails?.location || user?.city || "Chandigarh"})</span>
                       </div>
                       <div className="lp-legend-item">
                         <span className="lp-legend-dot active"></span>
-                        <span>Active Bookings</span>
+                        <span>{activeJobs.length} Active {activeJobs.length === 1 ? "Booking" : "Bookings"}</span>
                       </div>
                       <div className="lp-legend-item">
                         <span className="lp-legend-dot ring"></span>
@@ -941,15 +881,27 @@ const ProviderDashboard = () => {
                 </div>
 
                 {/* Verified Provider Banner */}
-                <div className="lp-verified-banner">
-                  <div className="lp-vb-check">
-                    <Check size={16} strokeWidth={3} />
+                {isVerified ? (
+                  <div className="lp-verified-banner">
+                    <div className="lp-vb-check">
+                      <Check size={16} strokeWidth={3} />
+                    </div>
+                    <div>
+                      <div className="lp-vb-title">VERIFIED PROVIDER</div>
+                      <div className="lp-vb-sub">{user?.phoneVerified && user?.providerDetails?.aadhaarVerified ? 'Phone & UIDAI Aadhaar Verified' : (user?.phoneVerified ? 'Phone OTP Verified' : 'Aadhaar Verified')}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="lp-vb-title">VERIFIED PROVIDER</div>
-                    <div className="lp-vb-sub">Build trust. Get more bookings.</div>
+                ) : (
+                  <div className="lp-verified-banner" style={{ background: '#FEF3C7', cursor: 'pointer' }} onClick={() => setActiveTab('profile')}>
+                    <div className="lp-vb-check" style={{ background: '#B45309', color: '#FFF' }}>
+                      <AlertCircle size={16} />
+                    </div>
+                    <div>
+                      <div className="lp-vb-title" style={{ color: '#B45309' }}>GET VERIFIED</div>
+                      <div className="lp-vb-sub" style={{ color: '#92400E' }}>Complete Phone or Aadhaar to build trust</div>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Earnings Overview Chart */}
                 <div className="lp-card">
@@ -961,29 +913,25 @@ const ProviderDashboard = () => {
                   </div>
 
                   <div className="lp-earnings-total">
-                    <span>₹12,480</span>
-                    <span className="lp-pill-pct">+18%</span>
+                    <span>₹{totalEarnings.toLocaleString('en-IN')}</span>
+                    {totalEarnings > 0 && <span className="lp-pill-pct">Active</span>}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '2px' }}>vs. last month</div>
+                  <div style={{ fontSize: '0.72rem', color: '#666', marginTop: '2px' }}>
+                    {completedJobs.length > 0 ? `From ${completedJobs.length} completed ${completedJobs.length === 1 ? 'service' : 'services'}` : 'No earnings recorded yet'}
+                  </div>
 
-                  {/* 4 weekly bar columns matching mockup */}
+                  {/* 4 weekly bar columns calculated from real completed jobs */}
                   <div className="lp-chart-bars-wrap">
-                    <div className="lp-bar-col">
-                      <div className="lp-bar-fill" style={{ height: '35%' }}></div>
-                      <span className="lp-bar-label">W1</span>
-                    </div>
-                    <div className="lp-bar-col">
-                      <div className="lp-bar-fill" style={{ height: '55%' }}></div>
-                      <span className="lp-bar-label">W2</span>
-                    </div>
-                    <div className="lp-bar-col">
-                      <div className="lp-bar-fill" style={{ height: '75%' }}></div>
-                      <span className="lp-bar-label">W3</span>
-                    </div>
-                    <div className="lp-bar-col">
-                      <div className="lp-bar-fill active" style={{ height: '90%' }}></div>
-                      <span className="lp-bar-label">W4</span>
-                    </div>
+                    {weeklyBars.map((bar, i) => (
+                      <div key={i} className="lp-bar-col">
+                        <div 
+                          className={`lp-bar-fill ${i === 3 ? 'active' : ''}`} 
+                          style={{ height: `${bar.heightPct}%` }}
+                          title={`₹${bar.amount}`}
+                        ></div>
+                        <span className="lp-bar-label">W{i + 1}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -1000,8 +948,8 @@ const ProviderDashboard = () => {
                         <span>Total Bookings</span>
                       </div>
                       <div className="lp-qs-right">
-                        <span className="lp-qs-val">124</span>
-                        <span className="lp-qs-badge pos">+12%</span>
+                        <span className="lp-qs-val">{jobs.length}</span>
+                        {jobs.length > 0 && <span className="lp-qs-badge pos">Live</span>}
                       </div>
                     </div>
 
@@ -1011,30 +959,28 @@ const ProviderDashboard = () => {
                         <span>Completed Services</span>
                       </div>
                       <div className="lp-qs-right">
-                        <span className="lp-qs-val">118</span>
-                        <span className="lp-qs-badge pos">+10%</span>
+                        <span className="lp-qs-val">{completedJobs.length}</span>
+                        {completedJobs.length > 0 && <span className="lp-qs-badge pos">{Math.round((completedJobs.length / (jobs.length || 1)) * 100)}%</span>}
                       </div>
                     </div>
 
                     <div className="lp-qs-row">
                       <div className="lp-qs-left">
                         <X size={15} />
-                        <span>Cancelled Bookings</span>
+                        <span>Cancelled / Declined</span>
                       </div>
                       <div className="lp-qs-right">
-                        <span className="lp-qs-val">6</span>
-                        <span className="lp-qs-badge neg">-2%</span>
+                        <span className="lp-qs-val">{jobs.filter(j => j.status === 'declined' || j.status === 'cancelled' || j.status === 'rejected').length}</span>
                       </div>
                     </div>
 
                     <div className="lp-qs-row">
                       <div className="lp-qs-left">
                         <Star size={15} />
-                        <span>Total Reviews</span>
+                        <span>Customer Reviews</span>
                       </div>
                       <div className="lp-qs-right">
-                        <span className="lp-qs-val">98</span>
-                        <span className="lp-qs-badge pos">+8%</span>
+                        <span className="lp-qs-val">{user?.providerDetails?.reviewsCount || reviews.length}</span>
                       </div>
                     </div>
                   </div>
@@ -1447,22 +1393,31 @@ const ProviderDashboard = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <div style={{ border: '1.5px solid #EAEAE4', padding: '1rem', borderRadius: 8, background: '#FFFFFF' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: 800 }}>Neha Verma</span>
-                  <span style={{ color: '#F59E0B', fontWeight: 800 }}>★★★★★</span>
+              {reviews.length === 0 ? (
+                <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#888' }}>
+                  <Star size={36} style={{ color: '#CBD5E1', margin: '0 auto 0.75rem', display: 'block' }} />
+                  <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#111' }}>No Customer Reviews Yet</div>
+                  <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>
+                    When customers complete and rate your bookings, their feedback and ratings will appear here.
+                  </p>
                 </div>
-                <p style={{ fontSize: '0.85rem', color: '#444', margin: '6px 0' }}>"Very professional and on time. Highly recommended for electrical repair!"</p>
-                <span style={{ fontSize: '0.72rem', color: '#888' }}>Apr 24, 2025</span>
-              </div>
-              <div style={{ border: '1.5px solid #EAEAE4', padding: '1rem', borderRadius: 8, background: '#FFFFFF' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: 800 }}>Rahul Mehta</span>
-                  <span style={{ color: '#F59E0B', fontWeight: 800 }}>★★★★☆</span>
-                </div>
-                <p style={{ fontSize: '0.85rem', color: '#444', margin: '6px 0' }}>"Good work, fixed the switchboard without hassle."</p>
-                <span style={{ fontSize: '0.72rem', color: '#888' }}>Apr 22, 2025</span>
-              </div>
+              ) : (
+                reviews.map((r, idx) => (
+                  <div key={r._id || idx} style={{ border: '1.5px solid #EAEAE4', padding: '1rem', borderRadius: 8, background: '#FFFFFF' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 800 }}>{r.customer?.name || 'Verified Customer'}</span>
+                      <span style={{ color: '#F59E0B', fontWeight: 800 }}>
+                        {'★'.repeat(Math.min(5, Math.max(1, r.rating || 5)))}
+                        {'☆'.repeat(Math.max(0, 5 - (r.rating || 5)))}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: '#444', margin: '6px 0' }}>"{r.comment || 'Great service!'}"</p>
+                    <span style={{ fontSize: '0.72rem', color: '#888' }}>
+                      {r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -1548,7 +1503,16 @@ const ProviderDashboard = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              {jobs.filter(j => j.customerId).slice(0, 4).map((j, idx) => (
+              {jobs.filter(j => j.customerId).length === 0 ? (
+                <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#888' }}>
+                  <MessageSquare size={36} style={{ color: '#CBD5E1', margin: '0 auto 0.75rem', display: 'block' }} />
+                  <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#111' }}>No Customer Messages</div>
+                  <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>
+                    Active bookings allow you to coordinate in-app and on WhatsApp with customers.
+                  </p>
+                </div>
+              ) : (
+                jobs.filter(j => j.customerId).slice(0, 4).map((j, idx) => (
                 <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', border: '1.5px solid #EAEAE4', borderRadius: 8, background: '#FFF' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#111', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
@@ -1579,7 +1543,8 @@ const ProviderDashboard = () => {
                     )}
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </div>
         )}
