@@ -449,7 +449,7 @@ const ProviderDashboard = () => {
               onClick={() => setActiveTab('dashboard')}
             >
               {activeTab === 'dashboard' && <span className="lp-nav-active-pill"></span>}
-              <Calendar size={18} />
+              <Calendar size={16} />
               <span>Dashboard</span>
             </button>
 
@@ -459,7 +459,7 @@ const ProviderDashboard = () => {
               onClick={() => setActiveTab('bookings')}
             >
               {activeTab === 'bookings' && <span className="lp-nav-active-pill"></span>}
-              <Calendar size={18} />
+              <Calendar size={16} />
               <span>Bookings</span>
               <span className="lp-nav-badge">{pendingJobs.length || 5}</span>
             </button>
@@ -470,7 +470,7 @@ const ProviderDashboard = () => {
               onClick={() => setActiveTab('services')}
             >
               {activeTab === 'services' && <span className="lp-nav-active-pill"></span>}
-              <Wrench size={18} />
+              <Wrench size={16} />
               <span>My Services</span>
             </button>
 
@@ -480,7 +480,7 @@ const ProviderDashboard = () => {
               onClick={() => setActiveTab('profile')}
             >
               {activeTab === 'profile' && <span className="lp-nav-active-pill"></span>}
-              <UserIcon size={18} />
+              <UserIcon size={16} />
               <span>Profile</span>
             </button>
 
@@ -490,7 +490,7 @@ const ProviderDashboard = () => {
               onClick={() => setActiveTab('earnings')}
             >
               {activeTab === 'earnings' && <span className="lp-nav-active-pill"></span>}
-              <Wallet size={18} />
+              <Wallet size={16} />
               <span>Earnings</span>
             </button>
 
@@ -500,7 +500,7 @@ const ProviderDashboard = () => {
               onClick={() => setActiveTab('reviews')}
             >
               {activeTab === 'reviews' && <span className="lp-nav-active-pill"></span>}
-              <Star size={18} />
+              <Star size={16} />
               <span>Reviews</span>
             </button>
 
@@ -510,7 +510,7 @@ const ProviderDashboard = () => {
               onClick={() => setActiveTab('availability')}
             >
               {activeTab === 'availability' && <span className="lp-nav-active-pill"></span>}
-              <Clock size={18} />
+              <Clock size={16} />
               <span>Availability</span>
             </button>
 
@@ -520,7 +520,7 @@ const ProviderDashboard = () => {
               onClick={() => setActiveTab('messages')}
             >
               {activeTab === 'messages' && <span className="lp-nav-active-pill"></span>}
-              <MessageSquare size={18} />
+              <MessageSquare size={16} />
               <span>Messages</span>
               <span className="lp-nav-badge">3</span>
             </button>
@@ -531,7 +531,7 @@ const ProviderDashboard = () => {
               onClick={() => setActiveTab('support')}
             >
               {activeTab === 'support' && <span className="lp-nav-active-pill"></span>}
-              <Headphones size={18} />
+              <Headphones size={16} />
               <span>Support</span>
             </button>
           </nav>
@@ -544,7 +544,7 @@ const ProviderDashboard = () => {
             onClick={() => navigate('/search')}
           >
             <span>Go to Customer App</span>
-            <ArrowRight size={16} />
+            <ArrowRight size={14} />
           </button>
 
           <div className="lp-sidebar-community-card">
@@ -572,7 +572,7 @@ const ProviderDashboard = () => {
 
           <div className="lp-topbar-right">
             <button type="button" className="lp-notif-bell-btn" title="Notifications">
-              <Bell size={20} />
+              <Bell size={18} />
               <span className="lp-notif-dot">3</span>
             </button>
 
@@ -605,7 +605,7 @@ const ProviderDashboard = () => {
             <div className="lp-kpi-grid">
               <div className="lp-kpi-card c-lime">
                 <div className="lp-kpi-card-header">
-                  <div className="lp-kpi-icon-wrap"><Calendar size={18} /></div>
+                  <div className="lp-kpi-icon-wrap"><Calendar size={16} /></div>
                   <span className="lp-kpi-label">TODAY'S BOOKINGS</span>
                 </div>
                 <div className="lp-kpi-val">{activeJobs.length || 3}</div>
@@ -614,7 +614,7 @@ const ProviderDashboard = () => {
 
               <div className="lp-kpi-card c-orange">
                 <div className="lp-kpi-card-header">
-                  <div className="lp-kpi-icon-wrap"><Clock size={18} /></div>
+                  <div className="lp-kpi-icon-wrap"><Clock size={16} /></div>
                   <span className="lp-kpi-label">PENDING REQUESTS</span>
                 </div>
                 <div className="lp-kpi-val">{pendingJobs.length || 5}</div>
@@ -623,7 +623,7 @@ const ProviderDashboard = () => {
 
               <div className="lp-kpi-card c-blue">
                 <div className="lp-kpi-card-header">
-                  <div className="lp-kpi-icon-wrap"><Star size={18} /></div>
+                  <div className="lp-kpi-icon-wrap"><Star size={16} /></div>
                   <span className="lp-kpi-label">AVERAGE RATING</span>
                 </div>
                 <div className="lp-kpi-val">{user?.providerDetails?.rating || 4.8} ★</div>
@@ -632,7 +632,7 @@ const ProviderDashboard = () => {
 
               <div className="lp-kpi-card c-cyan">
                 <div className="lp-kpi-card-header">
-                  <div className="lp-kpi-icon-wrap"><IndianRupee size={18} /></div>
+                  <div className="lp-kpi-icon-wrap"><IndianRupee size={16} /></div>
                   <span className="lp-kpi-label">TOTAL EARNINGS</span>
                 </div>
                 <div className="lp-kpi-val">₹{totalEarnings.toLocaleString('en-IN') || '12,480'}</div>
