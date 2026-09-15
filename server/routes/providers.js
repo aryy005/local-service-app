@@ -10,7 +10,11 @@ router.get('/', async (req, res) => {
   try {
     const { lng, lat, radius, city } = req.query;
     
-    let query = { role: 'provider' };
+    // Security Gate: Only admin-confirmed Verified providers are public for work
+    let query = { 
+      role: 'provider',
+      'providerDetails.status': 'Verified'
+    };
 
     // If city is specified, filter strictly by city
     if (city && city.trim() !== '') {

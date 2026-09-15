@@ -78,7 +78,13 @@ const userSchema = new mongoose.Schema({
     aadhaarRefId: { type: String, default: '' },      // UIDAI transaction reference ID
     // Partner Welcome Email Tracking
     welcomeEmailSent: { type: Boolean, default: false },
-    welcomeEmailSentAt: { type: Date }
+    welcomeEmailSentAt: { type: Date },
+    // Official Provider ID & Admin Verification
+    providerId: { type: String, default: '' },
+    verifiedByAdmin: { type: Boolean, default: false },
+    verifiedAt: { type: Date },
+    idCardIssued: { type: Boolean, default: false },
+    idCardIssueDate: { type: Date }
   },
   // Password Reset Token & OTP fields
   resetPasswordToken: { type: String, default: null },

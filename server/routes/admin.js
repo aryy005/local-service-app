@@ -6,6 +6,7 @@ const Payment = require('../models/Payment');
 const Message = require('../models/Message');
 const Complaint = require('../models/Complaint');
 const Review = require('../models/Review');
+const { sendPartnerWelcomeEmail } = require('../services/verification');
 const auth = require('../middleware/auth');
 
 // Middleware to verify admin privileges
@@ -347,6 +348,17 @@ router.get('/providers', [auth, admin], async (req, res) => {
         hourlyRate: p.providerDetails?.hourlyRate ? `?${p.providerDetails.hourlyRate}/hr` : '?350/hr',
         completedJobs: pBookings.filter(b => b.status === 'completed').length,
         avatar: p.providerDetails?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+        providerId: p.providerDetails?.providerId || (p.providerDetails?.status === 'Verified' ? `LFX-PRV-${p._id.toString().slice(-4).toUpperCase()}` : ''),
+        description: p.providerDetails?.description || '',
+        portfolioImages: p.providerDetails?.portfolioImages || [],
+        aadhaarVerified: Boolean(p.providerDetails?.aadhaarVerified),
+        aadhaarLastFour: p.providerDetails?.aadhaarLastFour || '',
+        phoneVerified: Boolean(p.phoneVerified),
+        verifiedByAdmin: Boolean(p.providerDetails?.verifiedByAdmin),
+        idCardIssued: Boolean(p.providerDetails?.idCardIssued),
+        idCardIssueDate: p.providerDetails?.idCardIssueDate || null,
+        welcomeEmailSent: Boolean(p.providerDetails?.welcomeEmailSent),
+        welcomeEmailSentAt: p.providerDetails?.welcomeEmailSentAt || null,
         docs,
         bookings: pBookings,
         reviews: pReviews,
@@ -379,12 +391,19 @@ router.put('/providers/:id/status', [auth, admin], async (req, res) => {
     provider.providerDetails.status = status;
 
     if (status === 'Verified') {
+      if (!provider.providerDetails.providerId) {
+        provider.providerDetails.providerId = `LFX-PRV-${provider._id.toString().slice(-4).toUpperCase()}`;
+      }
+      provider.providerDetails.verifiedByAdmin = true;
+      provider.providerDetails.verifiedAt = new Date();
+      provider.providerDetails.idCardIssued = true;
+      provider.providerDetails.idCardIssueDate = new Date();
       provider.providerDetails.aadhaarVerified = true;
-      provider.providerDetails.aadhaarVerifiedAt = new Date();
+      provider.providerDetails.aadhaarVerifiedAt = provider.providerDetails.aadhaarVerifiedAt || new Date();
       provider.emailVerified = true;
       provider.phoneVerified = true;
     } else if (status === 'Suspended' || status === 'Rejected') {
-      provider.providerDetails.aadhaarVerified = false;
+      provider.providerDetails.verifiedByAdmin = false;
     }
 
     await provider.save();
@@ -394,7 +413,8 @@ router.put('/providers/:id/status', [auth, admin], async (req, res) => {
       provider: {
         id: provider._id,
         name: provider.name,
-        status: provider.providerDetails.status
+        status: provider.providerDetails.status,
+        providerId: provider.providerDetails.providerId || ''
       }
     });
   } catch (err) {
@@ -403,6 +423,37 @@ router.put('/providers/:id/status', [auth, admin], async (req, res) => {
   }
 });
 
+
+// @route   POST api/admin/providers/:id/send-welcome-email
+// @desc    Send official Localfixr welcome email with Digital ID Card to provider
+router.post('/providers/:id/send-welcome-email', [auth, admin], async (req, res) => {
+  try {
+    const provider = await User.findById(req.params.id);
+    if (!provider || provider.role !== 'provider') {
+      return res.status(404).json({ message: 'Provider not found' });
+    }
+
+    if (!provider.providerDetails) provider.providerDetails = {};
+    if (!provider.providerDetails.providerId) {
+      provider.providerDetails.providerId = `LFX-PRV-${provider._id.toString().slice(-4).toUpperCase()}`;
+    }
+
+    const emailResult = await sendPartnerWelcomeEmail(provider);
+
+    provider.providerDetails.welcomeEmailSent = true;
+    provider.providerDetails.welcomeEmailSentAt = new Date();
+    await provider.save();
+
+    res.json({
+      message: `Official welcome email with Digital ID Card dispatched to ${provider.email}`,
+      previewUrl: emailResult?.previewUrl || null,
+      providerId: provider.providerDetails.providerId
+    });
+  } catch (err) {
+    console.error('Send Welcome Email Error:', err);
+    res.status(500).json({ message: 'Failed to send welcome email', error: err.message });
+  }
+});
 
 // @route   PUT api/admin/providers/:id
 // @desc    Update any provider details (name, email, phone, category, location, hourlyRate, experience, status, rating)

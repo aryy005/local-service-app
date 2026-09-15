@@ -276,10 +276,16 @@ const AdminDashboard = () => {
         throw new Error(err.message || 'Status update failed');
       }
 
+      const resData = await res.json();
       toast.success(successMsg);
       // Update selected detail provider in modal
       if (selectedDetailProvider && (selectedDetailProvider.id === id || selectedDetailProvider._id === id)) {
-        setSelectedDetailProvider(prev => ({ ...prev, status }));
+        setSelectedDetailProvider(prev => ({ 
+          ...prev, 
+          status, 
+          providerId: resData?.provider?.providerId || prev.providerId || `LFX-PRV-${(id || '').slice(-4).toUpperCase()}`,
+          idCardIssued: status === 'Verified'
+        }));
       }
       // Refetch live records
       await loadAdminData(true);
@@ -302,6 +308,32 @@ const AdminDashboard = () => {
 
   const handleRestoreProvider = (id) => {
     handleUpdateProviderStatus(id, 'Verified', 'Provider restored and account reactivated successfully!');
+  };
+
+  const handleSendWelcomeEmail = async (id) => {
+    try {
+      toast.loading('Dispatching welcome email with Digital ID Card...', { id: 'email-send' });
+      const res = await fetch(`${API_URL}/admin/providers/${id}/send-welcome-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      toast.dismiss('email-send');
+      if (!res.ok) throw new Error(data.message || 'Failed to dispatch welcome email');
+      
+      toast.success(data.message || 'Welcome email with Digital ID Card dispatched successfully!');
+      setSelectedDetailProvider(prev => prev ? { ...prev, welcomeEmailSent: true, welcomeEmailSentAt: new Date(), providerId: data.providerId || prev.providerId } : null);
+      
+      if (data.previewUrl) {
+        window.open(data.previewUrl, '_blank');
+      }
+      await loadAdminData(true);
+    } catch (err) {
+      toast.dismiss('email-send');
+      toast.error(err.message || 'Failed to send welcome email');
+    }
   };
 
   const handleOpenProviderDetail = (provider, initialTab = 'profile', startEditing = false) => {
@@ -2380,6 +2412,11 @@ const AdminDashboard = () => {
                     <span className={`admin-status-pill ${selectedDetailProvider.status.toLowerCase()}`}>
                       {selectedDetailProvider.status}
                     </span>
+                    {selectedDetailProvider.providerId && (
+                      <span className="admin-status-pill verified" style={{ fontFamily: 'monospace', fontWeight: 800 }}>
+                        {selectedDetailProvider.providerId}
+                      </span>
+                    )}
                   </div>
                   <div className="admin-prov-modal-submeta">
                     <span>{selectedDetailProvider.phone}</span>
@@ -2404,7 +2441,20 @@ const AdminDashboard = () => {
                     onClick={() => handleVerifyProvider(selectedDetailProvider.id || selectedDetailProvider._id)}
                   >
                     <CheckCircle size={15} />
-                    <span>Verify Provider</span>
+                    <span>Approve & Issue ID Card</span>
+                  </button>
+                )}
+
+                {selectedDetailProvider.status === 'Verified' && (
+                  <button 
+                    type="button" 
+                    className="admin-modal-action-btn"
+                    style={{ background: '#111111', color: '#D2FE00', border: '1.5px solid #111111' }}
+                    onClick={() => handleSendWelcomeEmail(selectedDetailProvider.id || selectedDetailProvider._id)}
+                    title="Send welcome email with official Digital ID Card"
+                  >
+                    <Send size={14} />
+                    <span>{selectedDetailProvider.welcomeEmailSent ? 'Resend Welcome & ID Card' : 'Send Welcome Mail & ID Card'}</span>
                   </button>
                 )}
 
@@ -2638,7 +2688,9 @@ const AdminDashboard = () => {
                       <div className="admin-info-card-label">CONTACT & LOCATION</div>
                       <div className="admin-info-row">
                         <span className="admin-info-k">Phone:</span>
-                        <span className="admin-info-v">{selectedDetailProvider.phone}</span>
+                        <span className="admin-info-v">
+                          {selectedDetailProvider.phone} {selectedDetailProvider.phoneVerified ? <span style={{ color: '#10B981', fontWeight: 800, fontSize: '0.72rem' }}>✓ OTP Verified</span> : <span style={{ color: '#F59E0B', fontSize: '0.72rem' }}>Pending</span>}
+                        </span>
                       </div>
                       <div className="admin-info-row">
                         <span className="admin-info-k">Email:</span>
@@ -2649,13 +2701,49 @@ const AdminDashboard = () => {
                         <span className="admin-info-v">{selectedDetailProvider.location}</span>
                       </div>
                       <div className="admin-info-row">
-                        <span className="admin-info-k">Account Status:</span>
-                        <span className={`admin-status-pill ${selectedDetailProvider.status.toLowerCase()}`}>
-                          {selectedDetailProvider.status}
+                        <span className="admin-info-k">Aadhaar KYC:</span>
+                        <span className="admin-info-v">
+                          {selectedDetailProvider.aadhaarVerified ? <span style={{ color: '#10B981', fontWeight: 800 }}>✓ UIDAI Verified (•••• {selectedDetailProvider.aadhaarLastFour || 'XXXX'})</span> : <span style={{ color: '#EF4444', fontWeight: 700 }}>Pending Verification</span>}
+                        </span>
+                      </div>
+                      <div className="admin-info-row">
+                        <span className="admin-info-k">Provider ID:</span>
+                        <span className="admin-info-v" style={{ fontFamily: 'monospace', fontWeight: 800, color: selectedDetailProvider.providerId ? '#10B981' : '#888' }}>
+                          {selectedDetailProvider.providerId || 'Assigned upon approval'}
+                        </span>
+                      </div>
+                      <div className="admin-info-row">
+                        <span className="admin-info-k">Welcome Mail:</span>
+                        <span className="admin-info-v">
+                          {selectedDetailProvider.welcomeEmailSent ? <span style={{ color: '#10B981', fontWeight: 700 }}>✓ Sent with Digital ID</span> : <span style={{ color: '#888' }}>Not Dispatched</span>}
                         </span>
                       </div>
                     </div>
                   </div>
+
+                  {selectedDetailProvider.description && (
+                    <div style={{ background: '#FAF9F6', border: '1.5px solid #DCDBCF', borderRadius: 8, padding: '1rem', marginBottom: '1rem' }}>
+                      <div className="admin-info-card-label" style={{ marginBottom: '4px' }}>PROVIDER BIO / DESCRIPTION</div>
+                      <p style={{ fontSize: '0.84rem', color: '#333', margin: 0, lineHeight: 1.4 }}>
+                        {selectedDetailProvider.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedDetailProvider.portfolioImages && selectedDetailProvider.portfolioImages.length > 0 && (
+                    <div style={{ background: '#FAF9F6', border: '1.5px solid #DCDBCF', borderRadius: 8, padding: '1rem', marginBottom: '1rem' }}>
+                      <div className="admin-info-card-label" style={{ marginBottom: '8px' }}>
+                        WORK PORTFOLIO PHOTOS ({selectedDetailProvider.portfolioImages.length} IMAGES)
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+                        {selectedDetailProvider.portfolioImages.map((img, idx) => (
+                          <a key={idx} href={img} target="_blank" rel="noreferrer">
+                            <img src={img} alt="Work" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 6, border: '2px solid #111' }} />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="admin-prov-docs-section">
                     <div className="admin-info-card-label" style={{ marginBottom: '0.65rem' }}>

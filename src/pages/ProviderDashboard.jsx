@@ -565,6 +565,49 @@ const ProviderDashboard = () => {
           </div>
         </header>
 
+        {/* Security & Verification Gate Status Banner */}
+        {user?.providerDetails?.status !== 'Verified' ? (
+          <div style={{ background: '#FEF3C7', border: '1.5px solid #F59E0B', borderRadius: 8, padding: '0.85rem 1.25rem', marginBottom: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <AlertCircle size={22} color="#B45309" style={{ flexShrink: 0 }} />
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.85rem', color: '#92400E' }}>
+                  Profile Awaiting Admin Confirmation &amp; ID Card Issuance
+                </div>
+                <div style={{ fontSize: '0.74rem', color: '#B45309', marginTop: '2px', lineHeight: 1.35 }}>
+                  Your profile details (Aadhaar KYC, contact number, work portfolio) have been transmitted to the Admin Portal. To protect trust and security, your profile is <strong>not public for work</strong> until confirmed by the administrator. Upon approval, you will receive your welcome email and official ID card.
+                </div>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              onClick={() => setActiveTab('profile')} 
+              style={{ background: '#111111', color: '#D2FE00', border: 'none', padding: '0.45rem 0.85rem', borderRadius: 6, fontSize: '0.74rem', fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >
+              Review Profile &amp; KYC
+            </button>
+          </div>
+        ) : (
+          <div style={{ background: '#DCFCE7', border: '1.5px solid #86EFAC', borderRadius: 8, padding: '0.65rem 1.25rem', marginBottom: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <ShieldCheck size={20} color="#15803D" style={{ flexShrink: 0 }} />
+              <span style={{ fontWeight: 800, fontSize: '0.82rem', color: '#15803D' }}>
+                Verified Partner &bull; Active &amp; Public for Customer Orders
+              </span>
+              <span style={{ fontFamily: 'monospace', fontWeight: 900, background: '#111111', color: '#D2FE00', padding: '2px 8px', borderRadius: 4, fontSize: '0.74rem' }}>
+                {user?.providerDetails?.providerId || `LFX-PRV-${user?._id?.slice(-4).toUpperCase()}`}
+              </span>
+            </div>
+            <button 
+              type="button" 
+              onClick={() => setActiveTab('profile')} 
+              style={{ background: '#15803D', color: '#FFFFFF', border: 'none', padding: '0.35rem 0.75rem', borderRadius: 5, fontSize: '0.72rem', fontWeight: 800, cursor: 'pointer' }}
+            >
+              View Official ID Card &rarr;
+            </button>
+          </div>
+        )}
+
         {/* TAB 1: EXECUTIVE DASHBOARD (Matches Mockup 100%) */}
         {activeTab === 'dashboard' && (
           <>
@@ -1349,6 +1392,84 @@ const ProviderDashboard = () => {
                 </button>
               </div>
             </form>
+
+            {/* Official Localfixr Digital Partner ID Card Section */}
+            <div style={{ marginTop: '2rem', borderTop: '2px solid #EAEAE4', paddingTop: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#111111' }}>
+                    🪪 Official Localfixr Partner Identity Card
+                  </h4>
+                  <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#666666' }}>
+                    {user?.providerDetails?.status === 'Verified'
+                      ? 'Your certified digital identity credential issued and verified by Localfixr Administration.'
+                      : 'Pending final admin verification. Your official credential will become active upon approval.'}
+                  </p>
+                </div>
+
+                {user?.providerDetails?.status === 'Verified' && (
+                  <button 
+                    type="button" 
+                    onClick={() => window.print()}
+                    style={{ background: '#111111', color: '#D2FE00', border: 'none', padding: '0.55rem 1.1rem', borderRadius: 6, fontWeight: 800, fontSize: '0.76rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    Print / Save ID Card
+                  </button>
+                )}
+              </div>
+
+              {/* ID Card Graphic Container */}
+              <div style={{ maxWidth: '440px', background: '#FFFFFF', border: '2px solid #141414', borderRadius: 12, overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.12)', opacity: user?.providerDetails?.status === 'Verified' ? 1 : 0.85 }}>
+                {/* ID Card Top Bar */}
+                <div style={{ background: '#141414', padding: '12px 18px', borderBottom: '3.5px solid #D2FE00', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.2rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '-0.03em' }}>Localfixr</span>
+                    <span style={{ fontSize: '0.62rem', fontWeight: 900, color: '#141414', background: '#D2FE00', padding: '2px 7px', borderRadius: 3, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      {user?.providerDetails?.status === 'Verified' ? 'CERTIFIED PARTNER' : 'PENDING REVIEW'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 900, color: '#D2FE00', fontFamily: 'monospace' }}>
+                    {user?.providerDetails?.providerId || (user?.providerDetails?.status === 'Verified' ? `LFX-PRV-${user?._id?.slice(-4).toUpperCase()}` : 'LFX-PRV-PENDING')}
+                  </div>
+                </div>
+
+                {/* ID Card Content */}
+                <div style={{ padding: '18px', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <img 
+                    src={user?.providerDetails?.avatarUrl || user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'} 
+                    alt={user?.name} 
+                    style={{ width: 88, height: 88, borderRadius: 8, objectFit: 'cover', border: '2.5px solid #141414', flexShrink: 0 }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#111111', lineHeight: 1.15, textTransform: 'uppercase' }}>
+                      {user?.name}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#16A34A', textTransform: 'uppercase', marginTop: '3px' }}>
+                      {user?.providerDetails?.category || 'Professional Technician'}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#444444', marginTop: '6px' }}>
+                      <strong>Provider ID:</strong> <span style={{ fontFamily: 'monospace', fontWeight: 800, color: '#111111' }}>{user?.providerDetails?.providerId || (user?.providerDetails?.status === 'Verified' ? `LFX-PRV-${user?._id?.slice(-4).toUpperCase()}` : 'Pending Approval')}</span>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#444444', marginTop: '2px' }}>
+                      <strong>Operating Area:</strong> {user?.addressDetails?.city || user?.providerDetails?.location || user?.city || 'Local Area'}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#444444', marginTop: '2px' }}>
+                      <strong>Contact:</strong> {user?.phone || 'Verified on Record'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ID Card Security Seal */}
+                <div style={{ padding: '10px 18px', background: '#FAF9F6', borderTop: '1px dashed #CBD5E1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.66rem', fontWeight: 800, color: user?.providerDetails?.status === 'Verified' ? '#047857' : '#B45309', background: user?.providerDetails?.status === 'Verified' ? '#DCFCE7' : '#FEF3C7', padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase' }}>
+                    {user?.providerDetails?.status === 'Verified' ? '✓ UIDAI Aadhaar & Phone KYC Verified' : '⏳ Awaiting Admin Approval'}
+                  </span>
+                  <span style={{ fontSize: '0.64rem', color: '#888888', fontWeight: 700 }}>
+                    Issued: {user?.providerDetails?.idCardIssueDate ? new Date(user.providerDetails.idCardIssueDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

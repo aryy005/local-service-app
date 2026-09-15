@@ -162,10 +162,13 @@ async function sendPartnerWelcomeEmail(partnerUser) {
   const partnerEmail = partnerUser.email;
   const p = partnerUser.providerDetails || {};
   const category = p.category || 'Home Services & Repairs';
-  const hourlyRate = p.hourlyRate || 25;
+  const hourlyRate = p.hourlyRate || 350;
   const location = partnerUser.city || p.location || 'Your Operating City';
+  const partnerPhone = partnerUser.phone || 'Provided';
   const partnerId = partnerUser._id ? partnerUser._id.toString() : Date.now().toString();
-  const clientUrl = process.env.CLIENT_URL || 'https://localfixr.site';
+  const providerId = p.providerId || `LFX-PRV-${partnerId.slice(-4).toUpperCase()}`;
+  const avatarUrl = p.avatarUrl || partnerUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
   const partnerSignInUrl = `${clientUrl}/auth/login?role=provider&redirect=${encodeURIComponent('/provider-dashboard')}`;
 
   const htmlContent = `
@@ -174,7 +177,7 @@ async function sendPartnerWelcomeEmail(partnerUser) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Partner Onboarding Letter - LocalFixr</title>
+  <title>Partner Verification & ID Card - LocalFixr</title>
 </head>
 <body style="margin:0; padding:0; background-color:#ffffff; font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; color:#0f172a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#ffffff; padding:24px 15px;">
@@ -202,8 +205,8 @@ async function sendPartnerWelcomeEmail(partnerUser) {
                     <h2 style="margin:0; font-size:18px; font-weight:800; color:#0f172a; text-transform:uppercase; letter-spacing:0.04em;">
                       WELCOME LETTER
                     </h2>
-                    <div style="margin-top:6px; font-size:13px; color:#4f46e5; font-weight:700; font-family:monospace;">
-                      Partner ID: LF-PRO-${partnerId.slice(-6).toUpperCase()}
+                    <div style="margin-top:6px; font-size:13px; color:#047857; font-weight:800; font-family:monospace;">
+                      Provider ID: ${providerId}
                     </div>
                     <div style="margin-top:2px; font-size:12px; color:#64748b;">
                       Date: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -223,14 +226,82 @@ async function sendPartnerWelcomeEmail(partnerUser) {
           <tr>
             <td style="padding:24px 0 16px 0;">
               <h3 style="margin:0 0 10px 0; font-size:17px; font-weight:700; color:#0f172a;">
-                Dear ${partnerName},
+                Congratulations &amp; Welcome, ${partnerName}!
               </h3>
               <p style="margin:0 0 12px 0; font-size:14px; line-height:1.6; color:#334155;">
-                We are pleased to welcome you to the <strong>LocalFixr Service Partner Network</strong>. Your partner account and profile have been successfully registered on our marketplace platform.
+                We are excited to confirm that your <strong>LocalFixr Service Partner Profile</strong> has been verified and officially approved by our administration team. Your profile is now <strong>Public for Work</strong> to receive customer service bookings in your area.
               </p>
               <p style="margin:0; font-size:14px; line-height:1.6; color:#334155;">
-                Below are the confirmed registration details and credentials associated with your partner workstation:
+                Below is your official <strong>LocalFixr Digital Partner ID Card</strong> and account specifications:
               </p>
+            </td>
+          </tr>
+
+          <!-- Official Localfixr Digital Partner ID Card Embedded -->
+          <tr>
+            <td style="padding:16px 0 24px 0;" align="center">
+              <div style="font-size:12px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; text-align:center;">
+                🪪 OFFICIAL LOCALFIXR PARTNER IDENTITY CARD
+              </div>
+              <table role="presentation" width="380" cellspacing="0" cellpadding="0" style="width:380px; max-width:100%; border:2px solid #111111; border-radius:12px; overflow:hidden; background:#ffffff; box-shadow:0 8px 24px rgba(0,0,0,0.12); font-family:'Segoe UI', sans-serif;">
+                <tr style="background:#141414;">
+                  <td style="padding:12px 16px; border-bottom:3px solid #D2FE00;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td align="left">
+                          <span style="font-size:16px; font-weight:900; color:#ffffff; letter-spacing:-0.03em;">LocalFixr</span>
+                          <span style="font-size:9px; font-weight:800; color:#141414; background:#D2FE00; padding:2px 6px; border-radius:4px; margin-left:6px; text-transform:uppercase; letter-spacing:0.05em;">CERTIFIED</span>
+                        </td>
+                        <td align="right" style="font-size:11px; font-weight:800; color:#D2FE00; font-family:monospace;">
+                          ${providerId}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:16px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td width="80" valign="top" style="padding-right:14px;">
+                          <img src="${avatarUrl}" alt="${partnerName}" width="76" height="76" style="width:76px; height:76px; border-radius:8px; object-fit:cover; border:2px solid #141414; display:block;" />
+                        </td>
+                        <td valign="top">
+                          <div style="font-size:16px; font-weight:900; color:#111111; line-height:1.2; margin-bottom:3px;">
+                            ${partnerName}
+                          </div>
+                          <div style="font-size:12px; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px;">
+                            ${category}
+                          </div>
+                          <div style="font-size:11px; color:#475569; margin-bottom:2px;">
+                            <strong>Partner ID:</strong> <span style="font-family:monospace; font-weight:700; color:#111;">${providerId}</span>
+                          </div>
+                          <div style="font-size:11px; color:#475569; margin-bottom:2px;">
+                            <strong>Operating Area:</strong> ${location}
+                          </div>
+                          <div style="font-size:11px; color:#475569;">
+                            <strong>Contact Phone:</strong> ${partnerPhone}
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                    <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td align="left">
+                            <span style="display:inline-block; font-size:10px; font-weight:800; color:#047857; background:#dcfce7; padding:2px 8px; border-radius:4px; text-transform:uppercase;">
+                              ✓ UIDAI Aadhaar &amp; Phone Verified
+                            </span>
+                          </td>
+                          <td align="right" style="font-size:10px; color:#94a3b8; font-weight:600;">
+                            Issued: ${new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
