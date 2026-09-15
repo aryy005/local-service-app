@@ -132,357 +132,66 @@ async function seedDatabase() {
     console.log('✔ System Admin ready: admin@localfixr.com / password123');
   }
 
-  // 2. Seed Providers if empty
-  const providerCount = await User.countDocuments({ role: 'provider' });
-  if (providerCount === 0) {
-    console.log('Seeding initial providers into database...');
-    const seedProviders = [
+  // 2. Clear out any demo / mock users, bookings, reviews, complaints, and payments so database is 100% REAL
+  const demoUsers = await User.find({
+    $or: [
       {
-        name: 'Arun Sharma',
-        email: 'arun.electrician@localfixr.com',
-        phone: '+91 98150 11223',
-        password: 'password123',
-        role: 'provider',
-        city: 'Chandigarh',
-        emailVerified: true,
-        phoneVerified: true,
-        providerDetails: {
-          category: 'Electrician',
-          categoryName: 'Electrician',
-          location: 'Sector 35, Chandigarh',
-          hourlyRate: 350,
-          experienceYears: 6,
-          rating: 4.9,
-          status: 'Verified',
-          aadhaarVerified: true,
-          aadhaarLastFour: '4821',
-          avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
-          skills: ['Wiring', 'MCB Installation', 'Inverter Repairs', 'Ceiling Fans'],
-          documents: [
-            { title: 'Aadhaar Card', status: 'Verified', uploadedAt: new Date() },
-            { title: 'Electrical License (Class A)', status: 'Verified', uploadedAt: new Date() }
+        email: {
+          $in: [
+            'arun.electrician@localfixr.com',
+            'deepak.plumber@localfixr.com',
+            'vikram.carpenter@localfixr.com',
+            'anil.painter@localfixr.com',
+            'rajesh.tailor@localfixr.com',
+            'sunil.ac@localfixr.com',
+            'pooja.cleaning@localfixr.com',
+            'rakesh.pest@localfixr.com',
+            'priya.patel@gmail.com',
+            'rahul.khanna@gmail.com',
+            'neha.gupta@gmail.com',
+            'rajesh@example.com',
+            'vikram@example.com',
+            'anil@example.com',
+            'sham@example.com',
+            'arun@example.com',
+            'deepak@example.com'
           ]
         }
       },
-      {
-        name: 'Deepak Verma',
-        email: 'deepak.plumber@localfixr.com',
-        phone: '+91 98760 22334',
-        password: 'password123',
-        role: 'provider',
-        city: 'Mohali',
-        emailVerified: true,
-        phoneVerified: true,
-        providerDetails: {
-          category: 'Plumber',
-          categoryName: 'Plumber',
-          location: 'Phase 7, Mohali',
-          hourlyRate: 300,
-          experienceYears: 8,
-          rating: 4.8,
-          status: 'Verified',
-          aadhaarVerified: true,
-          aadhaarLastFour: '7192',
-          avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=200',
-          skills: ['Pipe Leakages', 'Sanitary Fittings', 'Water Tank Cleaning'],
-          documents: [
-            { title: 'Aadhaar Card', status: 'Verified', uploadedAt: new Date() },
-            { title: 'Trade Certificate', status: 'Verified', uploadedAt: new Date() }
-          ]
-        }
-      },
-      {
-        name: 'Vikram Singh',
-        email: 'vikram.carpenter@localfixr.com',
-        phone: '+91 98880 33445',
-        password: 'password123',
-        role: 'provider',
-        city: 'Panchkula',
-        emailVerified: true,
-        phoneVerified: true,
-        providerDetails: {
-          category: 'Carpenter',
-          categoryName: 'Carpenter',
-          location: 'Sector 12, Panchkula',
-          hourlyRate: 400,
-          experienceYears: 5,
-          rating: 4.7,
-          status: 'Pending',
-          aadhaarVerified: false,
-          avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
-          skills: ['Furniture Assembly', 'Door Locks', 'Modular Kitchen Repair'],
-          documents: [
-            { title: 'Aadhaar Card (Pending Review)', status: 'Pending', uploadedAt: new Date() },
-            { title: 'Apprenticeship Proof', status: 'Pending', uploadedAt: new Date() }
-          ]
-        }
-      },
-      {
-        name: 'Anil Kapoor',
-        email: 'anil.painter@localfixr.com',
-        phone: '+91 98140 44556',
-        password: 'password123',
-        role: 'provider',
-        city: 'Chandigarh',
-        emailVerified: true,
-        phoneVerified: true,
-        providerDetails: {
-          category: 'Painter',
-          categoryName: 'Painter',
-          location: 'Sector 22, Chandigarh',
-          hourlyRate: 350,
-          experienceYears: 7,
-          rating: 4.6,
-          status: 'Verified',
-          aadhaarVerified: true,
-          aadhaarLastFour: '9903',
-          avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
-          skills: ['Interior Painting', 'Wall Textures', 'Waterproofing'],
-          documents: [
-            { title: 'Aadhaar Card', status: 'Verified', uploadedAt: new Date() }
-          ]
-        }
-      },
-      {
-        name: 'Sunil Mehta',
-        email: 'sunil.ac@localfixr.com',
-        phone: '+91 98720 55667',
-        password: 'password123',
-        role: 'provider',
-        city: 'Zirakpur',
-        emailVerified: true,
-        phoneVerified: false,
-        providerDetails: {
-          category: 'AC Repair',
-          categoryName: 'AC Repair',
-          location: 'VIP Road, Zirakpur',
-          hourlyRate: 500,
-          experienceYears: 4,
-          rating: 4.5,
-          status: 'Pending',
-          aadhaarVerified: false,
-          avatarUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=200',
-          skills: ['Split AC Jet Service', 'Gas Refill', 'Compressor Diagnostics'],
-          documents: [
-            { title: 'Aadhaar Card (Pending)', status: 'Pending', uploadedAt: new Date() },
-            { title: 'HVAC Certification', status: 'Pending', uploadedAt: new Date() }
-          ]
-        }
-      },
-      {
-        name: 'Rakesh Joshi',
-        email: 'rakesh.pest@localfixr.com',
-        phone: '+91 98890 66778',
-        password: 'password123',
-        role: 'provider',
-        city: 'Chandigarh',
-        emailVerified: true,
-        phoneVerified: true,
-        providerDetails: {
-          category: 'Pest Control',
-          categoryName: 'Pest Control',
-          location: 'Industrial Area, Chandigarh',
-          hourlyRate: 450,
-          experienceYears: 3,
-          rating: 3.9,
-          status: 'Suspended',
-          aadhaarVerified: true,
-          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-          skills: ['Termite Treatment', 'Bedbug Control', 'Cockroach Gel'],
-          documents: [
-            { title: 'Aadhaar Card', status: 'Verified', uploadedAt: new Date() }
-          ]
-        }
-      }
-    ];
+      { email: { $regex: '(@example\\.com|real_test_|realcarpenter_|realuser_|test)' } }
+    ]
+  });
 
-    await User.insertMany(seedProviders);
-    console.log('✔ Seeded 6 providers');
-  }
+  const demoUserIds = demoUsers.map(u => u._id);
 
-  // 3. Seed Customers if empty
-  const customerCount = await User.countDocuments({ role: 'customer' });
-  if (customerCount === 0) {
-    console.log('Seeding initial customers into database...');
-    const seedCustomers = [
-      {
-        name: 'Priya Patel',
-        email: 'priya.patel@gmail.com',
-        phone: '+91 98140 12345',
-        password: 'password123',
-        role: 'customer',
-        city: 'Chandigarh',
-        emailVerified: true,
-        phoneVerified: true,
-        addressDetails: {
-          street: '#402, Sector 34-C',
-          city: 'Chandigarh',
-          state: 'Punjab',
-          pincode: '160022'
-        }
-      },
-      {
-        name: 'Rahul Khanna',
-        email: 'rahul.khanna@gmail.com',
-        phone: '+91 98720 54321',
-        password: 'password123',
-        role: 'customer',
-        city: 'Mohali',
-        emailVerified: true,
-        phoneVerified: true,
-        addressDetails: {
-          street: 'House 112, Phase 3B2',
-          city: 'Mohali',
-          state: 'Punjab',
-          pincode: '160059'
-        }
-      },
-      {
-        name: 'Neha Gupta',
-        email: 'neha.gupta@gmail.com',
-        phone: '+91 98880 67890',
-        password: 'password123',
-        role: 'customer',
-        city: 'Panchkula',
-        emailVerified: true,
-        phoneVerified: true,
-        addressDetails: {
-          street: 'Flat 5B, Sector 20',
-          city: 'Panchkula',
-          state: 'Haryana',
-          pincode: '134116'
-        }
-      }
-    ];
-
-    await User.insertMany(seedCustomers);
-    console.log('✔ Seeded 3 customers');
-  }
-
-  // 4. Seed Bookings if empty
-  const bookingCount = await Booking.countDocuments();
-  if (bookingCount === 0) {
-    console.log('Seeding initial bookings into database...');
-    const arun = await User.findOne({ email: 'arun.electrician@localfixr.com' });
-    const deepak = await User.findOne({ email: 'deepak.plumber@localfixr.com' });
-    const priya = await User.findOne({ email: 'priya.patel@gmail.com' });
-    const rahul = await User.findOne({ email: 'rahul.khanna@gmail.com' });
-    const neha = await User.findOne({ email: 'neha.gupta@gmail.com' });
-
-    if (arun && deepak && priya && rahul && neha) {
-      const b1 = new Booking({
-        orderId: 'BK-8491',
-        orderNumber: 8491,
-        customerId: priya._id,
-        providerId: arun._id,
-        date: new Date().toLocaleDateString('en-US'),
-        timePreference: '10:00 AM - 12:00 PM',
-        description: 'Emergency MCB Tripping & Full Switchboard Diagnostics',
-        serviceAddress: '#402, Sector 34-C, Chandigarh',
-        status: 'completed',
-        serviceStage: 'completed',
-        finalPrice: 850,
-        paidAmount: 850,
-        paymentStatus: 'paid',
-        paymentMethod: 'upi',
-        billingDetails: { serviceAmount: 722.5, platformFee: 127.5, tax: 0, totalAmount: 850 },
-        stageHistory: [
-          { stage: 'requested', title: 'Booking Requested', timestamp: new Date(Date.now() - 3600000 * 5) },
-          { stage: 'accepted', title: 'Provider Accepted', timestamp: new Date(Date.now() - 3600000 * 4) },
-          { stage: 'completed', title: 'Service Completed', timestamp: new Date(Date.now() - 3600000 * 2) }
-        ]
-      });
-      await b1.save();
-
-      // Linked Payment record
-      await Payment.create({
-        bookingId: b1._id,
-        customerId: priya._id,
-        providerId: arun._id,
-        amount: 850,
-        platformFee: 127.5,
-        serviceAmount: 722.5,
-        tax: 0,
-        transactionId: 'TXN-8491-' + Date.now(),
-        paymentMethod: 'upi',
-        status: 'success'
-      });
-
-      const b2 = new Booking({
-        orderId: 'BK-8492',
-        orderNumber: 8492,
-        customerId: rahul._id,
-        providerId: deepak._id,
-        date: new Date().toLocaleDateString('en-US'),
-        timePreference: '02:00 PM - 04:00 PM',
-        description: 'Kitchen Sink Drain Blockage & Pipe Replacement',
-        serviceAddress: 'House 112, Phase 3B2, Mohali',
-        status: 'accepted',
-        serviceStage: 'in_progress',
-        finalPrice: 450,
-        paidAmount: 0,
-        paymentStatus: 'unpaid',
-        stageHistory: [
-          { stage: 'requested', title: 'Booking Requested', timestamp: new Date(Date.now() - 3600000 * 3) },
-          { stage: 'accepted', title: 'Provider Accepted', timestamp: new Date(Date.now() - 3600000 * 2) },
-          { stage: 'in_progress', title: 'Work In Progress', timestamp: new Date(Date.now() - 1800000) }
-        ]
-      });
-      await b2.save();
-
-      const b3 = new Booking({
-        orderId: 'BK-8493',
-        orderNumber: 8493,
-        customerId: neha._id,
-        providerId: arun._id,
-        date: new Date().toLocaleDateString('en-US'),
-        timePreference: '04:00 PM - 06:00 PM',
-        description: 'Living Room Fancy Chandelier & Fan Installation',
-        serviceAddress: 'Flat 5B, Sector 20, Panchkula',
-        status: 'accepted',
-        serviceStage: 'accepted',
-        finalPrice: 600,
-        paidAmount: 0,
-        paymentStatus: 'unpaid',
-        stageHistory: [
-          { stage: 'requested', title: 'Booking Requested', timestamp: new Date(Date.now() - 3600000) },
-          { stage: 'accepted', title: 'Provider Accepted', timestamp: new Date(Date.now() - 1800000) }
-        ]
-      });
-      await b3.save();
-
-      // Seed Reviews
-      await Review.create([
-        {
-          provider: arun._id,
-          customer: priya._id,
-          rating: 5,
-          comment: 'Arun was extremely punctual and fixed the MCB issue within 30 minutes! Highly professional.'
-        },
-        {
-          provider: deepak._id,
-          customer: rahul._id,
-          rating: 4,
-          comment: 'Quick and clean work on the kitchen pipe leak.'
-        }
-      ]);
-
-      // Seed Complaints
-      await Complaint.create([
-        {
-          bookingId: b2._id,
-          bookingRef: '#BK-8492',
-          customerId: rahul._id,
-          providerId: deepak._id,
-          subject: 'Provider arrived 20 minutes late without prior call',
-          description: 'Provider was delayed due to traffic but did not inform beforehand. Service quality was good though.',
-          status: 'under_review',
-          priority: 'low'
-        }
-      ]);
-
-      console.log('✔ Seeded bookings, payments, reviews & complaints');
-    }
+  if (demoUserIds.length > 0) {
+    await User.deleteMany({ _id: { $in: demoUserIds } });
+    await Booking.deleteMany({
+      $or: [
+        { customerId: { $in: demoUserIds } },
+        { providerId: { $in: demoUserIds } },
+        { orderId: { $in: ['BK-8491', 'BK-8492', 'BK-8493', 'BK-8494', 'BK-8495'] } }
+      ]
+    });
+    await Payment.deleteMany({
+      $or: [
+        { customerId: { $in: demoUserIds } },
+        { providerId: { $in: demoUserIds } }
+      ]
+    });
+    await Review.deleteMany({
+      $or: [
+        { customer: { $in: demoUserIds } },
+        { provider: { $in: demoUserIds } }
+      ]
+    });
+    await Complaint.deleteMany({
+      $or: [
+        { customerId: { $in: demoUserIds } },
+        { providerId: { $in: demoUserIds } }
+      ]
+    });
+    console.log('✔ Purged all demo users and mock records. Database is 100% REAL.');
   }
 }
 

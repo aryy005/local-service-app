@@ -91,16 +91,6 @@ const AdminLogin = () => {
             </div>
           </div>
 
-          <div className="admin-credentials-row">
-            <span>Admin: <strong>admin@localfixr.com</strong></span>
-            <button 
-              type="button" 
-              className="admin-quick-fill-btn"
-              onClick={() => { setEmail('admin@localfixr.com'); setPassword('password123'); }}
-            >
-              Fill Credentials
-            </button>
-          </div>
 
           <button 
             type="submit" 
