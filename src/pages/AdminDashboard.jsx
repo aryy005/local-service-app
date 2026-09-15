@@ -79,6 +79,36 @@ const AdminDashboard = () => {
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerCityFilter, setCustomerCityFilter] = useState('all');
 
+  // Provider editing state
+  const [isEditingProvider, setIsEditingProvider] = useState(false);
+  const [editProviderForm, setEditProviderForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    category: 'Electrician',
+    location: 'Chandigarh',
+    hourlyRate: 350,
+    experienceYears: 3,
+    status: 'Verified',
+    rating: 5.0
+  });
+
+  // Customer editing state
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [editCustomerForm, setEditCustomerForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    city: ''
+  });
+
+  // Platform settings state
+  const [platformSettings, setPlatformSettings] = useState({
+    platformName: 'LocalFixr',
+    platformCommission: 15,
+    adminEmail: 'admin@localfixr.com'
+  });
+
   // Form states
   const [newProviderForm, setNewProviderForm] = useState({
     name: '',
@@ -274,9 +304,178 @@ const AdminDashboard = () => {
     handleUpdateProviderStatus(id, 'Verified', 'Provider restored and account reactivated successfully!');
   };
 
-  const handleOpenProviderDetail = (provider, initialTab = 'profile') => {
+  const handleOpenProviderDetail = (provider, initialTab = 'profile', startEditing = false) => {
     setSelectedDetailProvider(provider);
     setProviderDetailTab(initialTab);
+    setIsEditingProvider(startEditing);
+
+    const rateNum = typeof provider.hourlyRate === 'string'
+      ? parseFloat(provider.hourlyRate.replace(/[^0-9.]/g, '')) || 350
+      : provider.hourlyRate || 350;
+    const expNum = typeof provider.experience === 'string'
+      ? parseInt(provider.experience.replace(/[^0-9]/g, '')) || 3
+      : provider.experienceYears || 3;
+
+    setEditProviderForm({
+      name: provider.name || '',
+      email: provider.email || '',
+      phone: provider.phone || '',
+      category: provider.category || 'Electrician',
+      location: provider.location || 'Chandigarh',
+      hourlyRate: rateNum,
+      experienceYears: expNum,
+      status: provider.status || 'Verified',
+      rating: provider.rating || 5.0
+    });
+  };
+
+  // Save Provider Edited Details
+  const handleSaveProviderDetails = async (e) => {
+    e.preventDefault();
+    if (!selectedDetailProvider) return;
+    const pId = selectedDetailProvider.id || selectedDetailProvider._id;
+
+    try {
+      const res = await fetch(`${API_URL}/admin/providers/${pId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(editProviderForm)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to update provider');
+
+      toast.success('Provider details updated successfully!');
+      setIsEditingProvider(false);
+
+      // Update in modal
+      setSelectedDetailProvider(prev => ({
+        ...prev,
+        ...editProviderForm,
+        hourlyRate: '₹' + editProviderForm.hourlyRate + '/hr',
+        experience: editProviderForm.experienceYears + ' years'
+      }));
+
+      // Update in list
+      setProvidersList(prev => prev.map(p => {
+        if ((p.id || p._id) === pId) {
+          return {
+            ...p,
+            ...editProviderForm,
+            hourlyRate: '₹' + editProviderForm.hourlyRate + '/hr',
+            experience: editProviderForm.experienceYears + ' years'
+          };
+        }
+        return p;
+      }));
+
+      await loadAdminData(true);
+    } catch (err) {
+      toast.error(err.message || 'Failed to update provider');
+    }
+  };
+
+  // Open Edit Customer Modal
+  const handleOpenEditCustomer = (customer) => {
+    setEditingCustomer(customer);
+    setEditCustomerForm({
+      name: customer.name || '',
+      email: customer.email || '',
+      phone: customer.phone || '',
+      city: customer.city || customer.addressDetails?.city || ''
+    });
+  };
+
+  // Save Customer Edited Details
+  const handleSaveCustomerDetails = async (e) => {
+    e.preventDefault();
+    if (!editingCustomer) return;
+    const cId = editingCustomer.id || editingCustomer._id;
+
+    try {
+      const res = await fetch(`${API_URL}/admin/customers/${cId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(editCustomerForm)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to update customer');
+
+      toast.success('Customer details updated successfully!');
+      setEditingCustomer(null);
+
+      // Update in local list
+      setCustomersList(prev => prev.map(c => {
+        if ((c.id || c._id) === cId) {
+          return {
+            ...c,
+            ...editCustomerForm
+          };
+        }
+        return c;
+      }));
+
+      await loadAdminData(true);
+    } catch (err) {
+      toast.error(err.message || 'Failed to update customer');
+    }
+  };
+
+  // Live Update Order / Booking Stage
+  const handleUpdateOrderStatus = async (id, serviceStage) => {
+    try {
+      const res = await fetch(`${API_URL}/admin/orders/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ serviceStage })
+      });
+
+      if (!res.ok) throw new Error('Failed to update order status');
+
+      toast.success(`Order status updated to ${serviceStage.replace('_', ' ').toUpperCase()}!`);
+      setOrdersList(prev => prev.map(o => {
+        if ((o._id || o.id) === id) {
+          return {
+            ...o,
+            status: serviceStage,
+            statusLabel: serviceStage.replace('_', ' ').toUpperCase()
+          };
+        }
+        return o;
+      }));
+      await loadAdminData(true);
+    } catch (err) {
+      toast.error(err.message || 'Failed to update order');
+    }
+  };
+
+  // Save Settings
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_URL}/admin/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(platformSettings)
+      });
+      if (!res.ok) throw new Error('Failed to save settings');
+      toast.success('Platform configuration saved successfully!');
+    } catch (err) {
+      toast.error(err.message || 'Failed to save settings');
+    }
   };
 
   // Onboard New Provider into MongoDB
@@ -1265,14 +1464,24 @@ const AdminDashboard = () => {
                         <td style={{ fontWeight: 600 }}>{c.totalBookings || 0}</td>
                         <td style={{ fontWeight: 700, color: '#10B981' }}>₹{c.totalSpent || 0}</td>
                         <td style={{ textAlign: 'right' }}>
-                          <button 
-                            className="admin-view-btn" 
-                            style={{ color: '#EF4444', borderColor: '#FECACA' }}
-                            onClick={() => handleDeleteCustomer(c.id || c._id, c.name)}
-                          >
-                            <Trash2 size={13} />
-                            <span>Delete</span>
-                          </button>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.4rem' }}>
+                            <button 
+                              className="admin-view-btn" 
+                              style={{ color: '#2563EB', borderColor: '#BFDBFE' }}
+                              onClick={() => handleOpenEditCustomer(c)}
+                            >
+                              <Edit2 size={13} />
+                              <span>Edit</span>
+                            </button>
+                            <button 
+                              className="admin-view-btn" 
+                              style={{ color: '#EF4444', borderColor: '#FECACA' }}
+                              onClick={() => handleDeleteCustomer(c.id || c._id, c.name)}
+                            >
+                              <Trash2 size={13} />
+                              <span>Delete</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -1449,8 +1658,18 @@ const AdminDashboard = () => {
                             <div className="admin-action-btns" style={{ justifyContent: 'flex-end' }}>
                               <button 
                                 type="button" 
+                                className="admin-view-arrow-btn"
+                                style={{ background: '#2563EB', color: '#FFFFFF', marginRight: '0.35rem' }}
+                                onClick={() => handleOpenProviderDetail(p, 'profile', true)}
+                                title="Edit Provider Details"
+                              >
+                                <Edit2 size={12} style={{ marginRight: '3px' }} />
+                                <span>Edit</span>
+                              </button>
+                              <button 
+                                type="button" 
                                 className={`admin-view-arrow-btn ${p.status === 'Pending' ? 'review' : ''}`}
-                                onClick={() => handleOpenProviderDetail(p, 'profile')}
+                                onClick={() => handleOpenProviderDetail(p, 'profile', false)}
                               >
                                 <span>{p.status === 'Pending' ? 'Review →' : 'View →'}</span>
                               </button>
@@ -1677,7 +1896,20 @@ const AdminDashboard = () => {
                         <td>{b.service}</td>
                         <td>{b.provider}</td>
                         <td>{b.customer}</td>
-                        <td><span className={`admin-status-pill ${b.status}`}>{b.statusLabel}</span></td>
+                        <td>
+                          <select 
+                            value={b.status} 
+                            className="admin-order-status-select"
+                            onChange={(e) => handleUpdateOrderStatus(b._id || b.id, e.target.value)}
+                          >
+                            <option value="requested">Requested</option>
+                            <option value="accepted">Accepted</option>
+                            <option value="in_transit">In Transit</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </td>
                         <td style={{ color: '#64748B' }}>{b.dateTime}</td>
                       </tr>
                     ))
@@ -2260,6 +2492,127 @@ const AdminDashboard = () => {
               {/* TAB 1: VIEW PROFILE */}
               {providerDetailTab === 'profile' && (
                 <div className="admin-modal-profile-tab fade-in">
+                  {isEditingProvider ? (
+                    <form onSubmit={handleSaveProviderDetails} className="admin-edit-provider-form">
+                      <div style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '1rem', color: '#0F172A' }}>
+                        ✏️ Edit Service Provider Details
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem', marginBottom: '0.85rem' }}>
+                        <div className="admin-form-group">
+                          <label className="admin-form-label">Full Name *</label>
+                          <input 
+                            type="text" 
+                            required
+                            value={editProviderForm.name} 
+                            onChange={e => setEditProviderForm({...editProviderForm, name: e.target.value})}
+                            className="admin-form-input" 
+                          />
+                        </div>
+                        <div className="admin-form-group">
+                          <label className="admin-form-label">Category</label>
+                          <select 
+                            value={editProviderForm.category}
+                            onChange={e => setEditProviderForm({...editProviderForm, category: e.target.value})}
+                            className="admin-form-select"
+                          >
+                            <option value="Electrician">Electrician</option>
+                            <option value="Plumber">Plumber</option>
+                            <option value="Carpenter">Carpenter</option>
+                            <option value="Painter">Painter</option>
+                            <option value="AC Repair">AC Repair</option>
+                            <option value="Cleaning">Cleaning</option>
+                            <option value="Pest Control">Pest Control</option>
+                            <option value="Tailor">Tailor</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem', marginBottom: '0.85rem' }}>
+                        <div className="admin-form-group">
+                          <label className="admin-form-label">Hourly Rate (₹)</label>
+                          <input 
+                            type="number" 
+                            value={editProviderForm.hourlyRate} 
+                            onChange={e => setEditProviderForm({...editProviderForm, hourlyRate: e.target.value})}
+                            className="admin-form-input" 
+                          />
+                        </div>
+                        <div className="admin-form-group">
+                          <label className="admin-form-label">Experience (Years)</label>
+                          <input 
+                            type="number" 
+                            value={editProviderForm.experienceYears} 
+                            onChange={e => setEditProviderForm({...editProviderForm, experienceYears: e.target.value})}
+                            className="admin-form-input" 
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem', marginBottom: '0.85rem' }}>
+                        <div className="admin-form-group">
+                          <label className="admin-form-label">Phone</label>
+                          <input 
+                            type="text" 
+                            value={editProviderForm.phone} 
+                            onChange={e => setEditProviderForm({...editProviderForm, phone: e.target.value})}
+                            className="admin-form-input" 
+                          />
+                        </div>
+                        <div className="admin-form-group">
+                          <label className="admin-form-label">Email</label>
+                          <input 
+                            type="email" 
+                            value={editProviderForm.email} 
+                            onChange={e => setEditProviderForm({...editProviderForm, email: e.target.value})}
+                            className="admin-form-input" 
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem', marginBottom: '0.85rem' }}>
+                        <div className="admin-form-group">
+                          <label className="admin-form-label">Operating Zone / Location</label>
+                          <input 
+                            type="text" 
+                            value={editProviderForm.location} 
+                            onChange={e => setEditProviderForm({...editProviderForm, location: e.target.value})}
+                            className="admin-form-input" 
+                          />
+                        </div>
+                        <div className="admin-form-group">
+                          <label className="admin-form-label">Account Status</label>
+                          <select 
+                            value={editProviderForm.status}
+                            onChange={e => setEditProviderForm({...editProviderForm, status: e.target.value})}
+                            className="admin-form-select"
+                          >
+                            <option value="Verified">Verified</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Suspended">Suspended</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+                        <button 
+                          type="button" 
+                          className="admin-view-btn"
+                          onClick={() => setIsEditingProvider(false)}
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          type="submit" 
+                          className="admin-approve-btn"
+                          style={{ padding: '0.6rem 1.5rem' }}
+                        >
+                          <Check size={16} /> Save Changes
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                  <>
                   <div className="admin-prov-profile-grid">
                     <div className="admin-prov-info-card">
                       <div className="admin-info-card-label">PROFESSIONAL DETAILS</div>
@@ -2320,6 +2673,8 @@ const AdminDashboard = () => {
                       ))}
                     </div>
                   </div>
+                  </>
+                  )}
                 </div>
               )}
 
@@ -2435,6 +2790,70 @@ const AdminDashboard = () => {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Edit Customer Modal */}
+      {editingCustomer && (
+        <div className="admin-modal-overlay fade-in" onClick={() => setEditingCustomer(null)}>
+          <div className="admin-modal-box" onClick={e => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h3 className="admin-modal-title">Edit Customer Account</h3>
+              <button className="admin-loc-close-btn" onClick={() => setEditingCustomer(null)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleSaveCustomerDetails}>
+              <div className="admin-modal-body">
+                <div className="admin-form-group">
+                  <label className="admin-form-label">Full Name *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={editCustomerForm.name} 
+                    onChange={e => setEditCustomerForm({...editCustomerForm, name: e.target.value})}
+                    className="admin-form-input" 
+                  />
+                </div>
+                <div className="admin-form-group">
+                  <label className="admin-form-label">Email Address *</label>
+                  <input 
+                    type="email" 
+                    required
+                    value={editCustomerForm.email} 
+                    onChange={e => setEditCustomerForm({...editCustomerForm, email: e.target.value})}
+                    className="admin-form-input" 
+                  />
+                </div>
+                <div className="admin-form-group">
+                  <label className="admin-form-label">Phone Number</label>
+                  <input 
+                    type="text" 
+                    value={editCustomerForm.phone} 
+                    onChange={e => setEditCustomerForm({...editCustomerForm, phone: e.target.value})}
+                    className="admin-form-input" 
+                  />
+                </div>
+                <div className="admin-form-group">
+                  <label className="admin-form-label">City</label>
+                  <input 
+                    type="text" 
+                    value={editCustomerForm.city} 
+                    onChange={e => setEditCustomerForm({...editCustomerForm, city: e.target.value})}
+                    className="admin-form-input" 
+                  />
+                </div>
+              </div>
+              <div className="admin-modal-footer">
+                <button type="button" className="admin-view-btn" onClick={() => setEditingCustomer(null)}>
+                  Cancel
+                </button>
+                <button type="submit" className="admin-approve-btn">
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

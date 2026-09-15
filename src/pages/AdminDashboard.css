@@ -1826,3 +1826,47 @@ body:has(.admin-portal-layout) {
 .admin-prov-metric-val.green { color: #10B981; }
 .admin-prov-metric-val.red { color: #EF4444; }
 .admin-prov-metric-val.orange { color: #F59E0B; }
+
+/* Order Status Select & Form Enhancements */
+.admin-order-status-select {
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0F172A;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-order-status-select:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.admin-form-select {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
+  font-size: 0.85rem;
+  color: #0F172A;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.admin-form-select:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.admin-edit-provider-form {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}

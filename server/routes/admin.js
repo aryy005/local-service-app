@@ -188,7 +188,7 @@ router.get('/stats', [auth, admin], async (req, res) => {
       activities.push({
         id: `act-c-${c._id}`,
         title: `Complaint Filed`,
-        desc: `${c.subject} • ${c.customerId?.name || 'Customer'}`,
+        desc: `${c.subject} ï¿½ ${c.customerId?.name || 'Customer'}`,
         time: new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         badgeClass: 'red',
         type: 'complaint'
@@ -403,6 +403,75 @@ router.put('/providers/:id/status', [auth, admin], async (req, res) => {
   }
 });
 
+
+// @route   PUT api/admin/providers/:id
+// @desc    Update any provider details (name, email, phone, category, location, hourlyRate, experience, status, rating)
+router.put('/providers/:id', [auth, admin], async (req, res) => {
+  try {
+    const provider = await User.findById(req.params.id);
+    if (!provider || provider.role !== 'provider') {
+      return res.status(404).json({ message: 'Provider not found' });
+    }
+
+    const { name, email, phone, category, location, hourlyRate, experienceYears, status, rating } = req.body;
+
+    if (name) provider.name = name;
+    if (email) provider.email = email;
+    if (phone) provider.phone = phone;
+    if (location) provider.city = location;
+
+    if (!provider.providerDetails) provider.providerDetails = {};
+    if (category) {
+      provider.providerDetails.category = category;
+      provider.providerDetails.categoryName = category;
+    }
+    if (location) provider.providerDetails.location = location;
+    if (hourlyRate !== undefined && hourlyRate !== '') {
+      const parsedRate = typeof hourlyRate === 'string' ? parseFloat(hourlyRate.replace(/[^0-9.]/g, '')) : hourlyRate;
+      provider.providerDetails.hourlyRate = parsedRate || 0;
+    }
+    if (experienceYears !== undefined && experienceYears !== '') {
+      const parsedExp = typeof experienceYears === 'string' ? parseInt(experienceYears.replace(/[^0-9]/g, '')) : experienceYears;
+      provider.providerDetails.experienceYears = parsedExp || 0;
+    }
+    if (rating !== undefined && rating !== '') {
+      provider.providerDetails.rating = parseFloat(rating);
+    }
+    if (status) {
+      provider.providerDetails.status = status;
+      if (status === 'Verified') {
+        provider.providerDetails.aadhaarVerified = true;
+        provider.emailVerified = true;
+        provider.phoneVerified = true;
+      } else if (status === 'Suspended' || status === 'Rejected') {
+        provider.providerDetails.aadhaarVerified = false;
+      }
+    }
+
+    await provider.save();
+
+    res.json({
+      message: 'Provider details updated successfully',
+      provider: {
+        id: provider._id,
+        _id: provider._id,
+        name: provider.name,
+        email: provider.email,
+        phone: provider.phone,
+        location: provider.providerDetails?.location || provider.city,
+        category: provider.providerDetails?.category,
+        hourlyRate: 'â‚¹' + (provider.providerDetails?.hourlyRate || 350) + '/hr',
+        experience: (provider.providerDetails?.experienceYears || 3) + ' years',
+        status: provider.providerDetails?.status || 'Verified',
+        rating: provider.providerDetails?.rating || 5.0
+      }
+    });
+  } catch (err) {
+    console.error('Update Provider Error:', err);
+    res.status(500).json({ message: 'Failed to update provider details', error: err.message });
+  }
+});
+
 // @route   POST api/admin/providers
 // @desc    Admin onboards a new provider directly into the real database
 router.post('/providers', [auth, admin], async (req, res) => {
@@ -486,6 +555,45 @@ router.get('/customers', [auth, admin], async (req, res) => {
   } catch (err) {
     console.error('Fetch Customers Error:', err);
     res.status(500).json({ message: 'Server error fetching customers' });
+  }
+});
+
+
+// @route   PUT api/admin/customers/:id
+// @desc    Update customer details (name, email, phone, city)
+router.put('/customers/:id', [auth, admin], async (req, res) => {
+  try {
+    const customer = await User.findById(req.params.id);
+    if (!customer || customer.role !== 'customer') {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    const { name, email, phone, city } = req.body;
+    if (name) customer.name = name;
+    if (email) customer.email = email;
+    if (phone) customer.phone = phone;
+    if (city) {
+      customer.city = city;
+      if (!customer.addressDetails) customer.addressDetails = {};
+      customer.addressDetails.city = city;
+    }
+
+    await customer.save();
+
+    res.json({
+      message: 'Customer details updated successfully',
+      customer: {
+        id: customer._id,
+        _id: customer._id,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        city: customer.city
+      }
+    });
+  } catch (err) {
+    console.error('Update Customer Error:', err);
+    res.status(500).json({ message: 'Failed to update customer details', error: err.message });
   }
 });
 
@@ -660,6 +768,25 @@ router.delete('/users/:id', [auth, admin], async (req, res) => {
     console.error('Delete User Error:', err);
     res.status(500).json({ message: 'Server error deleting user' });
   }
+});
+
+
+let platformSettings = {
+  platformName: 'LocalFixr',
+  platformCommission: 15,
+  adminEmail: 'admin@localfixr.com',
+  maintenanceMode: false
+};
+
+// @route   GET api/admin/settings
+router.get('/settings', [auth, admin], (req, res) => {
+  res.json(platformSettings);
+});
+
+// @route   PUT api/admin/settings
+router.put('/settings', [auth, admin], (req, res) => {
+  platformSettings = { ...platformSettings, ...req.body };
+  res.json({ message: 'Platform settings updated successfully', settings: platformSettings });
 });
 
 module.exports = router;
