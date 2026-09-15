@@ -405,7 +405,7 @@ const ProviderDashboard = () => {
       <aside className="lp-sidebar">
         <div>
           <div className="lp-sidebar-brand">
-            <h1 className="lp-brand-title">LocalPro</h1>
+            <h1 className="lp-brand-title">Localfixr</h1>
             <div className="lp-brand-sub">PROVIDERS PORTAL</div>
           </div>
 
@@ -987,7 +987,7 @@ const ProviderDashboard = () => {
                 </div>
 
                 <div className="lp-watermark">
-                  LocalPro v1.0
+                  Localfixr v1.0
                 </div>
 
               </div>
