@@ -51,14 +51,16 @@
 .logo-mark {
   width: 32px;
   height: 32px;
-  background: #121212;
-  color: #ffffff;
-  border-radius: 4px;
+  background: #D2FE00;
+  color: #000000;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 0.85rem;
+  font-weight: 900;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .logo-text {

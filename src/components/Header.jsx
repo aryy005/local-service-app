@@ -88,6 +88,7 @@ const Header = () => {
           <>
         {/* Logo */}
         <Link to={getHomeLink()} className="logo">
+          <div className="logo-mark">LF</div>
           <span className="logo-text">Localfixr</span>
         </Link>
 
