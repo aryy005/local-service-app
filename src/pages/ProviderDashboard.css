@@ -1,0 +1,1016 @@
+/* ═══════════════════════════════════════════════════════════════
+   LocalPro Provider Dashboard — High-End Editorial Reference Theme
+═══════════════════════════════════════════════════════════════ */
+
+.lp-provider-portal {
+  display: flex;
+  min-height: 100vh;
+  background-color: #EBEAE5;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #111111;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   1. SIDEBAR (Pitch Black #141414)
+═══════════════════════════════════════════════════════════════ */
+.lp-sidebar {
+  width: 250px;
+  min-width: 250px;
+  background-color: #141414;
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem 1rem 1rem;
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+.lp-sidebar-brand {
+  padding: 0 0.75rem 1.75rem;
+}
+
+.lp-brand-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #FFFFFF;
+  margin: 0;
+  line-height: 1;
+}
+
+.lp-brand-sub {
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #888888;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.lp-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.lp-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  color: #999999;
+  font-size: 0.88rem;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.15s ease;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.lp-nav-item:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.lp-nav-item.active {
+  background: #FFFFFF;
+  color: #111111;
+  font-weight: 800;
+}
+
+.lp-nav-active-pill {
+  width: 10px;
+  height: 20px;
+  background-color: #D2FE00;
+  border-radius: 3px;
+  margin-right: -4px;
+  flex-shrink: 0;
+}
+
+.lp-nav-badge {
+  margin-left: auto;
+  background: #262626;
+  color: #FFFFFF;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.lp-nav-item.active .lp-nav-badge {
+  background: #111111;
+  color: #FFFFFF;
+}
+
+.lp-sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.lp-go-customer-btn {
+  width: 100%;
+  background: #FFFFFF;
+  color: #111111;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.lp-go-customer-btn:hover {
+  background-color: #D2FE00;
+  transform: translateY(-1px);
+}
+
+.lp-sidebar-community-card {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 110px;
+  background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=400');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-end;
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+
+.lp-sidebar-community-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 100%);
+}
+
+.lp-community-text {
+  position: relative;
+  z-index: 2;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #E2E8F0;
+  line-height: 1.25;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   2. MAIN CONTENT AREA
+═══════════════════════════════════════════════════════════════ */
+.lp-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 2rem 2.5rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+  max-width: 1500px;
+}
+
+/* Top Header */
+.lp-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.lp-greeting-title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #111111;
+  margin: 0;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.lp-greeting-sub {
+  font-size: 0.92rem;
+  color: #555555;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+.lp-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.lp-date-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #FFFFFF;
+  border: 1.5px solid #DCDBCF;
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+}
+
+.lp-date-card-icon {
+  color: #111111;
+}
+
+.lp-date-card-val {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #111111;
+  line-height: 1.15;
+}
+
+.lp-date-card-day {
+  font-size: 0.7rem;
+  color: #666666;
+  font-weight: 600;
+}
+
+.lp-notif-bell-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #111111;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+}
+
+.lp-notif-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  background-color: #EF4444;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lp-provider-profile-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: #FFFFFF;
+  border: 1.5px solid #DCDBCF;
+  border-radius: 30px;
+  padding: 3px 12px 3px 4px;
+  cursor: pointer;
+}
+
+.lp-provider-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.lp-provider-pill-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #111111;
+  line-height: 1.1;
+}
+
+.lp-provider-pill-role {
+  font-size: 0.68rem;
+  color: #666666;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   3. FOUR KPI METRIC CARDS
+═══════════════════════════════════════════════════════════════ */
+.lp-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.lp-kpi-card {
+  background: #FFFFFF;
+  border: 1.5px solid #DCDBCF;
+  border-radius: 8px;
+  padding: 1.25rem 1.25rem 1rem;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.lp-kpi-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.5rem;
+}
+
+.lp-kpi-icon-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  background: #141414;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lp-kpi-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #666666;
+}
+
+.lp-kpi-val {
+  font-size: 2.1rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #111111;
+  margin: 0.25rem 0;
+  line-height: 1;
+}
+
+.lp-kpi-sub {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666666;
+}
+
+.lp-kpi-sub.green { color: #16A34A; }
+.lp-kpi-sub.orange { color: #EA580C; }
+
+.lp-kpi-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.lp-kpi-card.c-lime::after { background: #D2FE00; }
+.lp-kpi-card.c-orange::after { background: #F97316; }
+.lp-kpi-card.c-blue::after { background: #2563EB; }
+.lp-kpi-card.c-cyan::after { background: #06B6D4; }
+
+/* ═══════════════════════════════════════════════════════════════
+   4. THREE-COLUMN DASHBOARD CONTENT GRID
+═══════════════════════════════════════════════════════════════ */
+.lp-dashboard-columns {
+  display: grid;
+  grid-template-columns: 1.8fr 1.25fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.lp-col-left, .lp-col-center, .lp-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Card generic */
+.lp-card {
+  background: #FFFFFF;
+  border: 1.5px solid #DCDBCF;
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-sizing: border-box;
+}
+
+.lp-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.lp-card-title {
+  font-size: 0.92rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #111111;
+  margin: 0;
+}
+
+.lp-card-link {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #111111;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.lp-card-link:hover {
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   5. UPCOMING BOOKINGS TABLE
+═══════════════════════════════════════════════════════════════ */
+.lp-booking-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 0.6fr 0.8fr 0.6fr;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #EEEEEE;
+  gap: 0.5rem;
+}
+
+.lp-booking-row:last-child {
+  border-bottom: none;
+}
+
+.lp-bk-cust {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.lp-bk-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.lp-bk-name {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #111111;
+  line-height: 1.15;
+}
+
+.lp-bk-id {
+  font-size: 0.7rem;
+  color: #888888;
+  font-weight: 600;
+}
+
+.lp-bk-service {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lp-bk-srv-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #111111;
+  line-height: 1.15;
+}
+
+.lp-bk-srv-loc {
+  font-size: 0.7rem;
+  color: #666666;
+}
+
+.lp-bk-time {
+  font-size: 0.78rem;
+  color: #111111;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.lp-bk-time-sub {
+  font-size: 0.7rem;
+  color: #888888;
+}
+
+.lp-bk-price {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: #111111;
+}
+
+.lp-status-pill {
+  display: inline-block;
+  padding: 0.25rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.lp-status-pill.pending {
+  background-color: #FEF3C7;
+  color: #B45309;
+}
+
+.lp-status-pill.accepted {
+  background-color: #DCFCE7;
+  color: #15803D;
+}
+
+.lp-status-pill.in_progress,
+.lp-status-pill.in_transit {
+  background-color: #DBEAFE;
+  color: #1D4ED8;
+}
+
+.lp-status-pill.completed {
+  background-color: #D1FAE5;
+  color: #047857;
+}
+
+.lp-btn-view {
+  background: #111111;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  text-align: center;
+}
+
+.lp-btn-view:hover {
+  background-color: #D2FE00;
+  color: #111111;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   6. RECENT REVIEWS
+═══════════════════════════════════════════════════════════════ */
+.lp-reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.lp-rev-card {
+  border: 1px solid #EAEAE4;
+  border-radius: 6px;
+  padding: 0.85rem;
+  background: #FAF9F6;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.lp-rev-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.lp-rev-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.lp-rev-name {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #111111;
+  line-height: 1;
+}
+
+.lp-stars-row {
+  display: flex;
+  gap: 2px;
+  color: #F59E0B;
+  margin-top: 2px;
+}
+
+.lp-rev-comment {
+  font-size: 0.75rem;
+  color: #444444;
+  line-height: 1.3;
+  margin: 0.35rem 0;
+  flex: 1;
+}
+
+.lp-rev-date {
+  font-size: 0.68rem;
+  color: #888888;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   7. TODAY'S SCHEDULE TIMELINE
+═══════════════════════════════════════════════════════════════ */
+.lp-timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.lp-timeline-item {
+  display: grid;
+  grid-template-columns: 75px 20px 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.lp-timeline-time {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #111111;
+}
+
+.lp-timeline-node {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #CBD5E1;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.lp-timeline-node.green { background: #10B981; }
+.lp-timeline-node.blue { background: #2563EB; }
+.lp-timeline-node.amber { background: #F59E0B; }
+
+.lp-timeline-info {
+  line-height: 1.2;
+}
+
+.lp-timeline-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #111111;
+}
+
+.lp-timeline-sub {
+  font-size: 0.72rem;
+  color: #666666;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   8. QUICK ACTIONS
+═══════════════════════════════════════════════════════════════ */
+.lp-quick-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.lp-quick-action-btn {
+  background: #111111;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 1.1rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.lp-quick-action-btn:hover {
+  background: #D2FE00;
+  color: #111111;
+  transform: translateY(-2px);
+}
+
+.lp-qa-icon {
+  margin-right: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   9. SERVICE AREA RADAR MAP
+═══════════════════════════════════════════════════════════════ */
+.lp-radar-wrapper {
+  background: #F4F4F0;
+  border-radius: 6px;
+  padding: 1rem;
+  position: relative;
+}
+
+.lp-radar-svg-box {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lp-radar-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: #555555;
+  margin-top: 0.5rem;
+}
+
+.lp-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.lp-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.lp-legend-dot.loc { background: #10B981; }
+.lp-legend-dot.active { background: #2563EB; }
+.lp-legend-dot.ring { border: 1.5px dashed #888888; background: transparent; }
+
+.lp-btn-manage-area {
+  width: 100%;
+  margin-top: 0.75rem;
+  background: #111111;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  padding: 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.lp-btn-manage-area:hover {
+  background-color: #D2FE00;
+  color: #111111;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   10. RIGHT RAIL
+═══════════════════════════════════════════════════════════════ */
+.lp-quote-card {
+  position: relative;
+  height: 130px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-image: url('https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=600');
+  background-size: cover;
+  background-position: center;
+  padding: 1rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.lp-quote-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.lp-quote-text {
+  position: relative;
+  z-index: 2;
+  color: #FFFFFF;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.lp-verified-banner {
+  background: #D2FE00;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lp-vb-check {
+  width: 28px;
+  height: 28px;
+  background: #111111;
+  color: #D2FE00;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lp-vb-title {
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #111111;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lp-vb-sub {
+  font-size: 0.72rem;
+  color: #333333;
+  font-weight: 600;
+}
+
+/* Earnings Bar Chart */
+.lp-earnings-total {
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #111111;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lp-pill-pct {
+  font-size: 0.75rem;
+  background: #DCFCE7;
+  color: #15803D;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 800;
+}
+
+.lp-chart-bars-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 90px;
+  padding-top: 1rem;
+  gap: 0.5rem;
+}
+
+.lp-bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.lp-bar-fill {
+  width: 100%;
+  background: #111111;
+  border-radius: 3px;
+  transition: height 0.3s ease;
+}
+
+.lp-bar-fill.active {
+  background: #D2FE00;
+}
+
+.lp-bar-label {
+  font-size: 0.65rem;
+  color: #888888;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+/* Quick stats list */
+.lp-quick-stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lp-qs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed #E5E5E5;
+}
+
+.lp-qs-row:last-child {
+  border-bottom: none;
+}
+
+.lp-qs-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #444444;
+  font-weight: 600;
+}
+
+.lp-qs-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lp-qs-val {
+  font-weight: 900;
+  color: #111111;
+}
+
+.lp-qs-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+.lp-qs-badge.pos { color: #16A34A; }
+.lp-qs-badge.neg { color: #DC2626; }
+
+.lp-watermark {
+  font-size: 0.7rem;
+  color: #888888;
+  text-align: right;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+/* Sub-views (Bookings, Services, Profile, Earnings, Reviews, Availability, Support) */
+.lp-subview-card {
+  background: #FFFFFF;
+  border: 1.5px solid #DCDBCF;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.lp-subview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #EEEEEE;
+  padding-bottom: 0.75rem;
+}
+
+.lp-subview-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #111111;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .lp-dashboard-columns {
+    grid-template-columns: 1fr;
+  }
+  .lp-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .lp-provider-portal {
+    flex-direction: column;
+  }
+  .lp-sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+  .lp-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .lp-booking-row {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+}
