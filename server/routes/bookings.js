@@ -87,6 +87,7 @@ function checkProviderProfileCompleteness(user) {
   if (!p.hourlyRate || Number(p.hourlyRate) <= 0) missing.push('Starting / Base Price (₹)');
   if (p.experienceYears === undefined || p.experienceYears === null || Number(p.experienceYears) < 0) missing.push('Years of Experience');
   if (!p.description || p.description.trim().length < 10) missing.push('Bio / Description (min 10 characters)');
+  if (!p.avatarUrl || !p.avatarUrl.trim()) missing.push('Profile Picture');
   if (!p.upiId || !p.upiId.trim()) missing.push('Payout UPI ID');
   if (!p.portfolioImages || !Array.isArray(p.portfolioImages) || p.portfolioImages.length === 0) missing.push('Work Portfolio Images (at least 1 photo of previous work)');
   if (!user.phoneVerified && !p.aadhaarVerified) missing.push('Identity Verification (Phone OTP or Aadhaar KYC)');
@@ -159,8 +160,35 @@ router.put('/:id/stage', auth, async (req, res) => {
     booking.serviceStage = stage;
     booking.status = currentMeta.status;
 
+    const { serviceAmount, extraExpenses, extraExpenseReason } = req.body;
+    let baseCharge = serviceAmount !== undefined && !isNaN(serviceAmount) ? Number(serviceAmount) : undefined;
+    let extraParts = extraExpenses !== undefined && !isNaN(extraExpenses) ? Number(extraExpenses) : 0;
+    let expenseReason = extraExpenseReason !== undefined ? String(extraExpenseReason).trim() : (booking.billingDetails?.extraExpenseReason || '');
+
     if (finalPrice !== undefined && finalPrice !== null && !isNaN(finalPrice)) {
-      booking.finalPrice = Number(finalPrice);
+      const explicitPrice = Number(finalPrice);
+      if (baseCharge === undefined) {
+        baseCharge = Math.max(0, explicitPrice - extraParts);
+      }
+      booking.finalPrice = explicitPrice;
+    } else if (baseCharge !== undefined) {
+      booking.finalPrice = baseCharge + extraParts;
+    }
+
+    if (baseCharge !== undefined || extraParts > 0 || booking.finalPrice > 0) {
+      const sub = booking.finalPrice || (baseCharge || 0) + extraParts;
+      const fee = Number((sub * 0.05).toFixed(2));
+      const tax = Number(((sub + fee) * 0.18).toFixed(2));
+      const tot = Number((sub + fee + tax).toFixed(2));
+
+      booking.billingDetails = {
+        serviceAmount: baseCharge !== undefined ? baseCharge : (booking.billingDetails?.serviceAmount || sub),
+        extraExpenses: extraParts,
+        extraExpenseReason: expenseReason,
+        platformFee: fee,
+        tax: tax,
+        totalAmount: tot
+      };
     }
 
     if (workPhotos && Array.isArray(workPhotos)) {
@@ -171,11 +199,16 @@ router.put('/:id/stage', auth, async (req, res) => {
       booking.stageHistory = [];
     }
 
+    let stageDesc = note || `Stage updated to ${currentMeta.title}`;
+    if (stage === 'completed' && booking.finalPrice > 0) {
+      stageDesc = `Service completed. Bill confirmed: ₹${booking.finalPrice}${extraParts > 0 ? ` (Service: ₹${baseCharge || (booking.finalPrice - extraParts)}, Extra Expenses: ₹${extraParts}${expenseReason ? ` - "${expenseReason}"` : ''})` : ''}`;
+    }
+
     // Append to stageHistory audit log
     booking.stageHistory.push({
       stage,
       title: currentMeta.title,
-      description: note || `Stage updated to ${currentMeta.title}`,
+      description: stageDesc,
       timestamp: new Date()
     });
 
@@ -195,6 +228,69 @@ router.put('/:id/stage', auth, async (req, res) => {
   } catch (err) {
     console.error('Stage Update Error:', err);
     res.status(500).json({ message: 'Server Error updating service stage' });
+  }
+});
+
+// @route   PUT api/bookings/:id/final-bill
+// @desc    Confirm or adjust final bill breakdown before payment (Provider or Admin)
+router.put('/:id/final-bill', auth, async (req, res) => {
+  try {
+    const { serviceAmount, extraExpenses, extraExpenseReason, finalPrice } = req.body;
+    let booking = await Booking.findById(req.params.id);
+
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+
+    const providerIdStr = (booking.providerId?._id || booking.providerId)?.toString();
+    const isProvider = providerIdStr === req.user.id.toString();
+
+    if (!isProvider && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Only the assigned provider or admin can confirm the final bill' });
+    }
+
+    if (booking.paymentStatus === 'paid') {
+      return res.status(400).json({ message: 'Cannot modify bill for a booking that is already paid' });
+    }
+
+    const base = Number(serviceAmount !== undefined ? serviceAmount : (booking.billingDetails?.serviceAmount || booking.finalPrice || 0));
+    const extras = Number(extraExpenses !== undefined ? extraExpenses : (booking.billingDetails?.extraExpenses || 0));
+    const reason = extraExpenseReason !== undefined ? String(extraExpenseReason).trim() : (booking.billingDetails?.extraExpenseReason || '');
+    const total = finalPrice !== undefined && !isNaN(finalPrice) ? Number(finalPrice) : (base + extras);
+
+    const fee = Number((total * 0.05).toFixed(2));
+    const tax = Number(((total + fee) * 0.18).toFixed(2));
+    const totalPayable = Number((total + fee + tax).toFixed(2));
+
+    booking.finalPrice = total;
+    booking.billingDetails = {
+      serviceAmount: base,
+      extraExpenses: extras,
+      extraExpenseReason: reason,
+      platformFee: fee,
+      tax: tax,
+      totalAmount: totalPayable
+    };
+
+    if (!Array.isArray(booking.stageHistory)) {
+      booking.stageHistory = [];
+    }
+
+    booking.stageHistory.push({
+      stage: booking.serviceStage || 'completed',
+      title: 'Final Bill Confirmed',
+      description: `Provider confirmed final amount ₹${total}${extras > 0 ? ` (Labor: ₹${base}, Parts/Extras: ₹${extras}${reason ? ` - ${reason}` : ''})` : ''}`,
+      timestamp: new Date()
+    });
+
+    await booking.save();
+
+    const populatedBooking = await Booking.findById(booking._id)
+      .populate('customerId', 'name phone email customerDetails')
+      .populate('providerId', 'name phone providerDetails');
+
+    res.json(populatedBooking);
+  } catch (err) {
+    console.error('Final Bill Confirm Error:', err);
+    res.status(500).json({ message: 'Server Error confirming final bill' });
   }
 });
 

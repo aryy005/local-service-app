@@ -133,7 +133,7 @@ router.post('/google', async (req, res) => {
         providerDetails: normalizedRole === 'provider' ? {
           avatarUrl: picture || '',
           category: category || 'cat-5',
-          hourlyRate: Number(hourlyRate) || 25,
+          hourlyRate: Number(hourlyRate) || 350,
           location: primaryCity,
           description: description.trim() || 'Verified professional service provider.',
           rating: 5.0,
@@ -232,7 +232,7 @@ router.post('/register', async (req, res) => {
           'cat-9': 'Pest Control',
           'cat-10': 'Other'
         }[category]) || 'Service Provider',
-        hourlyRate: Number(hourlyRate) || 25,
+        hourlyRate: Number(hourlyRate) || 350,
         location: formattedLocation,
         description: description || '',
         rating: 0,
@@ -507,6 +507,7 @@ router.put('/me', auth, async (req, res) => {
       if (!p.hourlyRate || Number(p.hourlyRate) <= 0) missing.push('Starting / Base Price');
       if (p.experienceYears === undefined || p.experienceYears === null || Number(p.experienceYears) < 0) missing.push('Years of Experience');
       if (!p.description || p.description.trim().length < 10) missing.push('Bio / Description');
+      if (!p.avatarUrl || !p.avatarUrl.trim()) missing.push('Profile Picture');
       if (!p.upiId || !p.upiId.trim()) missing.push('UPI ID');
       if (!p.portfolioImages || !Array.isArray(p.portfolioImages) || p.portfolioImages.length === 0) missing.push('Work Portfolio Images');
       if (!user.phoneVerified && !p.aadhaarVerified) missing.push('Phone or Aadhaar Verification');

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { 
@@ -111,27 +111,42 @@ const CustomerDashboard = () => {
       pincode: user.addressDetails?.pincode || ''
     });
     setPhoneInput(user.phone || '');
+  }, [user]);
 
-    const fetchBookings = async () => {
-      try {
-        const res = await fetch(`${API_URL}/bookings`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setBookings(Array.isArray(data) ? data : []);
-        } else {
-          setBookings([]);
+  const fetchBookings = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/bookings`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : [];
+        setBookings(list);
+
+        // Check if there is an unreviewed completed booking to auto-prompt rating
+        const unreviewed = list.find(b => b.status === 'completed' && (!b.customerReview || !b.customerReview.rating));
+        if (unreviewed) {
+          const promptKey = `rating_prompted_${unreviewed._id}`;
+          if (!sessionStorage.getItem(promptKey)) {
+            sessionStorage.setItem(promptKey, 'true');
+            setActiveReviewBooking(unreviewed);
+          }
         }
-      } catch (err) {
-        console.error(err);
+      } else {
         setBookings([]);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error(err);
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
     fetchBookings();
-  }, [user, token, navigate]);
+  }, [fetchBookings]);
 
   const handleSendPhoneOtp = async (channel = 'sms') => {
     if (!phoneInput || phoneInput.trim().length < 10) {
@@ -627,7 +642,7 @@ const CustomerDashboard = () => {
                               </span>
                             ) : (
                               <span style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.78rem', fontWeight: 700 }}>
-                                Unpaid: ₹{booking.finalPrice || pDetails.hourlyRate || 25}
+                                Unpaid: ₹{booking.finalPrice || pDetails.hourlyRate || 350}
                               </span>
                             )}
                           </div>
@@ -643,6 +658,22 @@ const CustomerDashboard = () => {
                           <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Calendar size={16} /> {booking.date}</span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Clock size={16} /> {booking.timePreference}</span>
                         </div>
+
+                    {/* Confirmed Bill Itemized Breakdown for Completed & Unpaid Booking */}
+                    {Boolean((booking.status === 'completed' || booking.serviceStage === 'completed') && booking.paymentStatus !== 'paid') && (
+                      <div style={{ background: '#F0FDF4', border: '1.5px solid #86EFAC', borderRadius: '8px', padding: '0.75rem 0.9rem', marginBottom: '1rem', fontSize: '0.85rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 800, color: '#166534' }}>
+                          <span>Confirmed Final Bill by Partner:</span>
+                          <span style={{ fontSize: '1.15rem', color: '#15803D' }}>₹{booking.finalPrice}</span>
+                        </div>
+                        {Boolean(booking.billingDetails?.extraExpenses && booking.billingDetails.extraExpenses > 0) && (
+                          <div style={{ marginTop: '0.4rem', fontSize: '0.78rem', color: '#166534', borderTop: '1px dashed #BBF7D0', paddingTop: '0.4rem' }}>
+                            Labor Charge: ₹{booking.billingDetails?.serviceAmount || (booking.finalPrice - booking.billingDetails.extraExpenses)} + Extra Parts: ₹{booking.billingDetails.extraExpenses}
+                            {booking.billingDetails?.extraExpenseReason ? ` (${booking.billingDetails.extraExpenseReason})` : ''}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
                       <button 
@@ -659,7 +690,7 @@ const CustomerDashboard = () => {
                           className="btn btn-lime btn-sm" 
                           style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                         >
-                          <CreditCard size={15} /> Pay Now (₹{booking.finalPrice || pDetails.hourlyRate || 25})
+                          <CreditCard size={15} /> Pay Now (₹{booking.finalPrice || pDetails.hourlyRate || 350})
                         </button>
                       )}
 
@@ -685,7 +716,7 @@ const CustomerDashboard = () => {
                         <MessageCircle size={15} /> Chat
                       </button>
 
-                      {booking.status === 'completed' && !booking.customerReview && (
+                      {booking.status === 'completed' && (!booking.customerReview || !booking.customerReview.rating) && (
                         <button 
                           onClick={() => setActiveReviewBooking(booking)}
                           className="btn btn-outline btn-sm" 
@@ -693,6 +724,12 @@ const CustomerDashboard = () => {
                         >
                           <Star size={15} fill="#f59e0b" color="#f59e0b" /> Review Service
                         </button>
+                      )}
+
+                      {booking.customerReview?.rating && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.82rem', fontWeight: 800, color: '#111111', background: '#D2FE00', border: '1.5px solid #111111', padding: '0.25rem 0.65rem', borderRadius: '4px', boxShadow: '2px 2px 0 #111111' }}>
+                          <Star size={13} fill="#111111" color="#111111" /> Rated {booking.customerReview.rating}★
+                        </span>
                       )}
                     </div>
                   </div>
@@ -942,6 +979,7 @@ const CustomerDashboard = () => {
       {/* ── Modals ── */}
       {activeChat && (
         <ChatModal 
+          isOpen={true}
           bookingId={activeChat.bookingId} 
           receiverId={activeChat.receiverId} 
           receiverName={activeChat.receiverName} 
@@ -969,7 +1007,7 @@ const CustomerDashboard = () => {
           booking={activePaymentBooking} 
           onClose={() => setActivePaymentBooking(null)} 
           onSuccess={() => {
-            alert('Payment received successfully!');
+            fetchBookings();
             setActivePaymentBooking(null);
           }} 
         />
@@ -986,15 +1024,27 @@ const CustomerDashboard = () => {
         <ServiceTrackerModal 
           booking={activeTrackerBooking} 
           onClose={() => setActiveTrackerBooking(null)} 
+          onUpdateBooking={(updated) => {
+            setBookings(prev => prev.map(b => b._id === updated._id ? updated : b));
+            setActiveTrackerBooking(updated);
+          }}
+          onOpenPayment={(b) => { setActiveTrackerBooking(null); setActivePaymentBooking(b); }}
+          onOpenInvoice={(b) => { setActiveTrackerBooking(null); setActiveInvoiceBooking(b); }}
+          onOpenReview={(b) => { setActiveTrackerBooking(null); setActiveReviewBooking(b); }}
         />
       )}
 
       {activeReviewBooking && (
         <ReviewTipModal 
           booking={activeReviewBooking} 
+          token={token}
           onClose={() => setActiveReviewBooking(null)} 
-          onSuccess={() => {
-            alert('Thank you for your rating & review!');
+          onSuccess={(reviewData) => {
+            setBookings(prev => prev.map(b => 
+              b._id === activeReviewBooking._id 
+                ? { ...b, customerReview: reviewData } 
+                : b
+            ));
             setActiveReviewBooking(null);
           }} 
         />
@@ -1002,51 +1052,104 @@ const CustomerDashboard = () => {
 
       {/* New Address Modal */}
       {showNewAddressModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
-          <div className="glass-panel" style={{ background: '#fff', padding: '2rem', borderRadius: '12px', maxWidth: '450px', width: '100%' }}>
-            <h3 style={{ marginBottom: '1rem' }}>Add Service Address</h3>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(17, 17, 17, 0.65)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1.5rem 1rem' }}>
+          <div style={{ background: '#FFFFFF', border: '2.5px solid #111111', borderRadius: '8px', boxShadow: '6px 6px 0 #111111', maxWidth: '460px', width: '100%', padding: '2rem', position: 'relative', fontFamily: "'Space Grotesk', sans-serif" }}>
+            <button
+              type="button"
+              onClick={() => setShowNewAddressModal(false)}
+              style={{
+                position: 'absolute',
+                top: '1.25rem',
+                right: '1.25rem',
+                background: '#FFFFFF',
+                border: '2px solid #111111',
+                boxShadow: '2px 2px 0 #111111',
+                borderRadius: '6px',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontWeight: 900,
+                fontSize: '1rem',
+                color: '#111111'
+              }}
+            >
+              ✕
+            </button>
+
+            <div className="auth-tag">NEW LOCATION</div>
+            <h2 className="auth-title" style={{ fontSize: '1.45rem', margin: '0.35rem 0 1.25rem 0' }}>
+              ADD SERVICE ADDRESS
+            </h2>
+
             <form onSubmit={handleAddAddress} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <div>
-                <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Label (e.g. Home, Office)</label>
+                <label style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#111111', display: 'block', marginBottom: '0.35rem' }}>
+                  Label (e.g. Home, Office)
+                </label>
                 <input 
                   type="text" 
                   value={newAddressData.label} 
                   onChange={(e) => setNewAddressData({ ...newAddressData, label: e.target.value })} 
                   required 
+                  style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid #111111', borderRadius: '5px', boxShadow: '2px 2px 0 #111111', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
-                <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Street Address</label>
+                <label style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#111111', display: 'block', marginBottom: '0.35rem' }}>
+                  Street Address
+                </label>
                 <input 
                   type="text" 
                   value={newAddressData.street} 
                   onChange={(e) => setNewAddressData({ ...newAddressData, street: e.target.value })} 
                   required 
+                  style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid #111111', borderRadius: '5px', boxShadow: '2px 2px 0 #111111', boxSizing: 'border-box' }}
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>City</label>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#111111', display: 'block', marginBottom: '0.35rem' }}>
+                    City
+                  </label>
                   <input 
                     type="text" 
                     value={newAddressData.city} 
                     onChange={(e) => setNewAddressData({ ...newAddressData, city: e.target.value })} 
                     required 
+                    style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid #111111', borderRadius: '5px', boxShadow: '2px 2px 0 #111111', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Pincode</label>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#111111', display: 'block', marginBottom: '0.35rem' }}>
+                    Pincode
+                  </label>
                   <input 
                     type="text" 
                     value={newAddressData.pincode} 
                     onChange={(e) => setNewAddressData({ ...newAddressData, pincode: e.target.value })} 
                     required 
+                    style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid #111111', borderRadius: '5px', boxShadow: '2px 2px 0 #111111', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn btn-outline btn-sm" onClick={() => setShowNewAddressModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-lime btn-sm">Save Address</button>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', justifyContent: 'flex-end' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowNewAddressModal(false)}
+                  style={{ padding: '0.75rem 1.25rem', fontWeight: 800, background: '#FFFFFF', color: '#111111', border: '2px solid #111111', boxShadow: '2px 2px 0 #111111', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase', fontSize: '0.82rem' }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="auth-submit-btn"
+                  style={{ width: 'auto', padding: '0.75rem 1.5rem', margin: 0, fontSize: '0.85rem' }}
+                >
+                  SAVE ADDRESS →
+                </button>
               </div>
             </form>
           </div>

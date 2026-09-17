@@ -4,91 +4,103 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(8px);
+  background: rgba(17, 17, 17, 0.65);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1100;
-  padding: 1rem;
+  padding: 1.5rem 1rem;
   animation: fadeIn 0.2s ease-out;
 }
 
 .payment-modal-container {
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--surface-border, #e2e8f0);
-  border-radius: 1.25rem;
+  background: #FFFFFF;
+  border: 2.5px solid #111111;
+  border-radius: 8px;
   width: 100%;
   max-width: 640px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  color: var(--text-main, #0f172a);
+  box-shadow: 6px 6px 0 #111111;
+  color: #111111;
+  font-family: 'Space Grotesk', sans-serif;
+  position: relative;
+  box-sizing: border-box;
 }
 
 .payment-modal-header {
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--surface-border, #e2e8f0);
+  border-bottom: 2px solid #111111;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: #FAF9F6;
 }
 
 .payment-modal-header h2 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.35rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  color: #111111;
 }
 
 .payment-modal-close {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
+  background: #FFFFFF;
+  border: 2px solid #111111;
+  box-shadow: 2px 2px 0 #111111;
+  font-size: 1.25rem;
   cursor: pointer;
-  color: var(--text-muted, #64748b);
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  color: #111111;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  font-weight: 900;
+  transition: all 0.15s ease;
 }
 
 .payment-modal-close:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--text-main, #0f172a);
+  background: #D2FE00;
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #111111;
 }
 
 .payment-modal-body {
-  padding: 1.5rem;
+  padding: 1.75rem;
 }
 
 /* Order Summary Box */
 .order-summary-box {
-  background: rgba(99, 102, 241, 0.05);
-  border: 1px solid rgba(99, 102, 241, 0.15);
-  border-radius: 0.75rem;
-  padding: 1rem 1.25rem;
+  background: #FAF9F6;
+  border: 2px solid #111111;
+  box-shadow: 3px 3px 0 #111111;
+  border-radius: 6px;
+  padding: 1.15rem 1.25rem;
   margin-bottom: 1.5rem;
 }
 
 .summary-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
-  color: var(--text-muted, #64748b);
+  font-size: 0.88rem;
+  color: #555555;
+  font-weight: 600;
   margin-bottom: 0.4rem;
 }
 
 .summary-row.total {
   font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-main, #0f172a);
-  border-top: 1px dashed rgba(99, 102, 241, 0.2);
+  font-weight: 900;
+  color: #111111;
+  border-top: 2px dashed #111111;
   padding-top: 0.6rem;
   margin-top: 0.6rem;
   margin-bottom: 0;
@@ -101,35 +113,37 @@
   overflow-x: auto;
   padding-bottom: 0.5rem;
   margin-bottom: 1.25rem;
-  border-bottom: 1px solid var(--surface-border, #e2e8f0);
+  border-bottom: 2px solid #111111;
 }
 
 .payment-tab-btn {
-  padding: 0.6rem 1rem;
-  border: 1px solid var(--surface-border, #e2e8f0);
-  background: var(--surface-card, #ffffff);
-  color: var(--text-muted, #64748b);
-  border-radius: 0.6rem;
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 0.6rem 0.9rem;
+  border: 2px solid #111111;
+  background: #FFFFFF;
+  color: #555555;
+  border-radius: 6px;
+  box-shadow: 2px 2px 0 #111111;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
   cursor: pointer;
   white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
 .payment-tab-btn:hover {
-  border-color: #6366f1;
-  color: #6366f1;
+  background: #EBEAE5;
+  color: #111111;
 }
 
 .payment-tab-btn.active {
-  background: #6366f1;
-  color: #ffffff;
-  border-color: #6366f1;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  background: #D2FE00;
+  color: #111111;
+  border-color: #111111;
+  box-shadow: 3px 3px 0 #111111;
 }
 
 /* Form controls */
@@ -139,27 +153,32 @@
 
 .form-group label {
   display: block;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   margin-bottom: 0.35rem;
-  color: var(--text-main, #0f172a);
+  color: #111111;
 }
 
 .form-input {
   width: 100%;
-  padding: 0.65rem 0.85rem;
-  border: 1px solid var(--surface-border, #cbd5e1);
-  border-radius: 0.5rem;
-  background: var(--surface-bg, #f8fafc);
-  color: var(--text-main, #0f172a);
-  font-size: 0.95rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #111111;
+  border-radius: 5px;
+  box-shadow: 2px 2px 0 #111111;
+  background: #FFFFFF;
+  color: #111111;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
 }
 
 .form-input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 4px 4px 0 #D2FE00;
 }
 
 .form-row-2 {
@@ -172,18 +191,20 @@
 .qr-container {
   text-align: center;
   padding: 1.25rem;
-  background: #ffffff;
-  border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
+  background: #FAF9F6;
+  border-radius: 6px;
+  border: 2px solid #111111;
+  box-shadow: 2.5px 2.5px 0 #111111;
   margin-bottom: 1rem;
 }
 
 .qr-box {
   display: inline-block;
   padding: 0.75rem;
-  background: #ffffff;
-  border: 2px dashed #6366f1;
-  border-radius: 0.75rem;
+  background: #FFFFFF;
+  border: 2px solid #111111;
+  border-radius: 6px;
+  box-shadow: 2px 2px 0 #111111;
 }
 
 .upi-apps-grid {
@@ -194,19 +215,23 @@
 }
 
 .upi-app-card {
-  border: 1px solid var(--surface-border, #e2e8f0);
-  border-radius: 0.5rem;
+  border: 2px solid #111111;
+  border-radius: 5px;
+  box-shadow: 2px 2px 0 #111111;
   padding: 0.6rem;
   text-align: center;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s;
+  background: #FFFFFF;
+  transition: all 0.15s ease;
 }
 
 .upi-app-card:hover, .upi-app-card.selected {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.08);
+  background: #D2FE00;
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #111111;
 }
 
 /* Bank Select Grid */
@@ -218,42 +243,45 @@
 }
 
 .bank-card {
-  border: 1px solid var(--surface-border, #e2e8f0);
-  border-radius: 0.5rem;
+  border: 2px solid #111111;
+  border-radius: 5px;
+  box-shadow: 2px 2px 0 #111111;
   padding: 0.75rem 0.5rem;
   text-align: center;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.2s;
+  background: #FFFFFF;
+  transition: all 0.15s ease;
 }
 
 .bank-card:hover, .bank-card.selected {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.08);
+  background: #D2FE00;
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #111111;
 }
 
 /* Success View */
 .payment-success-box {
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 1.5rem 0.5rem;
 }
 
 .success-icon {
   width: 64px;
   height: 64px;
-  background: #10b981;
-  color: #ffffff;
+  background: #D2FE00;
+  color: #111111;
+  border: 2.5px solid #111111;
+  box-shadow: 3px 3px 0 #111111;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1rem auto;
-  font-size: 2rem;
-  box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+  margin: 0 auto 1.25rem auto;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
+  from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }

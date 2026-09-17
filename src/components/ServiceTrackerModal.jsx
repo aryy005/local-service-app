@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { playNotificationSound } from '../utils/soundNotifications';
 import { openWhatsAppChat, formatWhatsAppBookingMessage } from '../utils/whatsapp';
 import LiveTrackingMap from './LiveTrackingMap';
+import ConfirmFinalBillModal from './ConfirmFinalBillModal';
 import './ServiceTrackerModal.css';
 
 const STAGES = [
@@ -20,10 +21,12 @@ const STAGES = [
   { key: 'paid', label: 'Paid & Closed', icon: '💳', desc: 'Payment received. Service closed with tax invoice.' }
 ];
 
-const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment, onOpenInvoice }) => {
+const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment, onOpenInvoice, onOpenReview }) => {
   const { user, token } = useAuth();
   const [updating, setUpdating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showBillModal, setShowBillModal] = useState(false);
+  const [isAdjustingBill, setIsAdjustingBill] = useState(false);
 
   if (!booking) return null;
 
@@ -48,13 +51,11 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
 
   const handleAdvanceStage = async (nextStageKey) => {
     setErrorMsg('');
-    let finalPriceInput = booking.finalPrice;
-    let workPhotoInput = booking.workPhotos || [];
 
-    if (nextStageKey === 'completed' && (!finalPriceInput || finalPriceInput === 0)) {
-      const inputVal = window.prompt("Enter total service charge / final bill amount (₹):", booking.providerId?.providerDetails?.hourlyRate || 25);
-      if (inputVal === null) return; // User cancelled prompt
-      finalPriceInput = Number(inputVal) || 0;
+    if (nextStageKey === 'completed') {
+      setIsAdjustingBill(false);
+      setShowBillModal(true);
+      return;
     }
 
     setUpdating(true);
@@ -67,8 +68,7 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
         },
         body: JSON.stringify({
           stage: nextStageKey,
-          finalPrice: finalPriceInput,
-          workPhotos: workPhotoInput,
+          workPhotos: booking.workPhotos || [],
           note: `Stage updated to ${nextStageKey.replace('_', ' ')}`
         })
       });
@@ -82,6 +82,48 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
       if (onUpdateBooking) onUpdateBooking(updated);
     } catch (err) {
       setErrorMsg(err.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleConfirmFinalBill = async ({ serviceAmount, extraExpenses, extraExpenseReason, finalPrice }) => {
+    setErrorMsg('');
+    setUpdating(true);
+    try {
+      const endpoint = isAdjustingBill 
+        ? `${API_URL}/bookings/${booking._id}/final-bill` 
+        : `${API_URL}/bookings/${booking._id}/stage`;
+
+      const payload = isAdjustingBill 
+        ? { serviceAmount, extraExpenses, extraExpenseReason, finalPrice }
+        : {
+            stage: 'completed',
+            serviceAmount,
+            extraExpenses,
+            extraExpenseReason,
+            finalPrice,
+            workPhotos: booking.workPhotos || [],
+            note: `Service completed. Final bill confirmed: ₹${finalPrice}`
+          };
+
+      const res = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const updated = await res.json();
+      if (!res.ok) throw new Error(updated.message || 'Failed to confirm final bill');
+
+      playNotificationSound('stage_update');
+      if (onUpdateBooking) onUpdateBooking(updated);
+    } catch (err) {
+      setErrorMsg(err.message);
+      throw err;
     } finally {
       setUpdating(false);
     }
@@ -153,9 +195,11 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
             </div>
             
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Estimated Cost:</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                {(booking.status === 'completed' || currentStageKey === 'completed' || currentStageKey === 'paid') ? 'Final Bill:' : 'Estimated Cost:'}
+              </div>
               <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#10B981' }}>
-                ₹{booking.paidAmount || booking.finalPrice || booking.providerId?.providerDetails?.hourlyRate || 25}
+                ₹{booking.paidAmount || booking.finalPrice || booking.providerId?.providerDetails?.hourlyRate || 350}
               </div>
             </div>
           </div>
@@ -300,8 +344,46 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
                 )}
 
                 {currentStageKey === 'completed' && (
-                  <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', color: '#B45309', padding: '0.85rem', borderRadius: '0.75rem', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>
-                    ⏳ Service complete! Waiting for customer payment of ₹{booking.finalPrice}.
+                  <div style={{ background: '#FFFBEB', border: '1.5px solid #FDE68A', padding: '1rem', borderRadius: '0.75rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <span style={{ fontWeight: 800, color: '#92400E', fontSize: '0.9rem' }}>📄 Confirmed Final Bill:</span>
+                      <span style={{ fontWeight: 900, color: '#B45309', fontSize: '1.2rem' }}>₹{booking.finalPrice}</span>
+                    </div>
+
+                    <div style={{ fontSize: '0.82rem', color: '#78350F', display: 'flex', flexDirection: 'column', gap: '0.35rem', background: '#FEF3C7', padding: '0.65rem 0.85rem', borderRadius: 6 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Service / Labor Charge:</span>
+                        <span style={{ fontWeight: 700 }}>₹{booking.billingDetails?.serviceAmount || (booking.finalPrice - (booking.billingDetails?.extraExpenses || 0))}</span>
+                      </div>
+                      {Boolean(booking.billingDetails?.extraExpenses && booking.billingDetails.extraExpenses > 0) && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Additional Parts &amp; Materials:</span>
+                          <span style={{ fontWeight: 700 }}>+ ₹{booking.billingDetails.extraExpenses}</span>
+                        </div>
+                      )}
+                      {Boolean(booking.billingDetails?.extraExpenseReason) && (
+                        <div style={{ fontSize: '0.75rem', fontStyle: 'italic', color: '#92400E' }}>
+                          Note: {booking.billingDetails.extraExpenseReason}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ marginTop: '0.65rem', textAlign: 'center', fontSize: '0.82rem', fontWeight: 600, color: '#B45309' }}>
+                      ⏳ Service complete! Waiting for customer payment of ₹{booking.finalPrice}.
+                    </div>
+
+                    {booking.paymentStatus !== 'paid' && (
+                      <button
+                        type="button"
+                        style={{ marginTop: '0.65rem', width: '100%', background: '#FFFFFF', border: '1.5px solid #D97706', color: '#B45309', padding: '0.5rem', borderRadius: 6, fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}
+                        onClick={() => {
+                          setIsAdjustingBill(true);
+                          setShowBillModal(true);
+                        }}
+                      >
+                        ✏️ Adjust Bill / Add Extra Expenses
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -321,6 +403,34 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
             ) : (
               /* Customer Stage Action Controls */
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {/* When provider completes service, display itemized confirmed bill to customer */}
+                {(booking.status === 'completed' || currentStageKey === 'completed') && booking.paymentStatus !== 'paid' && (
+                  <div style={{ background: '#F8FAFC', border: '2px solid #111111', borderRadius: '8px', padding: '1rem', boxShadow: '3px 3px 0px #111111', marginBottom: '0.25rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <span style={{ fontWeight: 800, fontSize: '0.88rem' }}>Confirmed Final Bill</span>
+                      <span style={{ fontWeight: 900, color: '#059669', fontSize: '1.25rem' }}>₹{booking.finalPrice}</span>
+                    </div>
+
+                    <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.25rem', borderTop: '1px solid #E2E8F0', paddingTop: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Service / Labor:</span>
+                        <span style={{ fontWeight: 600 }}>₹{booking.billingDetails?.serviceAmount || (booking.finalPrice - (booking.billingDetails?.extraExpenses || 0))}</span>
+                      </div>
+                      {Boolean(booking.billingDetails?.extraExpenses && booking.billingDetails.extraExpenses > 0) && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#B45309' }}>
+                          <span>Additional Parts / Material:</span>
+                          <span style={{ fontWeight: 700 }}>+ ₹{booking.billingDetails.extraExpenses}</span>
+                        </div>
+                      )}
+                      {Boolean(booking.billingDetails?.extraExpenseReason) && (
+                        <div style={{ fontSize: '0.75rem', fontStyle: 'italic', color: '#64748B' }}>
+                          Details: {booking.billingDetails.extraExpenseReason}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {booking.paymentStatus !== 'paid' && (
                   <button 
                     className="provider-action-btn"
@@ -330,7 +440,7 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
                       if (onOpenPayment) onOpenPayment(booking);
                     }}
                   >
-                    <CreditCard size={18} /> Pay Now (₹{booking.finalPrice || booking.providerId?.providerDetails?.hourlyRate || 25})
+                    <CreditCard size={18} /> Pay Now (₹{booking.finalPrice || booking.providerId?.providerDetails?.hourlyRate || 350})
                   </button>
                 )}
 
@@ -344,6 +454,19 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
                     }}
                   >
                     <FileText size={18} /> View Official Tax Invoice
+                  </button>
+                )}
+
+                {(booking.status === 'completed' || booking.serviceStage === 'completed' || booking.serviceStage === 'paid') && (!booking.customerReview || !booking.customerReview.rating) && (
+                  <button 
+                    className="provider-action-btn"
+                    style={{ background: '#111111', color: '#D2FE00', border: '2px solid #111111', fontWeight: 800 }}
+                    onClick={() => {
+                      onClose();
+                      if (onOpenReview) onOpenReview(booking);
+                    }}
+                  >
+                    ★ Rate & Review Service
                   </button>
                 )}
 
@@ -364,6 +487,17 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
         </div>
 
       </div>
+
+      {/* Final Bill Confirmation Modal */}
+      {showBillModal && (
+        <ConfirmFinalBillModal 
+          booking={booking}
+          isOpen={showBillModal}
+          onClose={() => setShowBillModal(false)}
+          onConfirm={handleConfirmFinalBill}
+          isAdjusting={isAdjustingBill}
+        />
+      )}
     </div>
   );
 };

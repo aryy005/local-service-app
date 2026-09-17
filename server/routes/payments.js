@@ -5,14 +5,19 @@ const Payment = require('../models/Payment');
 const auth = require('../middleware/auth');
 
 // Helper to calculate price breakdown
-const calculateBreakdown = (servicePrice) => {
-  const price = Number(servicePrice) || 0;
-  const platformFee = Number((price * 0.05).toFixed(2)); // 5% platform fee
-  const tax = Number(((price + platformFee) * 0.18).toFixed(2)); // 18% GST/Tax
-  const totalAmount = Number((price + platformFee + tax).toFixed(2));
+const calculateBreakdown = (servicePrice, extraExpenses = 0, extraExpenseReason = '') => {
+  const basePrice = Number(servicePrice) || 0;
+  const extras = Number(extraExpenses) || 0;
+  const subtotal = Math.max(1, basePrice + extras);
+  const platformFee = Number((subtotal * 0.05).toFixed(2)); // 5% platform fee
+  const tax = Number(((subtotal + platformFee) * 0.18).toFixed(2)); // 18% GST/Tax
+  const totalAmount = Number((subtotal + platformFee + tax).toFixed(2));
 
   return {
-    serviceAmount: price,
+    serviceAmount: subtotal,
+    baseServiceAmount: basePrice,
+    extraExpenses: extras,
+    extraExpenseReason: extraExpenseReason || '',
     platformFee,
     tax,
     totalAmount
@@ -37,8 +42,21 @@ router.post('/create-order', auth, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to initiate payment for this booking' });
     }
 
-    const servicePrice = booking.finalPrice || (booking.providerId?.providerDetails?.hourlyRate || 25);
-    const breakdown = calculateBreakdown(servicePrice);
+    let basePrice = 350;
+    let extraExpenses = booking.billingDetails?.extraExpenses || 0;
+    let extraReason = booking.billingDetails?.extraExpenseReason || '';
+
+    if (booking.finalPrice && booking.finalPrice > 0) {
+      if (booking.billingDetails?.serviceAmount && booking.billingDetails.serviceAmount > 0) {
+        basePrice = booking.billingDetails.serviceAmount;
+      } else {
+        basePrice = Math.max(0, booking.finalPrice - extraExpenses);
+      }
+    } else if (booking.providerId?.providerDetails?.hourlyRate && Number(booking.providerId.providerDetails.hourlyRate) > 0) {
+      basePrice = Number(booking.providerId.providerDetails.hourlyRate);
+    }
+
+    const breakdown = calculateBreakdown(basePrice, extraExpenses, extraReason);
     const orderId = 'ORD_' + Date.now() + '_' + Math.floor(1000 + Math.random() * 9000);
 
     res.json({
@@ -66,7 +84,7 @@ router.post('/verify', auth, async (req, res) => {
       return res.status(400).json({ message: 'Missing payment parameters' });
     }
 
-    const booking = await Booking.findById(bookingId);
+    const booking = await Booking.findById(bookingId).populate('providerId', 'name phone providerDetails');
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
@@ -79,15 +97,28 @@ router.post('/verify', auth, async (req, res) => {
       return res.status(400).json({ message: 'Booking is already paid' });
     }
 
-    const servicePrice = booking.finalPrice || (booking.providerId?.providerDetails?.hourlyRate || 25);
-    const breakdown = calculateBreakdown(servicePrice);
+    let basePrice = 350;
+    let extraExpenses = booking.billingDetails?.extraExpenses || 0;
+    let extraReason = booking.billingDetails?.extraExpenseReason || '';
+
+    if (booking.finalPrice && booking.finalPrice > 0) {
+      if (booking.billingDetails?.serviceAmount && booking.billingDetails.serviceAmount > 0) {
+        basePrice = booking.billingDetails.serviceAmount;
+      } else {
+        basePrice = Math.max(0, booking.finalPrice - extraExpenses);
+      }
+    } else if (booking.providerId?.providerDetails?.hourlyRate && Number(booking.providerId.providerDetails.hourlyRate) > 0) {
+      basePrice = Number(booking.providerId.providerDetails.hourlyRate);
+    }
+
+    const breakdown = calculateBreakdown(basePrice, extraExpenses, extraReason);
     const txnId = transactionId || 'TXN_' + Date.now() + '_' + Math.floor(1000 + Math.random() * 9000);
 
     // Save payment record
     const payment = new Payment({
       bookingId: booking._id,
       customerId: booking.customerId,
-      providerId: booking.providerId,
+      providerId: booking.providerId?._id || booking.providerId,
       amount: breakdown.totalAmount,
       serviceAmount: breakdown.serviceAmount,
       platformFee: breakdown.platformFee,
@@ -107,9 +138,14 @@ router.post('/verify', auth, async (req, res) => {
     booking.serviceStage = 'paid';
     booking.paymentMethod = paymentMethod;
     booking.paymentId = txnId;
+    booking.finalPrice = breakdown.serviceAmount;
     booking.paidAmount = breakdown.totalAmount;
     booking.paidAt = new Date();
     booking.billingDetails = breakdown;
+
+    if (!Array.isArray(booking.stageHistory)) {
+      booking.stageHistory = [];
+    }
 
     booking.stageHistory.push({
       stage: 'paid',

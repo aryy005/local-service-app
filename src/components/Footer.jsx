@@ -21,12 +21,12 @@ const Footer = () => {
       }}>
         {/* Brand */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' }}>
-            <div style={{
-              width: '30px', height: '30px', background: '#D2FE00', color: '#121212',
-              borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: '900', fontSize: '0.85rem'
-            }}>LF</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.85rem' }}>
+            <img 
+              src="/logo.png" 
+              alt="Localfixr Logo" 
+              style={{ width: '30px', height: '30px', borderRadius: '6px', objectFit: 'cover', overflow: 'hidden' }} 
+            />
             <span style={{ fontWeight: 800, fontSize: '1.25rem', color: '#ffffff', fontFamily: "var(--font-sans, 'Space Grotesk', sans-serif)" }}>Localfixr</span>
           </div>
           <p style={{ fontSize: '0.85rem', color: '#aaaaaa', lineHeight: 1.6 }}>

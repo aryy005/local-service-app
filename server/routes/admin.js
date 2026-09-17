@@ -276,7 +276,7 @@ router.get('/providers', [auth, admin], async (req, res) => {
         customer: b.customerId?.name || 'Customer',
         service: b.description || 'General Service',
         date: new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        amount: `?${b.finalPrice || b.paidAmount || 0}`,
+        amount: `₹${b.paidAmount || b.finalPrice || 0}`,
         status: b.serviceStage || b.status || 'requested'
       });
     });
@@ -664,6 +664,11 @@ router.get('/orders', [auth, admin], async (req, res) => {
       service: b.description || 'Home Service',
       provider: b.providerId?.name || 'Unassigned',
       customer: b.customerId?.name || 'Customer',
+      amount: b.paidAmount || b.finalPrice || (b.billingDetails?.totalAmount) || 0,
+      finalPrice: b.finalPrice || 0,
+      paidAmount: b.paidAmount || 0,
+      paymentStatus: b.paymentStatus || 'unpaid',
+      billingDetails: b.billingDetails || null,
       status: b.serviceStage || b.status || 'requested',
       statusLabel: (b.serviceStage || b.status || 'Pending').replace('_', ' ').toUpperCase(),
       dateTime: new Date(b.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })

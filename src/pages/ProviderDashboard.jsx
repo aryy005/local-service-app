@@ -13,6 +13,7 @@ import { categories } from '../data/mockData';
 import ChatModal from '../components/ChatModal';
 import ServiceTrackerModal from '../components/ServiceTrackerModal';
 import InvoiceModal from '../components/InvoiceModal';
+import ConfirmFinalBillModal from '../components/ConfirmFinalBillModal';
 import { openWhatsAppChat, formatWhatsAppBookingMessage } from '../utils/whatsapp';
 import './ProviderDashboard.css';
 
@@ -25,12 +26,21 @@ const SAMPLE_PORTFOLIO_PRESETS = [
   { label: 'Wall Painting & Finish', url: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&w=600&q=80' }
 ];
 
+// Curated avatar presets for service partners
+const SAMPLE_AVATAR_PRESETS = [
+  { label: 'Technician 1', url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80' },
+  { label: 'Technician 2', url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80' },
+  { label: 'Technician 3', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80' },
+  { label: 'Technician 4', url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80' }
+];
+
 // Helper to validate complete provider profile
 const checkProviderProfile = (user) => {
   const p = user?.providerDetails || {};
   const addr = user?.addressDetails || {};
   
   const checks = [
+    { key: 'avatarUrl', label: 'Profile Photo', valid: !!(p.avatarUrl && p.avatarUrl.trim().length > 0), value: p.avatarUrl ? 'Uploaded' : null },
     { key: 'name', label: 'Full Name', valid: !!(user?.name && user.name.trim().length > 0), value: user?.name },
     { key: 'phone', label: 'Phone Number', valid: !!(user?.phone && user.phone.trim().length >= 10), value: user?.phone },
     { key: 'street', label: 'Doorstep / Street Address', valid: !!(addr.street && addr.street.trim().length > 0), value: addr.street },
@@ -65,6 +75,8 @@ const ProviderDashboard = () => {
   const [activeChat, setActiveChat] = useState(null);
   const [activeTrackerBooking, setActiveTrackerBooking] = useState(null);
   const [activeInvoiceBooking, setActiveInvoiceBooking] = useState(null);
+  const [confirmBillBooking, setConfirmBillBooking] = useState(null);
+  const [isAdjustingBill, setIsAdjustingBill] = useState(false);
   const [reviews, setReviews] = useState([]);
 
   // Booking filters in bookings tab
@@ -84,8 +96,12 @@ const ProviderDashboard = () => {
     location: '',
     description: '',
     upiId: '',
+    avatarUrl: '',
     portfolioImages: []
   });
+
+  // Acceptance blocked modal state
+  const [acceptBlockedModal, setAcceptBlockedModal] = useState({ isOpen: false, missing: [] });
 
   // Inline Verification States
   const [phoneInput, setPhoneInput] = useState(user?.phone || '');
@@ -152,6 +168,7 @@ const ProviderDashboard = () => {
       location: user.providerDetails?.location || user.city || 'Chandigarh',
       description: user.providerDetails?.description || '',
       upiId: user.providerDetails?.upiId || '',
+      avatarUrl: user.providerDetails?.avatarUrl || '',
       portfolioImages: user.providerDetails?.portfolioImages || []
     });
     setPhoneInput(user.phone || '');
@@ -159,8 +176,42 @@ const ProviderDashboard = () => {
     fetchJobs();
   }, [user, token, navigate]);
 
+  // Handle avatar image file upload (converts to base64 Data URL)
+  const handleAvatarFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size exceeds 5MB. Please choose a smaller image.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      setFormData(prev => ({ ...prev, avatarUrl: uploadEvent.target.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Update Booking Status
   const updateJobStatus = async (id, status, extraData = {}) => {
+    // Gate: Providers cannot accept jobs without Profile Photo and Payout UPI ID
+    if (status === 'accepted') {
+      const p = user?.providerDetails || {};
+      const hasAvatar = !!(p.avatarUrl && p.avatarUrl.trim().length > 0);
+      const hasUpi = !!(p.upiId && p.upiId.trim().length > 0);
+
+      if (!hasAvatar || !hasUpi) {
+        const missing = [];
+        if (!hasAvatar) missing.push('Profile Picture');
+        if (!hasUpi) missing.push('Payout UPI ID');
+
+        setAcceptBlockedModal({
+          isOpen: true,
+          missing
+        });
+        return;
+      }
+    }
+
     try {
       const res = await fetch(`${API_URL}/bookings/${id}/status`, {
         method: 'PUT',
@@ -212,6 +263,53 @@ const ProviderDashboard = () => {
     } catch (err) {
       console.error(err);
       alert('Error advancing stage');
+    }
+  };
+
+  // Confirm or adjust final bill with extra expenses
+  const handleConfirmFinalBill = async ({ serviceAmount, extraExpenses, extraExpenseReason, finalPrice }) => {
+    if (!confirmBillBooking) return;
+    const id = confirmBillBooking._id;
+    try {
+      const endpoint = isAdjustingBill 
+        ? `${API_URL}/bookings/${id}/final-bill` 
+        : `${API_URL}/bookings/${id}/stage`;
+
+      const payload = isAdjustingBill 
+        ? { serviceAmount, extraExpenses, extraExpenseReason, finalPrice }
+        : {
+            stage: 'completed',
+            serviceAmount,
+            extraExpenses,
+            extraExpenseReason,
+            finalPrice,
+            note: `Service completed. Final bill confirmed: ₹${finalPrice}`
+          };
+
+      const res = await fetch(endpoint, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const updated = await res.json();
+      if (!res.ok) throw new Error(updated.message || 'Failed to confirm final bill');
+
+      setJobs(prev => prev.map(j => j._id === updated._id ? updated : j));
+      if (selectedJobDetail && selectedJobDetail._id === id) {
+        setSelectedJobDetail(updated);
+      }
+      if (activeTrackerBooking && activeTrackerBooking._id === id) {
+        setActiveTrackerBooking(updated);
+      }
+      setConfirmBillBooking(null);
+    } catch (err) {
+      console.error('Final bill confirmation error:', err);
+      alert(err.message || 'Failed to confirm final bill');
+      throw err;
     }
   };
 
@@ -311,6 +409,7 @@ const ProviderDashboard = () => {
           location: formData.location || formData.city,
           description: formData.description,
           upiId: formData.upiId,
+          avatarUrl: formData.avatarUrl,
           portfolioImages: formData.portfolioImages
         }
       });
@@ -1138,12 +1237,49 @@ const ProviderDashboard = () => {
                               )}
 
                               {job.status === 'accepted' && job.serviceStage !== 'completed' && (
+                                <>
+                                  <button
+                                    type="button"
+                                    style={{ background: '#111111', color: '#FFFFFF', border: 'none', borderRadius: 4, padding: '0.35rem 0.65rem', fontWeight: 800, cursor: 'pointer' }}
+                                    onClick={() => setActiveTrackerBooking(job)}
+                                  >
+                                    Track Live
+                                  </button>
+                                  <button
+                                    type="button"
+                                    style={{ background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: 4, padding: '0.35rem 0.65rem', fontWeight: 800, cursor: 'pointer' }}
+                                    onClick={() => {
+                                      setConfirmBillBooking(job);
+                                      setIsAdjustingBill(false);
+                                    }}
+                                  >
+                                    Complete &amp; Bill
+                                  </button>
+                                </>
+                              )}
+
+                              {(job.status === 'completed' || job.serviceStage === 'completed') && job.paymentStatus !== 'paid' && (
                                 <button
                                   type="button"
-                                  style={{ background: '#111111', color: '#FFFFFF', border: 'none', borderRadius: 4, padding: '0.35rem 0.65rem', fontWeight: 800, cursor: 'pointer' }}
-                                  onClick={() => setActiveTrackerBooking(job)}
+                                  style={{ background: '#FFFBEB', color: '#B45309', border: '1.5px solid #FDE68A', borderRadius: 4, padding: '0.35rem 0.65rem', fontWeight: 800, cursor: 'pointer' }}
+                                  onClick={() => {
+                                    setConfirmBillBooking(job);
+                                    setIsAdjustingBill(true);
+                                  }}
+                                  title="Adjust Bill or Add Extra Expenses"
                                 >
-                                  Track Live
+                                  ₹{job.finalPrice || '—'} ✏️
+                                </button>
+                              )}
+
+                              {job.customerId && (
+                                <button
+                                  type="button"
+                                  style={{ background: '#111111', color: '#D2FE00', border: 'none', borderRadius: 4, padding: '0.35rem 0.65rem', fontWeight: 800, cursor: 'pointer' }}
+                                  onClick={() => setActiveChat(job)}
+                                  title="Chat with Customer"
+                                >
+                                  Chat
                                 </button>
                               )}
 
@@ -1235,6 +1371,82 @@ const ProviderDashboard = () => {
             </div>
 
             <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '800px' }}>
+              {/* Profile Photo Upload Section */}
+              <div style={{ border: '1.5px solid #111', borderRadius: 8, padding: '1.25rem', background: '#FAFAFA' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 900, textTransform: 'uppercase', display: 'block', marginBottom: '8px', color: '#111' }}>
+                  Profile Picture * (Required to accept orders)
+                </label>
+                <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div style={{ position: 'relative' }}>
+                    <img 
+                      src={formData.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150'} 
+                      alt="Profile preview" 
+                      style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid #111', background: '#FFF' }}
+                    />
+                    {formData.avatarUrl && (
+                      <span style={{ position: 'absolute', bottom: 0, right: 0, background: '#10B981', color: '#FFF', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>
+                        ✔
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, minWidth: '220px' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <input 
+                        type="file" 
+                        id="provider-avatar-upload" 
+                        accept="image/*" 
+                        style={{ display: 'none' }} 
+                        onChange={handleAvatarFileUpload}
+                      />
+                      <label 
+                        htmlFor="provider-avatar-upload" 
+                        style={{ background: '#111', color: '#D2FE00', padding: '0.55rem 1rem', borderRadius: 6, fontWeight: 800, fontSize: '0.78rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                      >
+                        <Upload size={14} /> Choose Photo from Device
+                      </label>
+                      {formData.avatarUrl && (
+                        <button 
+                          type="button" 
+                          onClick={() => setFormData({ ...formData, avatarUrl: '' })}
+                          style={{ background: '#FEE2E2', color: '#991B1B', border: 'none', padding: '0.55rem 0.85rem', borderRadius: 6, fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                        >
+                          <Trash2 size={13} /> Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <input 
+                        type="text" 
+                        placeholder="Or paste an image URL (https://...)" 
+                        value={formData.avatarUrl} 
+                        onChange={e => setFormData({ ...formData, avatarUrl: e.target.value })}
+                        style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: 6, border: '1.5px solid #CBD5E1', fontSize: '0.78rem', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#666', marginBottom: '4px' }}>
+                        Or choose from curated professional presets:
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.4rem' }}>
+                        {SAMPLE_AVATAR_PRESETS.map((av, idx) => (
+                          <img 
+                            key={idx} 
+                            src={av.url} 
+                            alt={av.label} 
+                            title={av.label} 
+                            onClick={() => setFormData({ ...formData, avatarUrl: av.url })}
+                            style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: formData.avatarUrl === av.url ? '2.5px solid #111' : '1.5px solid #CBD5E1' }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Full Name *</label>
@@ -1287,6 +1499,26 @@ const ProviderDashboard = () => {
                     <option value="Pest Control">Pest Control</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Payout UPI ID (Crucial for receiving payouts and accepting orders) */}
+              <div style={{ border: '1.5px solid #111', borderRadius: 8, padding: '1rem', background: '#F8FAFC' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginBottom: '4px', color: '#111' }}>
+                  Payout UPI ID * (Required to accept service requests)
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="e.g. mobile@upi, name@okhdfcbank, or 9876543210@paytm" 
+                    value={formData.upiId} 
+                    onChange={e => setFormData({ ...formData, upiId: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 6, border: '2px solid #111', fontWeight: 600, boxSizing: 'border-box' }}
+                  />
+                </div>
+                <p style={{ fontSize: '0.72rem', color: '#666', margin: '4px 0 0' }}>
+                  Customer payments are deposited directly into this UPI ID upon job completion. You cannot accept orders without this.
+                </p>
               </div>
 
               <div>
@@ -1495,6 +1727,35 @@ const ProviderDashboard = () => {
               <div style={{ background: '#DCFCE7', border: '1.5px solid #86EFAC', padding: '1.25rem', borderRadius: 8 }}>
                 <div style={{ fontSize: '0.75rem', color: '#15803D', fontWeight: 800, textTransform: 'uppercase' }}>Net Disbursable</div>
                 <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#15803D', marginTop: '4px' }}>₹{(totalEarnings * 0.85).toFixed(0)}</div>
+              </div>
+            </div>
+
+            {/* Payout Disbursement Account Card */}
+            <div style={{ background: '#FFF', border: '1.5px solid #EAEAE4', borderRadius: 8, padding: '1.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#666', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Payout UPI Disbursement Account
+                  </div>
+                  <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#111', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span>{user?.providerDetails?.upiId || 'Not Configured Yet'}</span>
+                    {user?.providerDetails?.upiId ? (
+                      <span style={{ fontSize: '0.72rem', background: '#DCFCE7', color: '#15803D', padding: '2px 8px', borderRadius: 12, fontWeight: 800 }}>✔ Active</span>
+                    ) : (
+                      <span style={{ fontSize: '0.72rem', background: '#FEE2E2', color: '#991B1B', padding: '2px 8px', borderRadius: 12, fontWeight: 800 }}>⚠ Mandatory for Order Acceptance</span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '0.78rem', color: '#666', margin: '4px 0 0' }}>
+                    Your net earnings from completed jobs are disbursed directly to this UPI address.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('profile')}
+                  style={{ background: '#111', color: '#D2FE00', border: 'none', padding: '0.6rem 1.15rem', borderRadius: 6, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}
+                >
+                  {user?.providerDetails?.upiId ? 'Update UPI ID' : 'Configure UPI ID Now →'}
+                </button>
               </div>
             </div>
           </div>
@@ -1778,14 +2039,53 @@ const ProviderDashboard = () => {
                     >
                       Open Live GPS Tracker
                     </button>
-                    <button 
-                      type="button" 
-                      style={{ background: '#10B981', color: '#FFF', border: 'none', padding: '0.65rem 1.25rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}
-                      onClick={() => advanceJobStage(selectedJobDetail._id, 'completed')}
-                    >
-                      Mark Completed
-                    </button>
+                    {selectedJobDetail.serviceStage !== 'completed' ? (
+                      <button 
+                        type="button" 
+                        style={{ background: '#10B981', color: '#FFF', border: 'none', padding: '0.65rem 1.25rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}
+                        onClick={() => {
+                          setConfirmBillBooking(selectedJobDetail);
+                          setIsAdjustingBill(false);
+                        }}
+                      >
+                        Complete &amp; Generate Bill
+                      </button>
+                    ) : selectedJobDetail.paymentStatus !== 'paid' ? (
+                      <button 
+                        type="button" 
+                        style={{ background: '#F59E0B', color: '#FFF', border: 'none', padding: '0.65rem 1.25rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}
+                        onClick={() => {
+                          setConfirmBillBooking(selectedJobDetail);
+                          setIsAdjustingBill(true);
+                        }}
+                      >
+                        Adjust Final Bill (₹{selectedJobDetail.finalPrice})
+                      </button>
+                    ) : null}
                   </>
+                )}
+
+                {selectedJobDetail.status === 'completed' && selectedJobDetail.paymentStatus !== 'paid' && selectedJobDetail.status !== 'accepted' && (
+                  <button 
+                    type="button" 
+                    style={{ background: '#F59E0B', color: '#FFF', border: 'none', padding: '0.65rem 1.25rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}
+                    onClick={() => {
+                      setConfirmBillBooking(selectedJobDetail);
+                      setIsAdjustingBill(true);
+                    }}
+                  >
+                    Adjust Final Bill (₹{selectedJobDetail.finalPrice})
+                  </button>
+                )}
+
+                {selectedJobDetail.customerId && (
+                  <button 
+                    type="button" 
+                    style={{ background: '#111', color: '#D2FE00', border: 'none', padding: '0.65rem 1.25rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                    onClick={() => setActiveChat(selectedJobDetail)}
+                  >
+                    <MessageSquare size={16} /> In-App Chat
+                  </button>
                 )}
 
                 {selectedJobDetail.customerId?.phone && (
@@ -1809,19 +2109,90 @@ const ProviderDashboard = () => {
           booking={activeTrackerBooking}
           userRole="provider"
           onClose={() => setActiveTrackerBooking(null)}
+          onUpdateBooking={(updated) => {
+            setJobs(prev => prev.map(j => j._id === updated._id ? updated : j));
+            setActiveTrackerBooking(updated);
+            if (selectedJobDetail && selectedJobDetail._id === updated._id) {
+              setSelectedJobDetail(updated);
+            }
+          }}
           onAdvanceStage={(stage) => advanceJobStage(activeTrackerBooking._id, stage)}
           onUpdateStatus={(status) => updateJobStatus(activeTrackerBooking._id, status)}
+        />
+      )}
+
+      {/* Confirm Final Bill Modal */}
+      {confirmBillBooking && (
+        <ConfirmFinalBillModal 
+          booking={confirmBillBooking}
+          isOpen={Boolean(confirmBillBooking)}
+          onClose={() => setConfirmBillBooking(null)}
+          onConfirm={handleConfirmFinalBill}
+          isAdjusting={isAdjustingBill}
         />
       )}
 
       {/* Chat Modal */}
       {activeChat && (
         <ChatModal
-          bookingId={activeChat._id}
-          receiverId={activeChat.customerId?._id || activeChat.customerId}
-          receiverName={activeChat.customerId?.name || 'Customer'}
+          isOpen={true}
+          bookingId={activeChat._id || activeChat.bookingId}
+          receiverId={activeChat.customerId?._id || activeChat.customerId || activeChat.receiverId}
+          receiverName={activeChat.customerId?.name || activeChat.receiverName || 'Customer'}
           onClose={() => setActiveChat(null)}
         />
+      )}
+
+      {/* Acceptance Blocked Requirements Modal */}
+      {acceptBlockedModal.isOpen && (
+        <div 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+          onClick={(e) => { if (e.target === e.currentTarget) setAcceptBlockedModal({ isOpen: false, missing: [] }); }}
+        >
+          <div style={{ background: '#FFF', maxWidth: '480px', width: '100%', borderRadius: 12, padding: '1.75rem', border: '2px solid #111', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#DC2626', marginBottom: '0.75rem' }}>
+              <AlertCircle size={30} />
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#111' }}>Cannot Accept Order Yet</h3>
+                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#DC2626', textTransform: 'uppercase' }}>Profile Requirements Incomplete</span>
+              </div>
+            </div>
+            
+            <p style={{ fontSize: '0.88rem', color: '#444', lineHeight: 1.5, margin: '0 0 1rem' }}>
+              To ensure customer trust and receive payouts for completed work, you must upload your <strong>Profile Picture</strong> and set your <strong>Payout UPI ID</strong> before accepting service requests.
+            </p>
+            
+            <div style={{ background: '#FEF2F2', border: '1.5px solid #F87171', borderRadius: 8, padding: '0.85rem 1rem', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 900, color: '#991B1B', textTransform: 'uppercase', marginBottom: '6px' }}>Missing Mandatory Information:</div>
+              <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.85rem', color: '#7F1D1D', fontWeight: 700 }}>
+                {acceptBlockedModal.missing.map((item, idx) => (
+                  <li key={idx} style={{ marginTop: '3px' }}>{item}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setAcceptBlockedModal({ isOpen: false, missing: [] })}
+                style={{ background: '#F1F5F9', color: '#475569', border: 'none', padding: '0.65rem 1.15rem', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}
+              >
+                Dismiss
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAcceptBlockedModal({ isOpen: false, missing: [] });
+                  setSelectedJobDetail(null);
+                  setActiveTab('profile');
+                }}
+                style={{ background: '#111111', color: '#D2FE00', border: 'none', padding: '0.65rem 1.35rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                Configure in Profile →
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Invoice Modal */}

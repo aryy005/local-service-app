@@ -10,22 +10,28 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] }
 });
+app.set('io', io);
 
 io.on('connection', (socket) => {
   // ── Chat Events ──────────────────────────────────────────────────────────
-  socket.on('join_chat', (bookingId) => socket.join(bookingId));
+  socket.on('join_chat', (bookingId) => {
+    if (bookingId) {
+      socket.join(String(bookingId));
+    }
+  });
   socket.on('send_message', async (data) => {
     const Message = require('./models/Message');
     try {
+      if (!data || !data.bookingId || !data.text || !data.text.trim()) return;
       const newMsg = new Message({
         bookingId: data.bookingId,
         sender: data.senderId,
         receiver: data.receiverId,
-        text: data.text
+        text: data.text.trim()
       });
       await newMsg.save();
       await newMsg.populate('sender', 'name');
-      io.to(data.bookingId).emit('receive_message', newMsg);
+      io.to(String(data.bookingId)).emit('receive_message', newMsg);
     } catch(err) {
       console.error('Socket message error:', err);
     }

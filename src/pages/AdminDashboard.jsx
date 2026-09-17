@@ -1402,13 +1402,14 @@ const AdminDashboard = () => {
                         <th>Booking ID</th>
                         <th>Service</th>
                         <th>Provider</th>
+                        <th>Amount</th>
                         <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {ordersList.length === 0 ? (
                         <tr>
-                          <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#94A3B8', fontSize: '0.82rem' }}>
+                          <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#94A3B8', fontSize: '0.82rem' }}>
                             No customer bookings recorded yet.
                           </td>
                         </tr>
@@ -1418,6 +1419,9 @@ const AdminDashboard = () => {
                             <td style={{ fontWeight: 600, color: '#2563EB' }}>{b.id}</td>
                             <td style={{ color: '#0F172A', fontWeight: 500 }}>{b.service}</td>
                             <td style={{ color: '#475569' }}>{b.provider}</td>
+                            <td style={{ fontWeight: 700, color: '#10B981' }}>
+                              ₹{b.paidAmount || b.finalPrice || b.amount || 0}
+                            </td>
                             <td>
                               <span className={`admin-status-pill ${b.status}`}>
                                 {b.statusLabel}
@@ -1910,6 +1914,8 @@ const AdminDashboard = () => {
                     <th>Service</th>
                     <th>Assigned Provider</th>
                     <th>Customer</th>
+                    <th>Amount / Bill</th>
+                    <th>Payment</th>
                     <th>Stage / Status</th>
                     <th>Scheduled Date</th>
                   </tr>
@@ -1917,7 +1923,7 @@ const AdminDashboard = () => {
                 <tbody>
                   {ordersList.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                      <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                         No bookings found in database.
                       </td>
                     </tr>
@@ -1928,6 +1934,27 @@ const AdminDashboard = () => {
                         <td>{b.service}</td>
                         <td>{b.provider}</td>
                         <td>{b.customer}</td>
+                        <td>
+                          <span style={{ fontWeight: 800, color: '#0F172A' }}>
+                            ₹{b.paidAmount || b.finalPrice || b.amount || 0}
+                          </span>
+                          {Boolean(b.billingDetails?.extraExpenses && b.billingDetails.extraExpenses > 0) && (
+                            <span style={{ display: 'block', fontSize: '0.72rem', color: '#B45309' }}>
+                              (Labor: ₹{b.billingDetails.serviceAmount} + Parts: ₹{b.billingDetails.extraExpenses})
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {b.paymentStatus === 'paid' ? (
+                            <span style={{ background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', padding: '0.2rem 0.55rem', borderRadius: '1rem', fontSize: '0.74rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                              ✓ Paid
+                            </span>
+                          ) : (
+                            <span style={{ background: '#FFFBEB', color: '#B45309', border: '1px solid #FDE68A', padding: '0.2rem 0.55rem', borderRadius: '1rem', fontSize: '0.74rem', fontWeight: 700 }}>
+                              Unpaid
+                            </span>
+                          )}
+                        </td>
                         <td>
                           <select 
                             value={b.status} 

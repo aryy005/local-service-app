@@ -70,7 +70,7 @@ router.get('/:id', async (req, res) => {
 // @desc    Add a review for a provider
 router.post('/:id/reviews', auth, async (req, res) => {
   try {
-    const { rating, comment } = req.body;
+    const { rating, comment, bookingId } = req.body;
     const providerId = req.params.id;
     const customerId = req.user.id;
 
@@ -80,38 +80,63 @@ router.post('/:id/reviews', auth, async (req, res) => {
     }
 
     const Booking = require('../models/Booking');
-    const completedBooking = await Booking.findOne({
-      providerId: providerId,
-      customerId: customerId,
-      status: 'completed'
-    });
+    let targetBooking = null;
+    if (bookingId) {
+      targetBooking = await Booking.findOne({
+        _id: bookingId,
+        providerId: providerId,
+        customerId: customerId
+      });
+    }
 
-    if (!completedBooking) {
+    if (!targetBooking) {
+      targetBooking = await Booking.findOne({
+        providerId: providerId,
+        customerId: customerId,
+        status: 'completed'
+      });
+    }
+
+    if (!targetBooking) {
       return res.status(400).json({ message: 'You can only review a service partner after your booking has been fully completed.' });
     }
 
-    const existingReview = await Review.findOne({ provider: providerId, customer: customerId });
-    if (existingReview) {
-      return res.status(400).json({ message: 'You have already reviewed this provider' });
+    const numRating = Math.min(5, Math.max(1, Number(rating) || 5));
+    const cleanComment = typeof comment === 'string' ? comment.trim() : '';
+
+    let review = await Review.findOne({ provider: providerId, customer: customerId });
+    if (review) {
+      review.rating = numRating;
+      review.comment = cleanComment;
+      await review.save();
+    } else {
+      review = new Review({
+        provider: providerId,
+        customer: customerId,
+        rating: numRating,
+        comment: cleanComment
+      });
+      await review.save();
     }
 
-    const review = new Review({
-      provider: providerId,
-      customer: customerId,
-      rating,
-      comment
-    });
-
-    await review.save();
+    // Update booking customerReview
+    if (targetBooking) {
+      targetBooking.customerReview = {
+        rating: numRating,
+        comment: cleanComment
+      };
+      await targetBooking.save();
+    }
 
     // Update aggregate logic
     const allReviews = await Review.find({ provider: providerId });
     const totalRating = allReviews.reduce((acc, curr) => acc + curr.rating, 0);
+    if (!provider.providerDetails) provider.providerDetails = {};
     provider.providerDetails.rating = Number((totalRating / allReviews.length).toFixed(1));
     provider.providerDetails.reviewsCount = allReviews.length;
     await provider.save();
 
-    res.json(review);
+    res.json({ review, booking: targetBooking });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

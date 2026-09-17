@@ -77,7 +77,7 @@ const Header = () => {
           /* Provider Brand Group */
           <div className="provider-brand-group">
             <Link to={getHomeLink()} className="logo">
-              <div className="logo-mark">LF</div>
+              <img src="/logo.png" alt="Localfixr" className="logo-img" />
               <span className="logo-text">Localfixr</span>
             </Link>
             <div className="provider-header-badge">
@@ -88,7 +88,7 @@ const Header = () => {
           <>
         {/* Logo */}
         <Link to={getHomeLink()} className="logo">
-          <div className="logo-mark">LF</div>
+          <img src="/logo.png" alt="Localfixr" className="logo-img" />
           <span className="logo-text">Localfixr</span>
         </Link>
 

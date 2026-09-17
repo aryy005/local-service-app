@@ -38,6 +38,8 @@ const bookingSchema = new mongoose.Schema({
   paidAt: { type: Date },
   billingDetails: {
     serviceAmount: { type: Number, default: 0 },
+    extraExpenses: { type: Number, default: 0 },
+    extraExpenseReason: { type: String, default: '' },
     platformFee: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },
     totalAmount: { type: Number, default: 0 }

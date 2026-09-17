@@ -4,6 +4,7 @@ import { API_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
 import { playNotificationSound } from '../utils/soundNotifications';
 import './PaymentModal.css';
+import '../pages/Auth.css';
 
 const PaymentModal = ({ booking, onClose, onSuccess }) => {
   const { token } = useAuth();
@@ -154,33 +155,34 @@ const PaymentModal = ({ booking, onClose, onSuccess }) => {
             /* Success Screen */
             <div className="payment-success-box">
               <div className="success-icon">
-                <CheckCircle size={40} />
+                <CheckCircle size={36} strokeWidth={2.5} />
               </div>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>
-                Payment Successful!
+              <div className="auth-tag">PAYMENT CONFIRMED</div>
+              <h3 className="auth-title" style={{ fontSize: '1.5rem', margin: '0.4rem 0 0.5rem 0' }}>
+                PAYMENT SUCCESSFUL!
               </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
-                Your payment of <strong>₹{paymentSuccess.amount}</strong> for {booking.providerId?.name || 'Service Professional'} has been processed.
+              <p className="auth-subtitle" style={{ marginBottom: '1.5rem' }}>
+                Your payment of <strong>₹{paymentSuccess.amount}</strong> for {booking.providerId?.name || 'Service Professional'} has been confirmed.
               </p>
 
-              <div style={{ background: 'var(--surface-bg, #f8fafc)', border: '1px solid var(--surface-border)', borderRadius: '0.75rem', padding: '1rem', textAlign: 'left', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+              <div style={{ background: '#FAF9F6', border: '2px solid #111111', boxShadow: '3px 3px 0 #111111', borderRadius: '6px', padding: '1rem', textAlign: 'left', marginBottom: '1.5rem', fontSize: '0.88rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Transaction ID:</span>
-                  <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{paymentSuccess.transactionId}</span>
+                  <span style={{ color: '#555555', fontWeight: 600 }}>Transaction ID:</span>
+                  <span style={{ fontFamily: "'Space Grotesk', monospace", fontWeight: 800 }}>{paymentSuccess.transactionId}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Payment Method:</span>
-                  <span style={{ textTransform: 'uppercase', fontWeight: 600 }}>{paymentSuccess.paymentMethod}</span>
+                  <span style={{ color: '#555555', fontWeight: 600 }}>Payment Method:</span>
+                  <span style={{ textTransform: 'uppercase', fontWeight: 800 }}>{paymentSuccess.paymentMethod}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Date & Time:</span>
-                  <span>{new Date(paymentSuccess.paidAt).toLocaleString()}</span>
+                  <span style={{ color: '#555555', fontWeight: 600 }}>Date & Time:</span>
+                  <span style={{ fontWeight: 700 }}>{new Date(paymentSuccess.paidAt).toLocaleString()}</span>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                <button className="btn btn-primary" onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  Done <ArrowRight size={16} />
+                <button className="auth-submit-btn" onClick={onClose} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%' }}>
+                  DONE & VIEW INVOICE <ArrowRight size={16} />
                 </button>
               </div>
             </div>
@@ -190,10 +192,32 @@ const PaymentModal = ({ booking, onClose, onSuccess }) => {
               {/* Price Breakdown Box */}
               {order?.breakdown && (
                 <div className="order-summary-box">
-                  <div className="summary-row">
-                    <span>Service Charge ({order.providerName}):</span>
-                    <span>₹{order.breakdown.serviceAmount}</span>
-                  </div>
+                  {order.breakdown.extraExpenses > 0 ? (
+                    <>
+                      <div className="summary-row">
+                        <span>Base Service / Labor ({order.providerName}):</span>
+                        <span>₹{order.breakdown.baseServiceAmount || (order.breakdown.serviceAmount - order.breakdown.extraExpenses)}</span>
+                      </div>
+                      <div className="summary-row" style={{ color: '#B45309' }}>
+                        <span>Extra Parts &amp; Expenses:</span>
+                        <span style={{ fontWeight: 700 }}>+ ₹{order.breakdown.extraExpenses}</span>
+                      </div>
+                      {order.breakdown.extraExpenseReason && (
+                        <div style={{ fontSize: '0.75rem', fontStyle: 'italic', color: '#6B7280', margin: '-0.2rem 0 0.35rem 0.5rem' }}>
+                          ↳ {order.breakdown.extraExpenseReason}
+                        </div>
+                      )}
+                      <div className="summary-row" style={{ borderTop: '1px dashed #E2E8F0', paddingTop: '0.35rem' }}>
+                        <span>Net Service Subtotal:</span>
+                        <span style={{ fontWeight: 700 }}>₹{order.breakdown.serviceAmount}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="summary-row">
+                      <span>Service Charge ({order.providerName}):</span>
+                      <span>₹{order.breakdown.serviceAmount}</span>
+                    </div>
+                  )}
                   <div className="summary-row">
                     <span>Platform Service Fee (5%):</span>
                     <span>₹{order.breakdown.platformFee}</span>
@@ -412,27 +436,27 @@ const PaymentModal = ({ booking, onClose, onSuccess }) => {
               )}
 
               {/* Pay Action Button */}
-              <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--surface-border)' }}>
+              <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '2px solid #111111' }}>
                 <button 
-                  className="btn btn-primary" 
-                  style={{ width: '100%', padding: '0.85rem', fontSize: '1rem', fontWeight: 700, background: 'linear-gradient(135deg, #6366F1, #4F46E5)', border: 'none', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: isProcessing ? 'not-allowed' : 'pointer' }}
+                  className="auth-submit-btn" 
+                  style={{ width: '100%', padding: '0.85rem', fontSize: '0.95rem' }}
                   onClick={handlePayNow}
                   disabled={isProcessing}
                 >
                   {isProcessing ? (
                     <>
                       <Loader2 className="animate-spin" size={20} />
-                      Processing Payment securely...
+                      PROCESSING PAYMENT SECURELY...
                     </>
                   ) : (
                     <>
                       <Lock size={18} />
-                      Pay ₹{order?.breakdown?.totalAmount || 0} Now
+                      PAY ₹{order?.breakdown?.totalAmount || 0} NOW →
                     </>
                   )}
                 </button>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  <ShieldCheck size={14} style={{ color: '#10B981' }} /> 256-bit Encrypted SSL Payment Protocol
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', marginTop: '0.75rem', fontSize: '0.75rem', fontWeight: 700, color: '#111111' }}>
+                  <ShieldCheck size={15} color="#111111" /> 256-Bit Bank-Grade Encrypted SSL Payment Protocol
                 </div>
               </div>
             </>
