@@ -724,28 +724,6 @@
   letter-spacing: -0.01em;
 }
 
-/* Direct APK / Web App Link */
-.lf-apk-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: transparent;
-  color: #D2FE00;
-  border: 1.5px solid rgba(210, 254, 0, 0.4);
-  border-radius: 10px;
-  padding: 0.65rem 1.15rem;
-  font-weight: 800;
-  font-size: 0.88rem;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.lf-apk-btn:hover {
-  background: rgba(210, 254, 0, 0.12);
-  border-color: #D2FE00;
-  transform: translateY(-2px);
-}
-
 /* QR Code Box */
 .lf-download-qr-box {
   background: #FFFFFF;

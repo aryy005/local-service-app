@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   MapPin, ArrowRight, ArrowUpRight, ShieldCheck, CreditCard, 
-  Clock, Smartphone, Download, QrCode, Zap, CheckCircle2 
+  Clock, Smartphone, QrCode, Zap, CheckCircle2 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -247,7 +247,7 @@ const Home = () => {
                   Install LocalFixr on Your Smartphone
                 </h3>
                 <p className="lf-download-info-p">
-                  Enjoy the complete hyper-local service experience in the palm of your hand. Tap below to get it on the Play Store, scan the QR code with your mobile camera, or launch the instant app.
+                  Enjoy the complete hyper-local service experience in the palm of your hand. Tap below to get it on Google Play, or scan the QR code with your smartphone camera.
                 </p>
 
                 <div className="lf-store-badges-row">
@@ -290,19 +290,6 @@ const Home = () => {
                       <span className="lf-store-maintext">App Store</span>
                     </div>
                   </a>
-
-                  {/* Direct APK / PWA Button */}
-                  <button 
-                    type="button" 
-                    className="lf-apk-btn"
-                    onClick={() => {
-                      toast.success('Launching LocalFixr Instant App...');
-                      navigate('/search');
-                    }}
-                  >
-                    <Download size={16} />
-                    <span>Install Instant App</span>
-                  </button>
                 </div>
               </div>
 

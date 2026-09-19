@@ -19,6 +19,7 @@ import HowItWorks from './pages/HowItWorks';
 import SafetyAndTrust from './pages/SafetyAndTrust';
 import PartnerGuidelines from './pages/PartnerGuidelines';
 import Support from './pages/Support';
+import ScrollToTop from './components/ScrollToTop';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from './context/AuthContext';
 
@@ -29,6 +30,7 @@ function App() {
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-[#EBEAE5]">
+      <ScrollToTop />
       {!user && <Header />}
       <main className="flex-grow w-full z-10">
         <ErrorBoundary>
