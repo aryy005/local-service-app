@@ -1,3 +1,6 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -59,6 +62,20 @@ io.on('connection', (socket) => {
     io.to(`track-${bookingId}`).emit('tracking_stopped');
   });
 
+  // ── User Private Notification Room ─────────────────────────────────────────
+  socket.on('join_user_room', (userId) => {
+    if (userId) {
+      socket.join(`user-${userId}`);
+    }
+  });
+
+  // ── Booking Room for real-time payment / status synchronization ─────────────
+  socket.on('join_booking_room', (bookingId) => {
+    if (bookingId) {
+      socket.join(`booking-${bookingId}`);
+    }
+  });
+
   socket.on('disconnect', () => console.log('User disconnected:', socket.id));
 });
 
@@ -71,8 +88,6 @@ app.use(cors({
   credentials: true
 }));
 
-const path = require('path');
-
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/verify', require('./routes/verification'));
 app.use('/api/providers', require('./routes/providers'));
@@ -80,6 +95,7 @@ app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/payments', require('./routes/payments'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 // Serve static build assets & SPA fallback for page reloads (e.g. /provider-dashboard, /customer-dashboard)
 const distPath = path.join(__dirname, '../dist');

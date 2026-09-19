@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
 import { isProviderSaved, toggleSaveProvider } from '../utils/savedProviders';
 import { getCurrentLocationName } from '../utils/geolocation';
+import NotificationCenter from '../components/NotificationCenter';
 import UserMenuPill from '../components/UserMenuPill';
 import './Search.css';
 
@@ -409,6 +410,7 @@ const Search = () => {
               )}
             </div>
 
+            <NotificationCenter />
             <UserMenuPill />
           </div>
         </div>

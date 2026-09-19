@@ -3,6 +3,7 @@ const router = express.Router();
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
 const auth = require('../middleware/auth');
+const { notifyUser } = require('../services/notificationService');
 
 // Helper to calculate price breakdown
 const calculateBreakdown = (servicePrice, extraExpenses = 0, extraExpenseReason = '') => {
@@ -38,7 +39,9 @@ router.post('/create-order', auth, async (req, res) => {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
-    if (booking.customerId.toString() !== req.user.id && req.user.role !== 'admin') {
+    const isCustomer = booking.customerId.toString() === req.user.id;
+    const isProvider = (booking.providerId?._id || booking.providerId).toString() === req.user.id;
+    if (!isCustomer && !isProvider && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to initiate payment for this booking' });
     }
 
@@ -89,8 +92,10 @@ router.post('/verify', auth, async (req, res) => {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
-    if (booking.customerId.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized' });
+    const isCustomer = (booking.customerId?._id || booking.customerId).toString() === req.user.id;
+    const isProvider = (booking.providerId?._id || booking.providerId).toString() === req.user.id;
+    if (!isCustomer && !isProvider && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to record payment for this booking' });
     }
 
     if (booking.paymentStatus === 'paid') {
@@ -155,6 +160,49 @@ router.post('/verify', auth, async (req, res) => {
     });
 
     await booking.save();
+
+    // ── Real-Time Socket.IO Synchronization ──
+    const io = req.app.get('io');
+    const paymentPayload = {
+      bookingId: booking._id,
+      orderId: booking.orderId,
+      paymentStatus: 'paid',
+      serviceStage: 'paid',
+      paidAmount: breakdown.totalAmount,
+      paymentMethod,
+      verifiedBy: isProvider ? 'provider' : 'customer'
+    };
+
+    if (io) {
+      io.to(`booking-${booking._id}`).emit('payment_completed', paymentPayload);
+      io.to(`track-${booking._id}`).emit('payment_completed', paymentPayload);
+      io.emit('booking_updated', paymentPayload);
+    }
+
+    // ── In-App Notifications for Customer & Provider ──
+    const customerIdStr = (booking.customerId?._id || booking.customerId).toString();
+    const providerIdStr = (booking.providerId?._id || booking.providerId).toString();
+    const orderIdStr = booking.orderId || ('ORD-' + booking._id.toString().slice(-6).toUpperCase());
+
+    // Notify customer
+    notifyUser(io, {
+      recipient: customerIdStr,
+      sender: req.user.id,
+      title: 'Payment Successful 🎉',
+      message: `Payment of ₹${breakdown.totalAmount} for Order #${orderIdStr} completed via ${paymentMethod.toUpperCase()}.`,
+      type: 'payment',
+      link: '/customer-dashboard'
+    });
+
+    // Notify provider
+    notifyUser(io, {
+      recipient: providerIdStr,
+      sender: req.user.id,
+      title: 'Payment Received 💰',
+      message: `Payment of ₹${breakdown.totalAmount} for Order #${orderIdStr} confirmed via ${paymentMethod.toUpperCase()}.`,
+      type: 'payment',
+      link: '/provider-dashboard'
+    });
 
     res.json({
       message: 'Payment verified and updated successfully',

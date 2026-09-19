@@ -92,12 +92,13 @@ const Header = () => {
           <span className="logo-text">Localfixr</span>
         </Link>
 
-        {/* Center Navigation Links (Matching mockup) */}
+        {/* Center Navigation Links */}
         <nav className="desktop-center-nav">
           <Link to="/" className="nav-link">Home</Link>
           <Link to="/search" className="nav-link">Services</Link>
-          <a href="#about" className="nav-link" onClick={(e) => { e.preventDefault(); navigate('/search'); }}>About</a>
-          <a href="#contact" className="nav-link" onClick={(e) => { e.preventDefault(); navigate('/search'); }}>Contact</a>
+          <Link to="/how-it-works" className="nav-link">How It Works</Link>
+          <Link to="/about" className="nav-link">About</Link>
+          <Link to="/support" className="nav-link">Support</Link>
         </nav>
 
         {/* Navigation / Actions */}
@@ -198,6 +199,15 @@ const Header = () => {
 
         <Link to="/search" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
           Explore All Services
+        </Link>
+        <Link to="/how-it-works" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          How It Works
+        </Link>
+        <Link to="/about" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          About Localfixr
+        </Link>
+        <Link to="/support" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          Help &amp; Support Desk
         </Link>
 
         {/* Quick controls row: Theme & Language */}

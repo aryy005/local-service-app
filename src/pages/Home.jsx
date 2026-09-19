@@ -1,8 +1,28 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, ArrowRight, ArrowUpRight, ShieldCheck, CreditCard, Clock } from 'lucide-react';
+import { 
+  MapPin, ArrowRight, ArrowUpRight, ShieldCheck, CreditCard, 
+  Clock, Smartphone, Download, QrCode, Zap, CheckCircle2 
+} from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import './Home.css';
+
+/* ─── Google Play & Apple App Store SVG Badges ─── */
+const GooglePlayIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path d="M3.609 1.814L13.793 12 3.61 22.186A2.37 2.37 0 0 1 3 20.5V3.5c0-.66.224-1.267.609-1.686z" fill="#00D2FF"/>
+    <path d="M17.436 8.357L13.793 12l3.643 3.643 4.148-2.396a1.458 1.458 0 0 0 0-2.494l-4.148-2.396z" fill="#FFC800"/>
+    <path d="M3.61 1.814l10.183 10.186 3.643-3.643L5.457.777C4.69.334 3.992.83 3.61 1.814z" fill="#00F076"/>
+    <path d="M13.793 12L3.61 22.186c.382.984 1.08 1.48 1.847 1.037l11.979-6.92L13.793 12z" fill="#FF3A44"/>
+  </svg>
+);
+
+const AppleIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.38c.62-.75 1.04-1.8 0.93-2.85-.9.04-1.99.6-2.63 1.35-.56.64-1.05 1.7-0.92 2.72 1 .08 2.02-.47 2.62-1.22z"/>
+  </svg>
+);
 
 /* ─── SVG Icons matching reference exactly ─── */
 const IconBolt = () => (
@@ -191,6 +211,159 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* ═══ MOBILE APP POSTER & PLAY STORE DOWNLOAD SHOWCASE (Visible only before signing up) ═══ */}
+      {!user && (
+        <section className="lf-app-showcase-section">
+          <div className="lf-app-showcase-inner">
+            
+            {/* Section Heading */}
+            <div className="lf-app-header">
+              <div className="lf-app-badge">
+                <Smartphone size={14} />
+                <span>Mobile App Now Available</span>
+              </div>
+              <h2 className="lf-app-title">
+                Get the <span className="lf-lime-text">LocalFixr App</span> on Google Play
+              </h2>
+              <p className="lf-app-sub">
+                Book verified doorstep experts, track live GPS technician arrivals in real time, and make seamless dynamic UPI QR code payments directly from your phone.
+              </p>
+            </div>
+
+            {/* Poster Feature Showcase Frame */}
+            <div className="lf-poster-wrapper">
+              <img 
+                src="/localfixr_app_poster.jpg" 
+                alt="LocalFixr Mobile App & Doorstep Services Poster" 
+                className="lf-poster-img"
+              />
+            </div>
+
+            {/* Download Hub & Action Bar */}
+            <div className="lf-download-hub">
+              <div>
+                <h3 className="lf-download-info-title">
+                  Install LocalFixr on Your Smartphone
+                </h3>
+                <p className="lf-download-info-p">
+                  Enjoy the complete hyper-local service experience in the palm of your hand. Tap below to get it on the Play Store, scan the QR code with your mobile camera, or launch the instant app.
+                </p>
+
+                <div className="lf-store-badges-row">
+                  {/* Google Play Store Badge */}
+                  <a 
+                    href="https://play.google.com/store/apps" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="lf-store-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toast.success('Redirecting to Google Play Store package...');
+                      window.open('https://play.google.com/store/apps', '_blank');
+                    }}
+                    title="Get LocalFixr on Google Play Store"
+                  >
+                    <GooglePlayIcon />
+                    <div className="lf-store-btn-text">
+                      <span className="lf-store-subtext">GET IT ON</span>
+                      <span className="lf-store-maintext">Google Play</span>
+                    </div>
+                  </a>
+
+                  {/* Apple App Store Badge */}
+                  <a 
+                    href="https://www.apple.com/app-store/" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="lf-store-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toast.success('App Store iOS release preview!');
+                      window.open('https://www.apple.com/app-store/', '_blank');
+                    }}
+                    title="Download on Apple App Store"
+                  >
+                    <AppleIcon />
+                    <div className="lf-store-btn-text">
+                      <span className="lf-store-subtext">Download on the</span>
+                      <span className="lf-store-maintext">App Store</span>
+                    </div>
+                  </a>
+
+                  {/* Direct APK / PWA Button */}
+                  <button 
+                    type="button" 
+                    className="lf-apk-btn"
+                    onClick={() => {
+                      toast.success('Launching LocalFixr Instant App...');
+                      navigate('/search');
+                    }}
+                  >
+                    <Download size={16} />
+                    <span>Install Instant App</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* QR Code Card */}
+              <div className="lf-download-qr-box">
+                <img 
+                  src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Flocalfixr.site%2Fsearch" 
+                  alt="Scan to download LocalFixr app" 
+                  className="lf-download-qr-img" 
+                />
+                <span className="lf-download-qr-label">Scan to Download</span>
+                <span style={{ fontSize: '0.7rem', color: '#666', fontWeight: 600 }}>Android &bull; iOS Web</span>
+              </div>
+            </div>
+
+            {/* Feature Highlights Grid */}
+            <div className="lf-app-features-grid">
+              <div className="lf-app-feature-pill">
+                <div className="lf-app-feature-icon">
+                  <Zap size={20} />
+                </div>
+                <div>
+                  <div className="lf-app-feature-title">Live GPS Tracking</div>
+                  <div className="lf-app-feature-desc">Watch technician arrival on map</div>
+                </div>
+              </div>
+
+              <div className="lf-app-feature-pill">
+                <div className="lf-app-feature-icon">
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <div className="lf-app-feature-title">Aadhaar KYC Verified</div>
+                  <div className="lf-app-feature-desc">100% screened specialists</div>
+                </div>
+              </div>
+
+              <div className="lf-app-feature-pill">
+                <div className="lf-app-feature-icon">
+                  <QrCode size={20} />
+                </div>
+                <div>
+                  <div className="lf-app-feature-title">Dynamic UPI QR &amp; Cash</div>
+                  <div className="lf-app-feature-desc">Pay directly on screen or cash</div>
+                </div>
+              </div>
+
+              <div className="lf-app-feature-pill">
+                <div className="lf-app-feature-icon">
+                  <Clock size={20} />
+                </div>
+                <div>
+                  <div className="lf-app-feature-title">60-Second Booking</div>
+                  <div className="lf-app-feature-desc">Transparent fixed hourly rates</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+      )}
 
     </div>
   );

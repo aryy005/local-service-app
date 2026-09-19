@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -14,11 +14,18 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
 import ForgotPassword from './pages/ForgotPassword';
 import NotFound from './pages/NotFound';
+import About from './pages/About';
+import HowItWorks from './pages/HowItWorks';
+import SafetyAndTrust from './pages/SafetyAndTrust';
+import PartnerGuidelines from './pages/PartnerGuidelines';
+import Support from './pages/Support';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from './context/AuthContext';
 
 function App() {
   const { user } = useAuth();
+  const location = useLocation();
+  const isDashboard = location.pathname.includes('-dashboard') || location.pathname.startsWith('/admin');
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-[#EBEAE5]">
@@ -36,6 +43,12 @@ function App() {
             <Route path="/auth/forgot-password" element={<ForgotPassword />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/safety" element={<SafetyAndTrust />} />
+            <Route path="/guidelines" element={<PartnerGuidelines />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/contact" element={<Support />} />
             <Route 
               path="/customer-dashboard" 
               element={
@@ -80,7 +93,7 @@ function App() {
           </Routes>
         </ErrorBoundary>
       </main>
-      {!user && <Footer />}
+      {!isDashboard && <Footer />}
       <Toaster 
         position="bottom-right" 
         toastOptions={{

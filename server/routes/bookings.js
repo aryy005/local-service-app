@@ -4,6 +4,7 @@ const Booking = require('../models/Booking');
 const User = require('../models/User');
 const Counter = require('../models/Counter');
 const auth = require('../middleware/auth');
+const { notifyUser } = require('../services/notificationService');
 
 // @route   POST api/bookings
 // @desc    Create a booking request (Customer only)
@@ -48,6 +49,18 @@ router.post('/', auth, async (req, res) => {
     });
 
     const booking = await newBooking.save();
+
+    // Dispatch real-time in-app notification to the assigned provider
+    const io = req.app.get('io');
+    notifyUser(io, {
+      recipient: providerId,
+      sender: req.user.id,
+      title: 'New Service Request! 🛠️',
+      message: `New booking (${generatedOrderId}) received from ${req.user.name || 'a customer'}. Scheduled for ${date || 'upcoming date'}.`,
+      type: 'booking',
+      link: '/provider-dashboard'
+    });
+
     res.json(booking);
   } catch (err) {
     console.error('Booking Error:', err.message);
@@ -223,6 +236,76 @@ router.put('/:id/stage', auth, async (req, res) => {
     const populatedBooking = await Booking.findById(booking._id)
       .populate('customerId', 'name phone email customerDetails')
       .populate('providerId', 'name phone providerDetails');
+
+    // ── Real-Time Socket Emission & In-App Notifications ──
+    const io = req.app.get('io');
+    const custId = populatedBooking.customerId?._id || populatedBooking.customerId;
+    const provId = populatedBooking.providerId?._id || populatedBooking.providerId;
+    const provName = populatedBooking.providerId?.name || 'Service Specialist';
+    const custName = populatedBooking.customerId?.name || 'Customer';
+    const ordId = populatedBooking.orderId || ('ORD-' + populatedBooking._id.toString().slice(-6).toUpperCase());
+
+    if (io) {
+      io.to(`booking-${booking._id}`).emit('stage_updated', {
+        bookingId: booking._id,
+        serviceStage: stage,
+        status: populatedBooking.status,
+        finalPrice: populatedBooking.finalPrice
+      });
+      io.emit('booking_updated', {
+        bookingId: booking._id,
+        serviceStage: stage,
+        status: populatedBooking.status
+      });
+    }
+
+    if (stage === 'accepted') {
+      notifyUser(io, {
+        recipient: custId,
+        sender: req.user.id,
+        title: 'Booking Accepted! 🚀',
+        message: `${provName} has accepted your booking for Order #${ordId}.`,
+        type: 'booking',
+        link: '/customer-dashboard'
+      });
+    } else if (stage === 'in_transit') {
+      notifyUser(io, {
+        recipient: custId,
+        sender: req.user.id,
+        title: 'Specialist On The Way 🚗',
+        message: `${provName} is traveling to your location for Order #${ordId}.`,
+        type: 'booking',
+        link: '/customer-dashboard'
+      });
+    } else if (stage === 'in_progress') {
+      notifyUser(io, {
+        recipient: custId,
+        sender: req.user.id,
+        title: 'Service In Progress 🔧',
+        message: `${provName} has started work on Order #${ordId}.`,
+        type: 'booking',
+        link: '/customer-dashboard'
+      });
+    } else if (stage === 'completed') {
+      notifyUser(io, {
+        recipient: custId,
+        sender: req.user.id,
+        title: 'Service Completed & Bill Ready 🌟',
+        message: `Order #${ordId} completed by ${provName}. Total bill confirmed: ₹${populatedBooking.finalPrice}. Please complete payment.`,
+        type: 'payment',
+        link: '/customer-dashboard'
+      });
+    } else if (stage === 'cancelled' || stage === 'declined') {
+      const recipientId = isCustomer ? provId : custId;
+      notifyUser(io, {
+        recipient: recipientId,
+        sender: req.user.id,
+        title: 'Booking Cancelled ❌',
+        message: `Order #${ordId} was cancelled by ${isCustomer ? custName : provName}.`,
+        type: 'booking',
+        link: isCustomer ? '/provider-dashboard' : '/customer-dashboard'
+      });
+    }
 
     res.json(populatedBooking);
   } catch (err) {

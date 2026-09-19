@@ -1,0 +1,385 @@
+/* ═══════════════════════════════════════════════════════════════
+   LOCALFIXR DOCUMENTATION & BLOG STYLING
+═══════════════════════════════════════════════════════════════ */
+
+.doc-page {
+  min-height: calc(100vh - 80px);
+  background-color: #F8F9FA;
+  color: #111111;
+  padding-bottom: 4rem;
+  font-family: var(--font-sans, 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+}
+
+/* ─── Hero Section ─── */
+.doc-hero {
+  background: #111111;
+  color: #FFFFFF;
+  padding: 4rem 1.5rem 3.5rem;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 3px solid #D2FE00;
+}
+
+.doc-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(210, 254, 0, 0.08) 0%, rgba(17, 17, 17, 0) 70%);
+  pointer-events: none;
+}
+
+.doc-hero-container {
+  max-width: 960px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.doc-category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #D2FE00;
+  color: #111111;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 1.25rem;
+}
+
+.doc-hero-title {
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin: 0 0 1rem;
+}
+
+.doc-hero-title .highlight {
+  color: #D2FE00;
+}
+
+.doc-hero-lead {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: #CCCCCC;
+  max-width: 760px;
+  line-height: 1.6;
+  margin: 0 0 1.75rem;
+}
+
+.doc-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #999999;
+  border-top: 1px solid #282828;
+  padding-top: 1.25rem;
+}
+
+.doc-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ─── Main Content Container ─── */
+.doc-container {
+  max-width: 960px;
+  margin: 2.5rem auto 0;
+  padding: 0 1.5rem;
+}
+
+/* ─── Article / Blog Layout ─── */
+.doc-article-card {
+  background: #FFFFFF;
+  border: 2px solid #111111;
+  border-radius: 12px;
+  box-shadow: 6px 6px 0px #111111;
+  padding: clamp(1.75rem, 4vw, 3rem);
+  margin-bottom: 2.5rem;
+}
+
+.doc-intro-box {
+  background: #F4F4F0;
+  border-left: 4px solid #111111;
+  padding: 1.25rem 1.5rem;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 2.5rem;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #222222;
+  font-weight: 500;
+}
+
+/* ─── Section Headings & Text ─── */
+.doc-section {
+  margin-bottom: 3rem;
+}
+
+.doc-section:last-child {
+  margin-bottom: 0;
+}
+
+.doc-h2 {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #111111;
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.doc-step-number {
+  background: #111111;
+  color: #D2FE00;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.doc-paragraph {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #374151;
+  margin: 0 0 1.25rem;
+}
+
+/* ─── Callout & Alert Boxes ─── */
+.doc-alert {
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.doc-alert-info {
+  background: #EFF6FF;
+  border: 1.5px solid #93C5FD;
+  color: #1E40AF;
+}
+
+.doc-alert-success {
+  background: #F0FDF4;
+  border: 1.5px solid #86EFAC;
+  color: #166534;
+}
+
+.doc-alert-warning {
+  background: #FEFCE8;
+  border: 1.5px solid #FDE047;
+  color: #854D0E;
+}
+
+.doc-alert-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin: 0 0 0.25rem;
+}
+
+.doc-alert-text {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ─── Grid Cards (Pillars, Verification, Guidelines) ─── */
+.doc-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.doc-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.doc-card {
+  background: #FAFAFA;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 1.5rem;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.doc-card:hover {
+  transform: translateY(-2px);
+  border-color: #111111;
+}
+
+.doc-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: #111111;
+  color: #D2FE00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.doc-card-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #111111;
+  margin: 0 0 0.5rem;
+}
+
+.doc-card-desc {
+  font-size: 0.9rem;
+  color: #4B5563;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ─── Verification Step Item ─── */
+.doc-verify-item {
+  display: flex;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  background: #FFFFFF;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+.doc-verify-badge {
+  background: #111111;
+  color: #D2FE00;
+  font-weight: 900;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  height: fit-content;
+  white-space: nowrap;
+}
+
+/* ─── FAQ Accordion ─── */
+.doc-faq-item {
+  border: 1.5px solid #E5E7EB;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  background: #FFFFFF;
+  overflow: hidden;
+}
+
+.doc-faq-question {
+  width: 100%;
+  padding: 1.1rem 1.25rem;
+  background: none;
+  border: none;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #111111;
+  cursor: pointer;
+}
+
+.doc-faq-question:hover {
+  background: #F9FAFB;
+}
+
+.doc-faq-answer {
+  padding: 0 1.25rem 1.25rem;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: #4B5563;
+}
+
+/* ─── Support Cards & Contact ─── */
+.doc-contact-banner {
+  background: #111111;
+  color: #FFFFFF;
+  border-radius: 12px;
+  padding: 2.5rem;
+  text-align: center;
+  margin-top: 3rem;
+  border: 2px solid #111111;
+  box-shadow: 6px 6px 0px #D2FE00;
+}
+
+.doc-contact-email-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: #D2FE00;
+  color: #111111;
+  padding: 0.85rem 1.75rem;
+  border-radius: 8px;
+  font-weight: 900;
+  font-size: 1.05rem;
+  text-decoration: none;
+  margin: 1.25rem 0.5rem 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.doc-contact-email-btn:hover {
+  background: #bbf000;
+  transform: translateY(-2px);
+}
+
+.doc-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: #FFFFFF;
+  border: 2px solid #444444;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-decoration: none;
+  margin: 1.25rem 0.5rem 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.doc-secondary-btn:hover {
+  border-color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 640px) {
+  .doc-hero {
+    padding: 2.75rem 1rem 2.25rem;
+  }
+  .doc-container {
+    padding: 0 1rem;
+    margin-top: 1.5rem;
+  }
+  .doc-article-card {
+    padding: 1.25rem;
+  }
+  .doc-contact-banner {
+    padding: 1.75rem 1rem;
+  }
+}

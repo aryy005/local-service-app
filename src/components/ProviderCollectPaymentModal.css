@@ -1,0 +1,377 @@
+/* ─── Provider Collect Payment Modal Styles ─── */
+
+.collect-pay-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 16px;
+}
+
+.collect-pay-modal {
+  width: 100%;
+  max-width: 440px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: modal-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modal-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header */
+.collect-pay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  background: #0f172a;
+  color: #ffffff;
+  border-bottom: 3px solid #D2FE00;
+}
+
+.collect-pay-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.collect-pay-header-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #D2FE00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collect-pay-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.collect-pay-subtitle {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  display: block;
+  margin-top: 2px;
+}
+
+.collect-pay-close-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  transition: color 0.15s;
+}
+
+.collect-pay-close-btn:hover {
+  color: #ffffff;
+}
+
+/* Body */
+.collect-pay-body {
+  padding: 20px 22px;
+}
+
+/* Amount Card */
+.collect-pay-amount-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 18px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.collect-pay-amt-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.collect-pay-amt-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+.collect-pay-amt-breakdown {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* Tabs */
+.collect-pay-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
+
+.collect-pay-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.collect-pay-tab.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* QR Section */
+.collect-pay-qr-section {
+  text-align: center;
+}
+
+.collect-pay-qr-instruction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 12px;
+}
+
+.collect-pay-qr-box {
+  display: inline-block;
+  padding: 12px;
+  background: #ffffff;
+  border: 2px solid #0f172a;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  margin-bottom: 12px;
+}
+
+.collect-pay-qr-image {
+  display: block;
+  width: 190px;
+  height: 190px;
+  margin: 0 auto;
+}
+
+.collect-pay-qr-badge {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #047857;
+  background: #ecfdf5;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid #a7f3d0;
+  display: inline-block;
+}
+
+.collect-pay-vpa-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.collect-pay-copy-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #0f172a;
+  transition: all 0.15s;
+}
+
+.collect-pay-copy-btn:hover {
+  background: #f1f5f9;
+}
+
+.collect-pay-apps-supported {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-bottom: 18px;
+}
+
+/* Cash Section */
+.collect-pay-cash-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 24px 20px;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.collect-pay-cash-icon {
+  margin-bottom: 8px;
+}
+
+.collect-pay-cash-box h4 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #065f46;
+}
+
+.collect-pay-cash-box p {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: #047857;
+  line-height: 1.5;
+}
+
+.collect-pay-cash-verify-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #065f46;
+  background: #dcfce7;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* Action Button */
+.collect-pay-actions {
+  margin-top: 10px;
+}
+
+.collect-pay-confirm-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  background: #0f172a;
+  color: #D2FE00;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2);
+}
+
+.collect-pay-confirm-btn:hover:not(:disabled) {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.collect-pay-confirm-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.collect-pay-footer-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 12px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* Success View */
+.collect-pay-success-state {
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.collect-pay-success-icon {
+  margin-bottom: 12px;
+  animation: bounce-icon 0.6s ease;
+}
+
+@keyframes bounce-icon {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.collect-pay-success-state h3 {
+  margin: 0 0 6px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.collect-pay-success-amt {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #10B981;
+  margin: 0 0 10px;
+}
+
+.collect-pay-success-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.5;
+  display: block;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

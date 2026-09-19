@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { 
   Check, Clock, MapPin, Phone, MessageSquare, 
   CreditCard, FileText, CheckCircle, Navigation, ShieldCheck, 
-  Loader2, AlertCircle, Sparkles, X, ChevronRight, Camera, MessageCircle
+  Loader2, AlertCircle, Sparkles, X, ChevronRight, Camera, MessageCircle, QrCode
 } from 'lucide-react';
 import { API_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,7 @@ import { playNotificationSound } from '../utils/soundNotifications';
 import { openWhatsAppChat, formatWhatsAppBookingMessage } from '../utils/whatsapp';
 import LiveTrackingMap from './LiveTrackingMap';
 import ConfirmFinalBillModal from './ConfirmFinalBillModal';
+import ProviderCollectPaymentModal from './ProviderCollectPaymentModal';
 import './ServiceTrackerModal.css';
 
 const STAGES = [
@@ -27,6 +28,7 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
   const [errorMsg, setErrorMsg] = useState('');
   const [showBillModal, setShowBillModal] = useState(false);
   const [isAdjustingBill, setIsAdjustingBill] = useState(false);
+  const [showCollectPaymentModal, setShowCollectPaymentModal] = useState(false);
 
   if (!booking) return null;
 
@@ -373,16 +375,25 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
                     </div>
 
                     {booking.paymentStatus !== 'paid' && (
-                      <button
-                        type="button"
-                        style={{ marginTop: '0.65rem', width: '100%', background: '#FFFFFF', border: '1.5px solid #D97706', color: '#B45309', padding: '0.5rem', borderRadius: 6, fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}
-                        onClick={() => {
-                          setIsAdjustingBill(true);
-                          setShowBillModal(true);
-                        }}
-                      >
-                        ✏️ Adjust Bill / Add Extra Expenses
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          style={{ marginTop: '0.65rem', width: '100%', background: '#0F172A', color: '#D2FE00', border: 'none', padding: '0.75rem 1rem', borderRadius: 6, fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', boxShadow: '0 4px 12px rgba(15,23,42,0.18)' }}
+                          onClick={() => setShowCollectPaymentModal(true)}
+                        >
+                          <QrCode size={18} /> Show QR Code &amp; Collect Payment
+                        </button>
+                        <button
+                          type="button"
+                          style={{ marginTop: '0.5rem', width: '100%', background: '#FFFFFF', border: '1.5px solid #D97706', color: '#B45309', padding: '0.5rem', borderRadius: 6, fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}
+                          onClick={() => {
+                            setIsAdjustingBill(true);
+                            setShowBillModal(true);
+                          }}
+                        >
+                          ✏️ Adjust Bill / Add Extra Expenses
+                        </button>
+                      </>
                     )}
                   </div>
                 )}
@@ -496,6 +507,18 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
           onClose={() => setShowBillModal(false)}
           onConfirm={handleConfirmFinalBill}
           isAdjusting={isAdjustingBill}
+        />
+      )}
+
+      {/* Provider Collect Payment / Dynamic QR Modal */}
+      {showCollectPaymentModal && (
+        <ProviderCollectPaymentModal
+          booking={booking}
+          onClose={() => setShowCollectPaymentModal(false)}
+          onPaymentConfirmed={(updatedBooking) => {
+            setShowCollectPaymentModal(false);
+            if (onUpdateBooking) onUpdateBooking(updatedBooking);
+          }}
         />
       )}
     </div>

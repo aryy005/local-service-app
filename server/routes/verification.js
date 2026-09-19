@@ -3,6 +3,9 @@ const router = express.Router();
 const {
   sendEmailOTP,
   verifyEmailOTP,
+  verifySmtpConnection,
+  sendTestEmail,
+  getCleanEmailCredentials,
   validateIndianPhone,
   sendPhoneOTP,
   verifyPhoneOTP,
@@ -11,8 +14,54 @@ const {
 } = require('../services/verification');
 
 // ═══════════════════════════════════════════════════════════════
-//                    EMAIL VERIFICATION
+//                    EMAIL VERIFICATION & DIAGNOSTICS
 // ═══════════════════════════════════════════════════════════════
+
+// @route   GET api/verify/email/status
+// @desc    Check SMTP configuration and Google mail connection status
+router.get('/email/status', async (req, res) => {
+  try {
+    const creds = getCleanEmailCredentials();
+    const status = await verifySmtpConnection();
+    res.json({
+      configured: status.configured,
+      verified: status.verified || false,
+      sender: creds.user,
+      host: creds.host,
+      port: creds.port,
+      fromHeader: creds.from,
+      message: status.message,
+      error: status.error || null
+    });
+  } catch (err) {
+    res.status(500).json({ configured: false, error: err.message });
+  }
+});
+
+// @route   POST api/verify/email/test
+// @desc    Dispatch a test email to verify SMTP delivery
+router.post('/email/test', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: 'Recipient email is required' });
+    }
+    const result = await sendTestEmail(email);
+    if (!result.success) {
+      return res.status(500).json({
+        message: 'Failed to send test email',
+        error: result.error,
+        help: 'Ensure you have pasted your 16-character Google App Password into server/.env'
+      });
+    }
+    res.json({
+      message: `Test email sent successfully to ${email} from localfixrr@gmail.com!`,
+      messageId: result.messageId
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error testing email', error: err.message });
+  }
+});
 
 // @route   POST api/verify/email/send-otp
 // @desc    Send OTP to email address
@@ -27,7 +76,10 @@ router.post('/email/send-otp', async (req, res) => {
     const result = await sendEmailOTP(email);
 
     if (!result.sent) {
-      return res.status(500).json({ message: 'Failed to send verification email.' });
+      return res.status(500).json({ 
+        message: result.error || 'Failed to send verification email.',
+        error: result.error
+      });
     }
 
     const response = {

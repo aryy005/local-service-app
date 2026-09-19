@@ -6,14 +6,17 @@ import {
   Briefcase, User as UserIcon, Wallet, MessageSquare, Headphones, 
   MapPin, Check, X, AlertCircle, Eye, Wrench, Plus, Upload, Trash2, 
   Lock, ArrowRight, ShieldCheck, Zap, Scissors, Paintbrush, Snowflake,
-  Edit2, ExternalLink, Navigation, Phone, Shield
+  Edit2, ExternalLink, Navigation, Phone, Shield, QrCode
 } from 'lucide-react';
-import { API_URL } from '../config';
+import { io } from 'socket.io-client';
+import { API_URL, SOCKET_URL } from '../config';
 import { categories } from '../data/mockData';
 import ChatModal from '../components/ChatModal';
 import ServiceTrackerModal from '../components/ServiceTrackerModal';
 import InvoiceModal from '../components/InvoiceModal';
 import ConfirmFinalBillModal from '../components/ConfirmFinalBillModal';
+import NotificationCenter from '../components/NotificationCenter';
+import ProviderCollectPaymentModal from '../components/ProviderCollectPaymentModal';
 import { openWhatsAppChat, formatWhatsAppBookingMessage } from '../utils/whatsapp';
 import './ProviderDashboard.css';
 
@@ -77,6 +80,7 @@ const ProviderDashboard = () => {
   const [activeInvoiceBooking, setActiveInvoiceBooking] = useState(null);
   const [confirmBillBooking, setConfirmBillBooking] = useState(null);
   const [isAdjustingBill, setIsAdjustingBill] = useState(false);
+  const [collectPaymentBooking, setCollectPaymentBooking] = useState(null);
   const [reviews, setReviews] = useState([]);
 
   // Booking filters in bookings tab
@@ -174,6 +178,28 @@ const ProviderDashboard = () => {
     setPhoneInput(user.phone || '');
 
     fetchJobs();
+
+    // Socket.IO real-time listener for provider updates & payment confirmations
+    const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+    const providerId = user.id || user._id;
+    if (providerId) {
+      socket.emit('join_user_room', providerId);
+    }
+
+    socket.on('payment_completed', (data) => {
+      fetchJobs();
+      if (data?.bookingId) {
+        setSelectedJobDetail(prev => prev?._id === data.bookingId ? { ...prev, paymentStatus: 'paid', status: 'completed', serviceStage: 'paid', paidAt: new Date() } : prev);
+        setCollectPaymentBooking(prev => prev?._id === data.bookingId ? null : prev);
+      }
+    });
+
+    socket.on('booking_updated', () => fetchJobs());
+    socket.on('new_booking_request', () => fetchJobs());
+
+    return () => {
+      socket.disconnect();
+    };
   }, [user, token, navigate]);
 
   // Handle avatar image file upload (converts to base64 Data URL)
@@ -637,10 +663,7 @@ const ProviderDashboard = () => {
           </div>
 
           <div className="lp-topbar-right">
-            <button type="button" className="lp-notif-bell-btn" title="Notifications">
-              <Bell size={18} />
-              {pendingJobs.length > 0 && <span className="lp-notif-dot">{pendingJobs.length}</span>}
-            </button>
+            <NotificationCenter />
 
             <div className="lp-provider-profile-pill" onClick={() => setActiveTab('profile')}>
               <img 
@@ -1259,17 +1282,27 @@ const ProviderDashboard = () => {
                               )}
 
                               {(job.status === 'completed' || job.serviceStage === 'completed') && job.paymentStatus !== 'paid' && (
-                                <button
-                                  type="button"
-                                  style={{ background: '#FFFBEB', color: '#B45309', border: '1.5px solid #FDE68A', borderRadius: 4, padding: '0.35rem 0.65rem', fontWeight: 800, cursor: 'pointer' }}
-                                  onClick={() => {
-                                    setConfirmBillBooking(job);
-                                    setIsAdjustingBill(true);
-                                  }}
-                                  title="Adjust Bill or Add Extra Expenses"
-                                >
-                                  ₹{job.finalPrice || '—'} ✏️
-                                </button>
+                                <>
+                                  <button
+                                    type="button"
+                                    style={{ background: '#0F172A', color: '#D2FE00', border: 'none', borderRadius: 4, padding: '0.35rem 0.65rem', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                    onClick={() => setCollectPaymentBooking(job)}
+                                    title="Show QR Code to Customer"
+                                  >
+                                    <QrCode size={13} /> QR / Collect
+                                  </button>
+                                  <button
+                                    type="button"
+                                    style={{ background: '#FFFBEB', color: '#B45309', border: '1.5px solid #FDE68A', borderRadius: 4, padding: '0.35rem 0.65rem', fontWeight: 800, cursor: 'pointer' }}
+                                    onClick={() => {
+                                      setConfirmBillBooking(job);
+                                      setIsAdjustingBill(true);
+                                    }}
+                                    title="Adjust Bill or Add Extra Expenses"
+                                  >
+                                    ₹{job.finalPrice || '—'} ✏️
+                                  </button>
+                                </>
                               )}
 
                               {job.customerId && (
@@ -2051,31 +2084,49 @@ const ProviderDashboard = () => {
                         Complete &amp; Generate Bill
                       </button>
                     ) : selectedJobDetail.paymentStatus !== 'paid' ? (
-                      <button 
-                        type="button" 
-                        style={{ background: '#F59E0B', color: '#FFF', border: 'none', padding: '0.65rem 1.25rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}
-                        onClick={() => {
-                          setConfirmBillBooking(selectedJobDetail);
-                          setIsAdjustingBill(true);
-                        }}
-                      >
-                        Adjust Final Bill (₹{selectedJobDetail.finalPrice})
-                      </button>
+                      <>
+                        <button 
+                          type="button" 
+                          style={{ background: '#0F172A', color: '#D2FE00', border: 'none', padding: '0.65rem 1.25rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: '0 4px 12px rgba(15,23,42,0.2)' }}
+                          onClick={() => setCollectPaymentBooking(selectedJobDetail)}
+                        >
+                          <QrCode size={18} /> Show QR &amp; Collect Payment
+                        </button>
+                        <button 
+                          type="button" 
+                          style={{ background: '#F59E0B', color: '#FFF', border: 'none', padding: '0.65rem 1.25rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}
+                          onClick={() => {
+                            setConfirmBillBooking(selectedJobDetail);
+                            setIsAdjustingBill(true);
+                          }}
+                        >
+                          Adjust Final Bill (₹{selectedJobDetail.finalPrice})
+                        </button>
+                      </>
                     ) : null}
                   </>
                 )}
 
                 {selectedJobDetail.status === 'completed' && selectedJobDetail.paymentStatus !== 'paid' && selectedJobDetail.status !== 'accepted' && (
-                  <button 
-                    type="button" 
-                    style={{ background: '#F59E0B', color: '#FFF', border: 'none', padding: '0.65rem 1.25rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}
-                    onClick={() => {
-                      setConfirmBillBooking(selectedJobDetail);
-                      setIsAdjustingBill(true);
-                    }}
-                  >
-                    Adjust Final Bill (₹{selectedJobDetail.finalPrice})
-                  </button>
+                  <>
+                    <button 
+                      type="button" 
+                      style={{ background: '#0F172A', color: '#D2FE00', border: 'none', padding: '0.65rem 1.25rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: '0 4px 12px rgba(15,23,42,0.2)' }}
+                      onClick={() => setCollectPaymentBooking(selectedJobDetail)}
+                    >
+                      <QrCode size={18} /> Show QR &amp; Collect Payment
+                    </button>
+                    <button 
+                      type="button" 
+                      style={{ background: '#F59E0B', color: '#FFF', border: 'none', padding: '0.65rem 1.25rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}
+                      onClick={() => {
+                        setConfirmBillBooking(selectedJobDetail);
+                        setIsAdjustingBill(true);
+                      }}
+                    >
+                      Adjust Final Bill (₹{selectedJobDetail.finalPrice})
+                    </button>
+                  </>
                 )}
 
                 {selectedJobDetail.customerId && (
@@ -2193,6 +2244,21 @@ const ProviderDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Provider Collect Payment / Dynamic QR Modal */}
+      {collectPaymentBooking && (
+        <ProviderCollectPaymentModal
+          booking={collectPaymentBooking}
+          onClose={() => setCollectPaymentBooking(null)}
+          onPaymentConfirmed={(updatedBooking) => {
+            setCollectPaymentBooking(null);
+            setJobs(prev => prev.map(j => j._id === updatedBooking._id ? updatedBooking : j));
+            if (selectedJobDetail && selectedJobDetail._id === updatedBooking._id) {
+              setSelectedJobDetail(updatedBooking);
+            }
+          }}
+        />
       )}
 
       {/* Invoice Modal */}

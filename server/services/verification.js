@@ -21,6 +21,11 @@
  * ─────────────────────────────────────────────────────────────────
  */
 
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
+require('dotenv').config();
+
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
@@ -53,36 +58,56 @@ function verifyStoredOTP(key, inputOtp) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//                    EMAIL VERIFICATION
-//              Uses Nodemailer with SMTP
+//                    EMAIL VERIFICATION & SERVICES
+//              Uses Nodemailer with Gmail / SMTP
 // ═══════════════════════════════════════════════════════════════
 
+function getCleanEmailCredentials() {
+  const user = (process.env.SMTP_USER || 'localfixrr@gmail.com').trim();
+  // Strip all whitespace from pass (Google App Passwords are shown with spaces like "abcd efgh ijkl mnop")
+  const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '').trim();
+  const host = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
+  const port = parseInt(process.env.SMTP_PORT) || 465;
+  const isSecure = process.env.SMTP_SECURE === 'true' || port === 465;
+  const from = (process.env.SMTP_FROM || `"LocalFixr" <${user}>`).trim();
+
+  return { user, pass, host, port, isSecure, from };
+}
+
 async function getEmailTransporter() {
-  // If custom SMTP credentials or Gmail credentials are provided
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-    const isGmail = process.env.SMTP_USER.endsWith('@gmail.com') || (process.env.SMTP_HOST && process.env.SMTP_HOST.includes('gmail'));
-    if (isGmail && !process.env.SMTP_HOST) {
+  const { user, pass, host, port, isSecure } = getCleanEmailCredentials();
+
+  // If credentials are provided
+  if (user && pass) {
+    const isGmail = user.endsWith('@gmail.com') || host.includes('gmail');
+    if (isGmail) {
       return nodemailer.createTransport({
         service: 'gmail',
         auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS
+          user,
+          pass
+        },
+        tls: {
+          rejectUnauthorized: false
         }
       });
     }
 
     return nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT) || 587,
-      secure: parseInt(process.env.SMTP_PORT) === 465,
+      host,
+      port,
+      secure: isSecure,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
+        user,
+        pass
+      },
+      tls: {
+        rejectUnauthorized: false
       }
     });
   }
 
-  // Fallback to Ethereal Test Account for instant live email web preview
+  // Fallback to Ethereal Test Account if no real SMTP credentials provided
   try {
     const testAccount = await nodemailer.createTestAccount();
     return nodemailer.createTransport({
@@ -100,31 +125,67 @@ async function getEmailTransporter() {
   }
 }
 
+/**
+ * Verify SMTP connection with Google/Mail server
+ */
+async function verifySmtpConnection() {
+  const { user, pass } = getCleanEmailCredentials();
+  if (!user || !pass) {
+    return {
+      configured: false,
+      message: 'SMTP credentials missing. Please configure SMTP_USER and SMTP_PASS in server/.env'
+    };
+  }
+
+  try {
+    const transporter = await getEmailTransporter();
+    if (!transporter) throw new Error('Could not initialize email transporter');
+    await transporter.verify();
+    return {
+      configured: true,
+      verified: true,
+      message: `SMTP connection to mail server verified successfully for ${user}`
+    };
+  } catch (err) {
+    return {
+      configured: true,
+      verified: false,
+      error: err.message,
+      message: `SMTP authentication failed: ${err.message}. If using Gmail, ensure you are using a 16-character Google App Password (not your normal password).`
+    };
+  }
+}
+
 async function sendEmailOTP(email) {
   const otp = generateOTP();
   const key = `email:${email.toLowerCase()}`;
   storeOTP(key, otp);
 
+  const { user, pass, from } = getCleanEmailCredentials();
+  const isConfigured = Boolean(user && pass);
   const transporter = await getEmailTransporter();
   
   if (transporter) {
     try {
       const info = await transporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER || '"LocalFixr Security" <no-reply@localfixr.com>',
+        from: from,
         to: email,
         subject: 'LocalFixr - Email Verification OTP',
         html: `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
-            <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 32px 24px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">LocalFixr</h1>
-              <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 14px;">Email Verification</p>
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+            <div style="background: linear-gradient(135deg, #111827, #1f2937); padding: 32px 24px; text-align: center; border-bottom: 3px solid #D2FE00;">
+              <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 800;">LocalFixr</h1>
+              <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px;">Secure Verification Code</p>
             </div>
             <div style="padding: 32px 24px;">
               <p style="color: #374151; font-size: 15px; line-height: 1.6;">Your verification code is:</p>
-              <div style="background: #f3f4f6; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
-                <span style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #6366f1; font-family: monospace;">${otp}</span>
+              <div style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
+                <span style="font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #0f172a; font-family: monospace;">${otp}</span>
               </div>
-              <p style="color: #6b7280; font-size: 13px; line-height: 1.5;">This code expires in 5 minutes. Do not share this code with anyone.</p>
+              <p style="color: #64748b; font-size: 13px; line-height: 1.5;">This code expires in 5 minutes. Do not share this code with anyone.</p>
+            </div>
+            <div style="background: #f8fafc; padding: 16px 24px; font-size: 12px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9;">
+              Sent by LocalFixr Automated Security System
             </div>
           </div>
         `
@@ -133,17 +194,24 @@ async function sendEmailOTP(email) {
       const previewUrl = nodemailer.getTestMessageUrl(info);
       if (previewUrl) {
         console.log(`[EMAIL OTP] Sent via test account. Preview: ${previewUrl}`);
+        return { sent: true, demo: true, previewUrl, demo_otp: otp };
       } else {
-        console.log(`[EMAIL OTP] Sent OTP via SMTP to ${email}`);
+        console.log(`[EMAIL OTP] Successfully sent OTP via real SMTP (${user}) to ${email}`);
+        return { sent: true, demo: false };
       }
-      return { sent: true, demo: false };
     } catch (err) {
-      console.error(`[EMAIL OTP] Failed to send email:`, err.message);
+      console.error(`[EMAIL OTP] Failed to send email via SMTP (${user}):`, err.message);
+      if (isConfigured) {
+        return {
+          sent: false,
+          error: `Email sending failed: ${err.message}. Please verify your Gmail App Password.`
+        };
+      }
     }
   }
 
-  // Demo mode: log OTP to console
-  console.log(`[EMAIL OTP] Demo mode - OTP for ${email}: ${otp}`);
+  // Demo mode fallback only when SMTP credentials are not configured
+  console.log(`[EMAIL OTP] Demo mode (SMTP not configured) - OTP for ${email}: ${otp}`);
   return { sent: true, demo: true, demo_otp: otp };
 }
 
@@ -422,13 +490,15 @@ async function sendPartnerWelcomeEmail(partnerUser) {
 </html>
   `;
 
+  const { user, pass, from } = getCleanEmailCredentials();
+  const isConfigured = Boolean(user && pass);
   const transporter = await getEmailTransporter();
   const subject = `Welcome to the LocalFixr Partner Network, ${partnerName}! 🌟 Official Onboarding Confirmation`;
 
   if (transporter) {
     try {
       const info = await transporter.sendMail({
-        from: process.env.SMTP_FROM || (process.env.SMTP_USER ? `"LocalFixr Partner Network" <${process.env.SMTP_USER}>` : '"LocalFixr Partner Network" <onboarding@localfixr.com>'),
+        from: from,
         to: partnerEmail,
         subject: subject,
         html: htmlContent
@@ -442,13 +512,16 @@ async function sendPartnerWelcomeEmail(partnerUser) {
         console.log(`Subject: ${subject}`);
         console.log(`🔗 Click to view rendered letter: ${previewUrl}`);
         console.log(`=============================================================\n`);
-        return { sent: true, demo: false, previewUrl };
+        return { sent: true, demo: true, previewUrl };
       } else {
-        console.log(`[PARTNER WELCOME EMAIL] Sent official welcome letter via real SMTP to ${partnerEmail}`);
+        console.log(`[PARTNER WELCOME EMAIL] Sent official welcome letter via real SMTP (${user}) to ${partnerEmail}`);
         return { sent: true, demo: false };
       }
     } catch (err) {
-      console.error(`[PARTNER WELCOME EMAIL] SMTP dispatch failed:`, err.message);
+      console.error(`[PARTNER WELCOME EMAIL] SMTP dispatch failed (${user}):`, err.message);
+      if (isConfigured) {
+        return { sent: false, error: `SMTP delivery failed: ${err.message}. Please check your Gmail App Password.` };
+      }
     }
   }
 
@@ -461,6 +534,328 @@ async function sendPartnerWelcomeEmail(partnerUser) {
   console.log(`Category: ${category} | Starting Base Price: ₹${hourlyRate}`);
   console.log(`=============================================================\n`);
   return { sent: true, demo: true };
+}
+
+// ═══════════════════════════════════════════════════════════════
+//               AUTOMATED BOOKING EMAILS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Send automated booking confirmation email to customer
+ */
+async function sendBookingConfirmationEmail(booking, customer, provider) {
+  if (!customer || !customer.email) return { sent: false, error: 'Customer email missing' };
+
+  const { user, pass, from } = getCleanEmailCredentials();
+  const isConfigured = Boolean(user && pass);
+  const transporter = await getEmailTransporter();
+  const orderId = booking.orderId || `ORD-${booking.orderNumber || 'LF'}`;
+  const subject = `Booking Confirmed! Order #${orderId} - LocalFixr`;
+
+  const providerName = provider?.name || 'Assigned Specialist';
+  const category = provider?.providerDetails?.categoryName || provider?.providerDetails?.category || 'Service';
+  const serviceDate = booking.date ? new Date(booking.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : 'Scheduled';
+  const timeSlot = booking.timePreference || 'Flexible';
+  const address = booking.serviceAddress || 'Customer Location';
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0; padding:0; background:#f8fafc; font-family:'Segoe UI', sans-serif; color:#0f172a;">
+  <div style="max-width:560px; margin:24px auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
+    <div style="background:#0f172a; padding:28px 24px; text-align:left; border-bottom:3px solid #D2FE00;">
+      <h1 style="color:#ffffff; margin:0; font-size:22px; font-weight:800; letter-spacing:-0.5px;">LocalFixr</h1>
+      <p style="color:#94a3b8; margin:6px 0 0; font-size:13px;">Booking Confirmation &amp; Receipt Notice</p>
+    </div>
+    <div style="padding:28px 24px;">
+      <h2 style="margin:0 0 12px; font-size:18px; color:#0f172a;">Your Service Booking is Confirmed! 🎉</h2>
+      <p style="margin:0 0 20px; font-size:14px; line-height:1.6; color:#475569;">
+        Hi <strong>${customer.name || 'Valued Customer'}</strong>, thank you for booking with LocalFixr. Your service request has been assigned to your neighborhood specialist.
+      </p>
+      
+      <div style="background:#f1f5f9; border-radius:8px; padding:18px; margin-bottom:20px;">
+        <table style="width:100%; font-size:14px; border-collapse:collapse;">
+          <tr>
+            <td style="padding:6px 0; color:#64748b; width:40%;">Order ID:</td>
+            <td style="padding:6px 0; font-weight:700; color:#0f172a; font-family:monospace;">${orderId}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0; color:#64748b;">Service:</td>
+            <td style="padding:6px 0; font-weight:600; color:#0f172a;">${category}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0; color:#64748b;">Specialist:</td>
+            <td style="padding:6px 0; font-weight:600; color:#0f172a;">${providerName}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0; color:#64748b;">Scheduled For:</td>
+            <td style="padding:6px 0; font-weight:600; color:#0f172a;">${serviceDate} (${timeSlot})</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0; color:#64748b;">Service Address:</td>
+            <td style="padding:6px 0; color:#0f172a;">${address}</td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="font-size:13px; color:#64748b; line-height:1.5; margin-bottom:20px;">
+        You can track live progress, chat with your specialist, and view stage milestones anytime on your LocalFixr dashboard.
+      </p>
+
+      <div style="text-align:center; margin:16px 0;">
+        <a href="http://localhost:5173/customer-dashboard" style="background:#0f172a; color:#D2FE00; padding:12px 24px; text-decoration:none; font-weight:700; font-size:14px; border-radius:6px; display:inline-block;">
+          Track in Customer Dashboard →
+        </a>
+      </div>
+    </div>
+    <div style="background:#f8fafc; padding:16px 24px; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
+      LocalFixr Automated Support: ${user}
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  if (transporter) {
+    try {
+      const info = await transporter.sendMail({
+        from: from,
+        to: customer.email,
+        subject,
+        html: htmlContent
+      });
+      console.log(`[BOOKING CONFIRMATION EMAIL] Dispatched to customer ${customer.email} for order ${orderId}`);
+      return { sent: true, demo: false };
+    } catch (err) {
+      console.error(`[BOOKING CONFIRMATION EMAIL] Error sending to ${customer.email}:`, err.message);
+      if (isConfigured) return { sent: false, error: err.message };
+    }
+  }
+  return { sent: true, demo: true };
+}
+
+/**
+ * Send automated new job alert email to provider
+ */
+async function sendBookingNotificationToProvider(booking, customer, provider) {
+  if (!provider || !provider.email) return { sent: false, error: 'Provider email missing' };
+
+  const { user, pass, from } = getCleanEmailCredentials();
+  const isConfigured = Boolean(user && pass);
+  const transporter = await getEmailTransporter();
+  const orderId = booking.orderId || `ORD-${booking.orderNumber || 'LF'}`;
+  const subject = `New Service Request: Order #${orderId} - LocalFixr`;
+
+  const customerName = customer?.name || 'Customer';
+  const customerPhone = customer?.phone || 'Check in Dashboard';
+  const address = booking.serviceAddress || 'Customer Location';
+  const serviceDate = booking.date ? new Date(booking.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : 'Scheduled';
+  const timeSlot = booking.timePreference || 'Flexible';
+  const description = booking.description || 'Standard service request';
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0; padding:0; background:#f8fafc; font-family:'Segoe UI', sans-serif; color:#0f172a;">
+  <div style="max-width:560px; margin:24px auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
+    <div style="background:#0f172a; padding:28px 24px; text-align:left; border-bottom:3px solid #D2FE00;">
+      <h1 style="color:#ffffff; margin:0; font-size:22px; font-weight:800; letter-spacing:-0.5px;">LocalFixr Partner</h1>
+      <p style="color:#94a3b8; margin:6px 0 0; font-size:13px;">New Job Alert</p>
+    </div>
+    <div style="padding:28px 24px;">
+      <h2 style="margin:0 0 12px; font-size:18px; color:#0f172a;">You Have a New Service Request! 🛠️</h2>
+      <p style="margin:0 0 20px; font-size:14px; line-height:1.6; color:#475569;">
+        Hi <strong>${provider.name || 'Partner'}</strong>, a customer has requested your service. Please review the details and open your Provider Dashboard to accept.
+      </p>
+
+      <div style="background:#f1f5f9; border-radius:8px; padding:18px; margin-bottom:20px;">
+        <table style="width:100%; font-size:14px; border-collapse:collapse;">
+          <tr>
+            <td style="padding:6px 0; color:#64748b; width:40%;">Order ID:</td>
+            <td style="padding:6px 0; font-weight:700; color:#0f172a; font-family:monospace;">${orderId}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0; color:#64748b;">Customer:</td>
+            <td style="padding:6px 0; font-weight:600; color:#0f172a;">${customerName}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0; color:#64748b;">Customer Phone:</td>
+            <td style="padding:6px 0; font-weight:600; color:#0f172a;">${customerPhone}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0; color:#64748b;">Scheduled Time:</td>
+            <td style="padding:6px 0; font-weight:600; color:#0f172a;">${serviceDate} (${timeSlot})</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0; color:#64748b;">Address:</td>
+            <td style="padding:6px 0; color:#0f172a;">${address}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0; color:#64748b;">Details:</td>
+            <td style="padding:6px 0; color:#0f172a;">${description}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="text-align:center; margin:24px 0;">
+        <a href="http://localhost:5173/provider-dashboard" style="background:#111111; color:#D2FE00; padding:12px 28px; text-decoration:none; font-weight:700; font-size:14px; border-radius:6px; display:inline-block;">
+          Open Provider Dashboard →
+        </a>
+      </div>
+    </div>
+    <div style="background:#f8fafc; padding:16px 24px; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
+      LocalFixr Partner Operations: ${user}
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  if (transporter) {
+    try {
+      const info = await transporter.sendMail({
+        from: from,
+        to: provider.email,
+        subject,
+        html: htmlContent
+      });
+      console.log(`[PROVIDER JOB ALERT EMAIL] Dispatched to provider ${provider.email} for order ${orderId}`);
+      return { sent: true, demo: false };
+    } catch (err) {
+      console.error(`[PROVIDER JOB ALERT EMAIL] Error sending to ${provider.email}:`, err.message);
+      if (isConfigured) return { sent: false, error: err.message };
+    }
+  }
+  return { sent: true, demo: true };
+}
+
+/**
+ * Send automated booking stage update email to customer
+ */
+async function sendBookingStatusUpdateEmail(booking, customer, provider, stage) {
+  if (!customer || !customer.email) return { sent: false };
+
+  const { user, pass, from } = getCleanEmailCredentials();
+  const transporter = await getEmailTransporter();
+  const orderId = booking.orderId || `ORD-${booking.orderNumber || 'LF'}`;
+  const providerName = provider?.name || 'Your Service Specialist';
+
+  let subject = `Booking Update: Order #${orderId} - LocalFixr`;
+  let stageTitle = 'Service Status Updated';
+  let stageBody = `Your booking status has been updated to: <strong>${stage}</strong>.`;
+
+  if (stage === 'accepted') {
+    subject = `Booking Accepted! Order #${orderId} - LocalFixr`;
+    stageTitle = 'Your Specialist Accepted the Job! 🚀';
+    stageBody = `Great news! <strong>${providerName}</strong> has accepted your service request and is scheduling for your appointment.`;
+  } else if (stage === 'in_transit') {
+    subject = `${providerName} is On The Way! - Order #${orderId}`;
+    stageTitle = 'Specialist is En Route 🚗';
+    stageBody = `<strong>${providerName}</strong> is heading to your address right now. You can view live tracking updates on your dashboard.`;
+  } else if (stage === 'in_progress') {
+    subject = `Work in Progress: Order #${orderId} - LocalFixr`;
+    stageTitle = 'Work Has Started 🔧';
+    stageBody = `<strong>${providerName}</strong> has arrived at your location and begun service.`;
+  } else if (stage === 'completed') {
+    const finalAmount = booking.finalPrice ? `₹${booking.finalPrice}` : 'the agreed estimate';
+    subject = `Service Completed: Order #${orderId} - LocalFixr`;
+    stageTitle = 'Service Completed & Bill Ready! 🌟';
+    stageBody = `<strong>${providerName}</strong> has marked the service as completed. Total confirmed amount: <strong>${finalAmount}</strong>. Please review and complete your payment on the dashboard.`;
+  } else if (stage === 'cancelled') {
+    subject = `Booking Cancelled: Order #${orderId} - LocalFixr`;
+    stageTitle = 'Service Booking Cancelled';
+    stageBody = `Order #${orderId} has been cancelled. If you need further assistance, please contact support or book a new service.`;
+  }
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0; padding:0; background:#f8fafc; font-family:'Segoe UI', sans-serif; color:#0f172a;">
+  <div style="max-width:560px; margin:24px auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
+    <div style="background:#0f172a; padding:24px; text-align:left; border-bottom:3px solid #D2FE00;">
+      <h1 style="color:#ffffff; margin:0; font-size:22px; font-weight:800;">LocalFixr</h1>
+      <p style="color:#94a3b8; margin:4px 0 0; font-size:13px;">Order Status Notification: ${orderId}</p>
+    </div>
+    <div style="padding:28px 24px;">
+      <h2 style="margin:0 0 12px; font-size:18px; color:#0f172a;">${stageTitle}</h2>
+      <p style="margin:0 0 16px; font-size:14px; line-height:1.6; color:#475569;">
+        Hi ${customer.name || 'Customer'},
+      </p>
+      <p style="margin:0 0 20px; font-size:14px; line-height:1.6; color:#475569;">
+        ${stageBody}
+      </p>
+      <div style="text-align:center; margin:24px 0;">
+        <a href="http://localhost:5173/customer-dashboard" style="background:#111111; color:#D2FE00; padding:12px 24px; text-decoration:none; font-weight:700; font-size:14px; border-radius:6px; display:inline-block;">
+          View in Customer Dashboard →
+        </a>
+      </div>
+    </div>
+    <div style="background:#f8fafc; padding:16px 24px; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
+      LocalFixr Notifications: ${user}
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  if (transporter) {
+    try {
+      await transporter.sendMail({
+        from,
+        to: customer.email,
+        subject,
+        html: htmlContent
+      });
+      console.log(`[STATUS UPDATE EMAIL] Dispatched (${stage}) to ${customer.email} for order ${orderId}`);
+      return { sent: true };
+    } catch (err) {
+      console.error(`[STATUS UPDATE EMAIL] Failed:`, err.message);
+    }
+  }
+  return { sent: true, demo: true };
+}
+
+/**
+ * Send a test email to verify SMTP delivery on demand
+ */
+async function sendTestEmail(targetEmail) {
+  const { user, pass, from } = getCleanEmailCredentials();
+  if (!user || !pass) {
+    return {
+      success: false,
+      error: 'SMTP_USER or SMTP_PASS is not configured in server/.env'
+    };
+  }
+
+  const transporter = await getEmailTransporter();
+  try {
+    const info = await transporter.sendMail({
+      from,
+      to: targetEmail,
+      subject: 'LocalFixr - Automated Email Service Test ✅',
+      html: `
+        <div style="font-family:'Segoe UI', sans-serif; max-width:500px; padding:24px; border:1px solid #e2e8f0; border-radius:8px; background:#ffffff;">
+          <div style="background:#0f172a; padding:16px; border-radius:6px; text-align:center; margin-bottom:16px;">
+            <h2 style="color:#D2FE00; margin:0; font-size:20px;">LocalFixr Mail Engine Active! 🚀</h2>
+          </div>
+          <p style="color:#334155; font-size:14px; line-height:1.6;">
+            Success! Automated email sending from <strong>${user}</strong> is connected and functioning properly.
+          </p>
+          <div style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:12px; color:#64748b; font-family:monospace;">
+            Sender: ${user}<br/>
+            Recipient: ${targetEmail}<br/>
+            Timestamp: ${new Date().toISOString()}
+          </div>
+        </div>
+      `
+    });
+    return { success: true, messageId: info.messageId, to: targetEmail };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -842,6 +1237,12 @@ module.exports = {
   sendEmailOTP,
   verifyEmailOTP,
   sendPartnerWelcomeEmail,
+  sendBookingConfirmationEmail,
+  sendBookingNotificationToProvider,
+  sendBookingStatusUpdateEmail,
+  verifySmtpConnection,
+  sendTestEmail,
+  getCleanEmailCredentials,
   // Phone
   validateIndianPhone,
   sendPhoneOTP,

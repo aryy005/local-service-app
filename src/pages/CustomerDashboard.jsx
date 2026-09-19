@@ -6,7 +6,8 @@ import {
   FileText, CheckCircle, Navigation, MessageCircle, Star, Heart, 
   User, Settings, LogOut, ArrowRight, ArrowLeft, ShieldCheck, Sparkles, Plus, Trash2, MapPin, LayoutDashboard, Search
 } from 'lucide-react';
-import { API_URL } from '../config';
+import { io } from 'socket.io-client';
+import { API_URL, SOCKET_URL } from '../config';
 import ChatModal from '../components/ChatModal';
 import BookingModal from '../components/BookingModal';
 import AIDiagnosisModal from '../components/AIDiagnosisModal';
@@ -14,6 +15,7 @@ import PaymentModal from '../components/PaymentModal';
 import InvoiceModal from '../components/InvoiceModal';
 import ServiceTrackerModal from '../components/ServiceTrackerModal';
 import ReviewTipModal from '../components/ReviewTipModal';
+import NotificationCenter from '../components/NotificationCenter';
 import UserMenuPill from '../components/UserMenuPill';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
@@ -147,6 +149,37 @@ const CustomerDashboard = () => {
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
+
+  // Real-time updates via Socket.IO
+  useEffect(() => {
+    if (!user) return;
+    const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+    const customerId = user.id || user._id;
+    if (customerId) {
+      socket.emit('join_user_room', customerId);
+    }
+
+    socket.on('payment_completed', (data) => {
+      fetchBookings();
+      if (data?.bookingId) {
+        setActivePaymentBooking(prev => prev?._id === data.bookingId ? null : prev);
+        setActiveTrackerBooking(prev => prev?._id === data.bookingId ? { ...prev, paymentStatus: 'paid', status: 'completed', serviceStage: 'paid', paidAt: new Date() } : prev);
+      }
+    });
+
+    socket.on('booking_stage_updated', (data) => {
+      fetchBookings();
+      if (data?.bookingId) {
+        setActiveTrackerBooking(prev => prev?._id === data.bookingId ? { ...prev, serviceStage: data.stage } : prev);
+      }
+    });
+
+    socket.on('booking_updated', () => fetchBookings());
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user, fetchBookings]);
 
   const handleSendPhoneOtp = async (channel = 'sms') => {
     if (!phoneInput || phoneInput.trim().length < 10) {
@@ -387,6 +420,7 @@ const CustomerDashboard = () => {
               <Search size={15} />
               <span>Browse Services</span>
             </button>
+            <NotificationCenter />
             <UserMenuPill />
           </div>
         </div>
