@@ -118,7 +118,7 @@ const Support = () => {
       <div className="doc-container">
         
         {/* Support Channel Cards */}
-        <div className="doc-grid-3" style={{ marginTop: '-1.5rem', position: 'relative', zIndex: 10 }}>
+        <div className="doc-grid-3">
           
           {/* Card 1: Email Support */}
           <div className="doc-card" style={{ background: '#111111', color: '#FFFFFF', borderColor: '#333333' }}>
