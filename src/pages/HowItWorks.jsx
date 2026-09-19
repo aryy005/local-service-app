@@ -26,14 +26,12 @@ const HowItWorks = () => {
       {/* ─── Hero ─── */}
       <section className="doc-hero">
         <div className="doc-hero-container">
-          <div style={{ marginBottom: '1.25rem' }}>
-            <Link 
-              to={user ? (user.role === 'provider' ? '/provider-dashboard' : '/customer-dashboard') : '/'} 
-              style={{ color: '#D2FE00', textDecoration: 'none', fontWeight: 800, fontSize: '0.84rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-            >
-              &larr; Back to {user ? 'Dashboard' : 'Home'}
-            </Link>
-          </div>
+          <Link 
+            to={user ? (user.role === 'provider' ? '/provider-dashboard' : '/customer-dashboard') : '/'} 
+            className="doc-back-link"
+          >
+            &larr; Back to {user ? 'Dashboard' : 'Home'}
+          </Link>
 
           <div className="doc-category-badge">
             <BookOpen size={13} />
