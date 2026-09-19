@@ -25,16 +25,18 @@ const About = () => {
       {/* ─── Hero ─── */}
       <section className="doc-hero">
         <div className="doc-hero-container">
-          <Link 
-            to={user ? (user.role === 'provider' ? '/provider-dashboard' : '/customer-dashboard') : '/'} 
-            className="doc-back-link"
-          >
-            &larr; Back to {user ? 'Dashboard' : 'Home'}
-          </Link>
+          <div className="doc-hero-top-row">
+            <Link 
+              to={user ? (user.role === 'provider' ? '/provider-dashboard' : '/customer-dashboard') : '/'} 
+              className="doc-back-link"
+            >
+              &larr; Back to {user ? 'Dashboard' : 'Home'}
+            </Link>
 
-          <div className="doc-category-badge">
-            <Users size={13} />
-            <span>Our Mission &amp; Vision</span>
+            <div className="doc-category-badge">
+              <Users size={13} />
+              <span>Our Mission &amp; Vision</span>
+            </div>
           </div>
           <h1 className="doc-hero-title">
             Local Services. Real People.<br />

@@ -26,16 +26,18 @@ const SafetyAndTrust = () => {
       {/* ─── Hero ─── */}
       <section className="doc-hero">
         <div className="doc-hero-container">
-          <Link 
-            to={user ? (user.role === 'provider' ? '/provider-dashboard' : '/customer-dashboard') : '/'} 
-            className="doc-back-link"
-          >
-            &larr; Back to {user ? 'Dashboard' : 'Home'}
-          </Link>
+          <div className="doc-hero-top-row">
+            <Link 
+              to={user ? (user.role === 'provider' ? '/provider-dashboard' : '/customer-dashboard') : '/'} 
+              className="doc-back-link"
+            >
+              &larr; Back to {user ? 'Dashboard' : 'Home'}
+            </Link>
 
-          <div className="doc-category-badge">
-            <ShieldCheck size={13} />
-            <span>Safety, Vetting &amp; Privacy Shield</span>
+            <div className="doc-category-badge">
+              <ShieldCheck size={13} />
+              <span>Safety, Vetting &amp; Privacy Shield</span>
+            </div>
           </div>
           <h1 className="doc-hero-title">
             Your Safety and Trust.<br />

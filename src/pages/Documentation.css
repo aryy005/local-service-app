@@ -38,6 +38,15 @@
   z-index: 2;
 }
 
+.doc-hero-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
+}
+
 .doc-back-link {
   display: inline-flex;
   align-items: center;
@@ -46,7 +55,7 @@
   text-decoration: none;
   font-weight: 800;
   font-size: 0.78rem;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0;
   transition: opacity 0.15s ease;
 }
 
@@ -60,13 +69,15 @@
   gap: 0.35rem;
   background: #D2FE00;
   color: #111111;
-  padding: 0.22rem 0.65rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0;
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .doc-hero-title {
