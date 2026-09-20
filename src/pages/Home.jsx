@@ -223,7 +223,7 @@ const Home = () => {
                 <MapPin size={18} className="lf-pin-icon" />
                 <input
                   type="text"
-                  placeholder="Search for a service (electrician, plumb..."
+                  placeholder="Search for a service (e.g, electrician, plumber..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="lf-search-input"
@@ -233,20 +233,18 @@ const Home = () => {
                 </button>
               </div>
             </form>
+          </div>
 
-            {/* Trust badge — situated right below search pill on the right */}
-            <div className="lf-trust-badge-wrap">
-              <div className="lf-trust-badge">
-                <div className="lf-badge-row">
-                  <span>LOCAL</span>
-                  <ArrowUpRight size={14} strokeWidth={3} />
-                </div>
-                <div>TRUSTED</div>
-                <div className="lf-badge-row">
-                  <span>VERIFIED</span>
-                  <ArrowUpRight size={14} strokeWidth={3} />
-                </div>
-              </div>
+          {/* Trust badge — bottom-right corner on photo matching Image 2 */}
+          <div className="lf-trust-badge">
+            <div className="lf-badge-row">
+              <span>LOCAL</span>
+              <ArrowUpRight size={14} strokeWidth={3} />
+            </div>
+            <div>TRUSTED</div>
+            <div className="lf-badge-row">
+              <span>VERIFIED</span>
+              <ArrowUpRight size={14} strokeWidth={3} />
             </div>
           </div>
         </div>
