@@ -241,7 +241,10 @@ const Home = () => {
               <span>LOCAL</span>
               <ArrowUpRight size={14} strokeWidth={3} />
             </div>
-            <div>TRUSTED</div>
+            <div className="lf-badge-row">
+              <span>TRUSTED</span>
+              <ArrowUpRight size={14} strokeWidth={3} />
+            </div>
             <div className="lf-badge-row">
               <span>VERIFIED</span>
               <ArrowUpRight size={14} strokeWidth={3} />
