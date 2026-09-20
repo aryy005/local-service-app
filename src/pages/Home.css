@@ -563,257 +563,310 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   APP DOWNLOAD & MOBILE POSTER SHOWCASE (Pre-login only)
+   POST-LOGIN MOBILE-FIRST STYLING (MATCHING IMAGE 2 EXACTLY)
 ═══════════════════════════════════════════════════════════════ */
-.lf-app-showcase-section {
+.lf-signedin-container {
   width: 100%;
-  background: #111111;
-  color: #FFFFFF;
-  padding: 4.5rem 1.5rem 4rem;
-  border-top: 3px solid #D2FE00;
-  border-bottom: 2px solid #222222;
-  position: relative;
-  overflow: hidden;
-  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #FAF9F5;
+  padding-bottom: 90px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.lf-app-showcase-inner {
-  max-width: 1200px;
+/* Top App Bar with Hamburger Icon */
+.lf-signedin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.25rem 0.6rem;
+  background: transparent;
+  max-width: 600px;
   margin: 0 auto;
-}
-
-.lf-app-header {
-  text-align: center;
-  max-width: 780px;
-  margin: 0 auto 2.5rem;
-}
-
-.lf-app-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: #D2FE00;
-  color: #111111;
-  font-weight: 800;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.35rem 0.95rem;
-  border-radius: 9999px;
-  margin-bottom: 1.1rem;
-}
-
-.lf-app-title {
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.03em;
-  color: #FFFFFF;
-  margin: 0 0 0.85rem;
-}
-
-.lf-app-title .lf-lime-text {
-  color: #D2FE00;
-}
-
-.lf-app-sub {
-  font-size: clamp(0.95rem, 1.8vw, 1.1rem);
-  color: #A3A3A3;
-  line-height: 1.6;
-  margin: 0;
-}
-
-/* ─── Poster Image Container ─── */
-.lf-poster-wrapper {
-  position: relative;
   width: 100%;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 2px solid #2A2A2A;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(210, 254, 0, 0.15);
-  margin-bottom: 2.75rem;
-  background: #0A0A0A;
+  box-sizing: border-box;
 }
 
-.lf-poster-img {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover;
-  transition: transform 0.4s ease;
-}
-
-.lf-poster-wrapper:hover .lf-poster-img {
-  transform: scale(1.008);
-}
-
-/* ─── Download Hub & Action Bar ─── */
-.lf-download-hub {
-  background: #181818;
-  border: 1.5px solid #2B2B2B;
-  border-radius: 14px;
-  padding: 2.5rem clamp(1.5rem, 3.5vw, 3rem);
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2.5rem;
-  align-items: center;
-}
-
-.lf-download-info-title {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #FFFFFF;
-  margin: 0 0 0.6rem;
-}
-
-.lf-download-info-p {
-  color: #A3A3A3;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  max-width: 580px;
-  margin: 0 0 1.5rem;
-}
-
-/* Store Badges Row */
-.lf-store-badges-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.lf-store-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.85rem;
-  background: #000000;
-  color: #FFFFFF;
-  border: 1.5px solid #3A3A3A;
-  border-radius: 10px;
-  padding: 0.65rem 1.35rem;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.lf-store-btn:hover {
-  border-color: #D2FE00;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(210, 254, 0, 0.25);
-}
-
-.lf-store-btn-text {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  line-height: 1.15;
-}
-
-.lf-store-subtext {
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #A3A3A3;
-  font-weight: 700;
-}
-
-.lf-store-maintext {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #FFFFFF;
-  letter-spacing: -0.01em;
-}
-
-/* QR Code Box */
-.lf-download-qr-box {
-  background: #FFFFFF;
-  color: #111111;
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  box-shadow: 4px 4px 0px #D2FE00;
-  min-width: 175px;
-}
-
-.lf-download-qr-img {
-  width: 125px;
-  height: 125px;
-  border-radius: 4px;
-}
-
-.lf-download-qr-label {
-  font-size: 0.72rem;
+.lf-signedin-brand {
+  font-size: 1.7rem;
   font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   color: #111111;
+  letter-spacing: -0.03em;
 }
 
-/* Feature Highlights Grid */
-.lf-app-features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.25rem;
-  margin-top: 2.25rem;
-}
-
-.lf-app-feature-pill {
-  background: #181818;
-  border: 1px solid #2E2E2E;
-  border-radius: 10px;
-  padding: 1rem 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.lf-app-feature-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 8px;
-  background: #111111;
-  color: #D2FE00;
+.lf-signedin-menu-btn {
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: #111111;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.lf-signedin-menu-btn:active {
+  background: #EAEAE4;
+}
+
+/* Content wrapper */
+.lf-signedin-content {
+  padding: 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Location row */
+.lf-signedin-loc-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #111111;
+  cursor: pointer;
+  user-select: none;
+  width: fit-content;
+}
+
+.lf-signedin-loc-row:hover {
+  opacity: 0.8;
+}
+
+.lf-signedin-loc-pin {
+  color: #111111;
   flex-shrink: 0;
 }
 
-.lf-app-feature-title {
-  font-size: 0.88rem;
-  font-weight: 800;
+.lf-signedin-loc-name {
+  line-height: 1;
+}
+
+/* Search bar */
+.lf-signedin-search-form {
+  width: 100%;
+}
+
+.lf-signedin-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E2DC;
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lf-signedin-search-box:focus-within {
+  border-color: #111111;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.lf-signedin-search-icon {
+  color: #64748B;
+  flex-shrink: 0;
+}
+
+.lf-signedin-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #111111;
+  width: 100%;
+}
+
+.lf-signedin-search-input::placeholder {
+  color: #8E8E93;
+}
+
+/* Hero Banner Card matching Image 2 */
+.lf-signedin-hero-card {
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background-color: #141414;
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.5) 60%, rgba(0, 0, 0, 0.25) 100%), url('/hero_bg.jpg');
+  background-size: cover;
+  background-position: center right;
   color: #FFFFFF;
+  padding: 1.85rem 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+  box-sizing: border-box;
+  min-height: 165px;
+  display: flex;
+  align-items: center;
 }
 
-.lf-app-feature-desc {
-  font-size: 0.76rem;
-  color: #888888;
-  margin-top: 2px;
+.lf-signedin-hero-card:active {
+  transform: scale(0.99);
 }
 
-@media (max-width: 880px) {
-  .lf-app-showcase-section {
-    padding: 3rem 1rem;
+.lf-signedin-hero-overlay {
+  max-width: 260px;
+}
+
+.lf-signedin-hero-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  line-height: 1.12;
+  color: #FFFFFF;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.02em;
+}
+
+.lf-signedin-hero-subtitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #CBD5E1;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+/* Popular Services Section matching Image 2 */
+.lf-signedin-services-section {
+  margin-top: 0.25rem;
+}
+
+.lf-signedin-services-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.95rem;
+}
+
+.lf-signedin-services-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #111111;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.lf-signedin-view-all {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #475569;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.lf-signedin-view-all:hover {
+  color: #111111;
+}
+
+/* 6-card 3x2 Grid matching Image 2 */
+.lf-signedin-services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.85rem;
+  width: 100%;
+}
+
+.lf-signedin-service-tile {
+  background: #FFFFFF;
+  border: 1px solid #E5E5DF;
+  border-radius: 14px;
+  padding: 1.25rem 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.025);
+  outline: none;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lf-signedin-service-tile:hover {
+  border-color: #111111;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.lf-signedin-service-tile:active {
+  transform: scale(0.96);
+}
+
+.lf-signedin-tile-icon {
+  color: #111111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+}
+
+.lf-signedin-tile-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #111111;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PRE-LOGIN SMARTPHONE ALIGNMENT PERFECTION
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .lf-hero-inner {
+    max-width: 100% !important;
+    padding: 1.5rem 1.2rem 1rem !important;
   }
-  .lf-download-hub {
-    grid-template-columns: 1fr;
-    text-align: center;
-    gap: 2rem;
-    padding: 1.75rem 1.25rem;
+
+  .lf-hero-title {
+    font-size: 2.4rem !important;
+    line-height: 0.95 !important;
+    margin-bottom: 0.6rem !important;
   }
-  .lf-download-info-p {
-    margin-left: auto;
-    margin-right: auto;
+
+  .lf-hero-sub {
+    font-size: 0.92rem !important;
+    margin-bottom: 1rem !important;
   }
-  .lf-store-badges-row {
-    justify-content: center;
+
+  .lf-search-pill {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.4rem 0.4rem 0.4rem 0.85rem !important;
   }
-  .lf-download-qr-box {
-    margin: 0 auto;
+
+  .lf-value-strip {
+    padding: 0.85rem 1rem !important;
+    gap: 0.75rem !important;
+  }
+
+  .lf-strip-cta {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.85rem 1rem !important;
+  }
+
+  .lf-services-inner {
+    padding: 1.5rem 1rem !important;
+  }
+
+  .lf-services-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
   }
 }
+
 

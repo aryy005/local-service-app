@@ -27,3 +27,11 @@ dist-ssr
 .env
 .env.local
 .env.*
+
+# Android build outputs & caches
+android-app/.gradle/
+android-app/build/
+android-app/app/build/
+android-app/local.properties
+*.apk
+

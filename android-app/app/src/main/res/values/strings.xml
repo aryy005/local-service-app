@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Localfixr</string>
+    <string name="app_tagline">Instant Local Services &amp; Certified Specialists</string>
+    <string name="app_subtext">Fast • Verified • Doorstep</string>
+    <string name="retry">Retry Connection</string>
+    <string name="offline_title">No Internet Connection</string>
+    <string name="offline_desc">Please connect to the internet to use Localfixr doorstep services.</string>
+    <string name="exit_prompt">Press back again to exit Localfixr</string>
+</resources>

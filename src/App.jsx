@@ -20,6 +20,7 @@ import SafetyAndTrust from './pages/SafetyAndTrust';
 import PartnerGuidelines from './pages/PartnerGuidelines';
 import Support from './pages/Support';
 import Messages from './pages/Messages';
+import MobileBottomNav from './components/MobileBottomNav';
 import ScrollToTop from './components/ScrollToTop';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from './context/AuthContext';
@@ -104,7 +105,8 @@ function App() {
           </Routes>
         </ErrorBoundary>
       </main>
-      {!isDashboard && <Footer />}
+      {!isDashboard && !user && <Footer />}
+      <MobileBottomNav />
       <Toaster 
         position="bottom-right" 
         toastOptions={{

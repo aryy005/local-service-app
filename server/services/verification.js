@@ -69,8 +69,8 @@ function getCleanEmailCredentials() {
   const host = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
   const port = parseInt(process.env.SMTP_PORT) || 465;
   const isSecure = process.env.SMTP_SECURE === 'true' || port === 465;
-  const from = (process.env.SMTP_FROM || '"LocalFixr" <info@localfixr.site>').trim();
-  const replyTo = (process.env.SMTP_REPLY_TO || 'info@localfixr.site').trim();
+  const from = (process.env.SMTP_FROM || '"Localfixr Support" <support@localfixr.site>').trim();
+  const replyTo = (process.env.SMTP_REPLY_TO || 'support@localfixr.site').trim();
 
   return { user, pass, host, port, isSecure, from, replyTo };
 }
@@ -480,7 +480,7 @@ async function sendPartnerWelcomeEmail(partnerUser) {
                     🛡️ Official Service Partner Engagement Letter • LocalFixr Marketplace
                   </td>
                   <td align="right" style="font-size:11px; color:#64748b;">
-                    Support: info@localfixr.site
+                    Support: support@localfixr.site
                   </td>
                 </tr>
               </table>
@@ -616,7 +616,7 @@ async function sendBookingConfirmationEmail(booking, customer, provider) {
       </div>
     </div>
     <div style="background:#f8fafc; padding:16px 24px; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
-      LocalFixr Support: info@localfixr.site
+      LocalFixr Support: support@localfixr.site
     </div>
   </div>
 </body>
@@ -713,7 +713,7 @@ async function sendBookingNotificationToProvider(booking, customer, provider) {
       </div>
     </div>
     <div style="background:#f8fafc; padding:16px 24px; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
-      LocalFixr Partner Operations: info@localfixr.site
+      LocalFixr Partner Operations: support@localfixr.site
     </div>
   </div>
 </body>
@@ -802,7 +802,7 @@ async function sendBookingStatusUpdateEmail(booking, customer, provider, stage) 
       </div>
     </div>
     <div style="background:#f8fafc; padding:16px 24px; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
-      LocalFixr Notifications: info@localfixr.site
+      LocalFixr Notifications: support@localfixr.site
     </div>
   </div>
 </body>

@@ -1,0 +1,259 @@
+/* Right Slide-Over Navigation Drawer matching Image 1 */
+.side-drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  justify-content: flex-end;
+  animation: drawerFadeIn 0.2s ease-out;
+}
+
+.side-drawer-panel {
+  width: 290px;
+  max-width: 85vw;
+  height: 100%;
+  background: #111111;
+  border-left: 1px solid #222222;
+  box-shadow: -8px 0 28px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1rem;
+  overflow-y: auto;
+  box-sizing: border-box;
+  animation: drawerSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes drawerFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Header */
+.side-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #222222;
+}
+
+.side-drawer-brand {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+}
+
+.side-drawer-close-btn {
+  background: none;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* User Card matching Image 1 */
+.side-drawer-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem 0.5rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.side-drawer-user-card:hover {
+  background: #1C1C1C;
+}
+
+.side-drawer-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid #333333;
+  flex-shrink: 0;
+  background: #222222;
+}
+
+.side-drawer-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.side-drawer-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #D2FE00;
+  background: #1E1E1E;
+}
+
+.side-drawer-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.side-drawer-username {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.side-drawer-useremail {
+  font-size: 0.76rem;
+  color: #888888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+/* Guest Mode Card */
+.side-drawer-guest-card {
+  padding: 1.25rem 0.5rem;
+  border-bottom: 1px solid #222222;
+}
+
+.side-drawer-guest-text {
+  font-size: 0.85rem;
+  color: #AAAAAA;
+  margin-bottom: 0.75rem;
+}
+
+.side-drawer-guest-btns {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.side-drawer-btn-login,
+.side-drawer-btn-signup {
+  flex: 1;
+  padding: 0.55rem 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.side-drawer-btn-login {
+  background: #222222;
+  color: #FFFFFF;
+  border: 1px solid #333333;
+}
+
+.side-drawer-btn-signup {
+  background: #D2FE00;
+  color: #111111;
+  border: none;
+}
+
+/* Navigation Menu */
+.side-drawer-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 0.75rem;
+  flex: 1;
+}
+
+.side-drawer-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  color: #CCCCCC;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.side-drawer-item-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.side-drawer-item:hover {
+  background: #1C1C1C;
+  color: #FFFFFF;
+}
+
+.side-drawer-item.active {
+  background: #252525;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.side-drawer-item.active svg {
+  color: #D2FE00;
+}
+
+.side-drawer-badge {
+  background: #EF4444;
+  color: #FFFFFF;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+/* Footer & Logout */
+.side-drawer-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #222222;
+}
+
+.side-drawer-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #999999;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.side-drawer-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
