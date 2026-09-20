@@ -78,8 +78,8 @@ const Header = () => {
           /* Provider Brand Group */
           <div className="provider-brand-group">
             <Link to={getHomeLink()} className="logo">
-              <div className="logo-mark">lf</div>
-              <span className="logo-text">LocalFixr</span>
+              <img src="/logo.png" alt="Localfixr" className="logo-img" />
+              <span className="logo-text">Localfixr</span>
             </Link>
             <div className="provider-header-badge">
               💼 Provider Workstation
@@ -87,84 +87,38 @@ const Header = () => {
           </div>
         ) : (
           <>
-        {/* Logo */}
-        <Link to={getHomeLink()} className="logo">
-          <div className="logo-mark">lf</div>
-          <span className="logo-text">LocalFixr</span>
-        </Link>
+            {/* Logo — restored to official /logo.png */}
+            <Link to={getHomeLink()} className="logo">
+              <img src="/logo.png" alt="Localfixr" className="logo-img" />
+              <span className="logo-text">Localfixr</span>
+            </Link>
 
-        {/* Center Navigation Links */}
-        <nav className="desktop-center-nav">
-          <Link to="/" className="nav-link">Home</Link>
-          <Link to="/search" className="nav-link">Services</Link>
-          <Link to="/how-it-works" className="nav-link">How It Works</Link>
-          <Link to="/about" className="nav-link">About</Link>
-          <Link to="/support" className="nav-link">Support</Link>
-        </nav>
+            {/* Center Navigation Links */}
+            <nav className="desktop-center-nav">
+              <Link to="/" className="nav-link">Home</Link>
+              <Link to="/search" className="nav-link">Services</Link>
+              <Link to="/how-it-works" className="nav-link">How It Works</Link>
+              <Link to="/about" className="nav-link">About</Link>
+              <Link to="/support" className="nav-link">Support</Link>
+            </nav>
 
-        {/* Navigation / Actions */}
-        <nav className="desktop-nav">
-          <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme" title="Toggle Dark/Light Mode">
-            {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
-          </button>
-
-          {user ? (
-            <div className="profile-dropdown-container" ref={profileRef}>
-              <button 
-                type="button" 
-                className="profile-trigger-btn"
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-              >
-                <div className="profile-avatar">
-                  {user.name ? user.name.charAt(0).toUpperCase() : <User size={16} />}
-                </div>
-                <span className="profile-trigger-name">{user.name || 'Profile'}</span>
-                <ChevronDown size={14} className={`dropdown-chevron ${isProfileOpen ? 'open' : ''}`} />
+            {/* Navigation / Actions */}
+            <nav className="desktop-nav">
+              <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme" title="Toggle Dark/Light Mode">
+                {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
               </button>
 
-              {isProfileOpen && (
-                <div className="profile-dropdown-menu">
-                  <div className="profile-dropdown-header">
-                    <div className="profile-user-name">{user.name}</div>
-                    <div className="profile-user-email">{user.email}</div>
-                    <span className="profile-role-badge">{user.role}</span>
-                  </div>
-
-                  <div className="profile-dropdown-divider"></div>
-
-                  <Link 
-                    to={getDashboardLink()} 
-                    className="profile-dropdown-item"
-                    onClick={() => setIsProfileOpen(false)}
-                  >
-                    <LayoutDashboard size={16} />
-                    <span>{user.role === 'provider' ? 'My Jobs & Dashboard' : 'Profile & Dashboard'}</span>
-                  </Link>
-
-                  <button 
-                    type="button"
-                    className="profile-dropdown-item logout-item"
-                    onClick={handleLogout}
-                  >
-                    <LogOut size={16} />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="auth-header-buttons">
-              <Link to="/auth/login" className="nav-link nav-login-link">Login</Link>
-              <Link to="/auth/signup" className="get-started-btn-lime">
-                Get Started
-              </Link>
-            </div>
-          )}
-        </nav>
-        
-        <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(true)} aria-label="Open menu">
-          <Menu size={24} strokeWidth={2.2} />
-        </button>
+              <div className="auth-header-buttons">
+                <Link to="/auth/login" className="nav-link nav-login-link">Login</Link>
+                <Link to="/auth/signup" className="get-started-btn-lime">
+                  Get Started
+                </Link>
+              </div>
+            </nav>
+            
+            <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(true)} aria-label="Open menu">
+              <Menu size={24} strokeWidth={2.2} />
+            </button>
           </>
         )}
       </div>
