@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Check, Clock, MapPin, Phone, MessageSquare, 
   CreditCard, FileText, CheckCircle, Navigation, ShieldCheck, 
@@ -24,6 +25,7 @@ const STAGES = [
 
 const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment, onOpenInvoice, onOpenReview }) => {
   const { user, token } = useAuth();
+  const navigate = useNavigate();
   const [updating, setUpdating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showBillModal, setShowBillModal] = useState(false);
@@ -234,16 +236,29 @@ const ServiceTrackerModal = ({ booking, onClose, onUpdateBooking, onOpenPayment,
               <div style={{ color: 'var(--text-muted)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 <Phone size={13} /> {isProvider ? booking.customerId?.phone : booking.providerId?.phone || 'N/A'}
               </div>
-              <button
-                style={{ background: '#25D366', color: 'white', border: 'none', padding: '0.35rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.78rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', marginTop: '0.5rem' }}
-                onClick={() => {
-                  const targetPhone = isProvider ? booking.customerId?.phone : booking.providerId?.phone;
-                  const msg = formatWhatsAppBookingMessage(booking, isProvider);
-                  openWhatsAppChat(targetPhone, msg);
-                }}
-              >
-                <MessageCircle size={14} /> WhatsApp Chat
-              </button>
+              <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  style={{ background: '#111111', color: '#D2FE00', border: '1.5px solid #111111', padding: '0.35rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.78rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}
+                  onClick={() => {
+                    onClose();
+                    navigate(`/messages?bookingId=${booking._id}`);
+                  }}
+                >
+                  <MessageSquare size={13} /> Chat on Localfixr
+                </button>
+                <button
+                  type="button"
+                  style={{ background: '#25D366', color: 'white', border: 'none', padding: '0.35rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.78rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}
+                  onClick={() => {
+                    const targetPhone = isProvider ? booking.customerId?.phone : booking.providerId?.phone;
+                    const msg = formatWhatsAppBookingMessage(booking, isProvider);
+                    openWhatsAppChat(targetPhone, msg);
+                  }}
+                >
+                  <MessageCircle size={14} /> WhatsApp
+                </button>
+              </div>
             </div>
 
             <div style={{ background: 'var(--surface-bg, #f8fafc)', border: '1px solid var(--surface-border)', padding: '1rem', borderRadius: '0.75rem' }}>

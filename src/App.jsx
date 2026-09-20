@@ -19,6 +19,7 @@ import HowItWorks from './pages/HowItWorks';
 import SafetyAndTrust from './pages/SafetyAndTrust';
 import PartnerGuidelines from './pages/PartnerGuidelines';
 import Support from './pages/Support';
+import Messages from './pages/Messages';
 import ScrollToTop from './components/ScrollToTop';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from './context/AuthContext';
@@ -26,7 +27,7 @@ import { useAuth } from './context/AuthContext';
 function App() {
   const { user } = useAuth();
   const location = useLocation();
-  const isDashboard = location.pathname.includes('-dashboard') || location.pathname.startsWith('/admin');
+  const isDashboard = location.pathname.includes('-dashboard') || location.pathname.startsWith('/admin') || location.pathname.startsWith('/messages');
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-[#EBEAE5]">
@@ -88,6 +89,14 @@ function App() {
               element={
                 <ProtectedRoute requireRole="admin">
                   <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/messages" 
+              element={
+                <ProtectedRoute>
+                  <Messages />
                 </ProtectedRoute>
               } 
             />

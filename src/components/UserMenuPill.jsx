@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
-  ChevronDown, LayoutDashboard, User, LogOut 
+  ChevronDown, LayoutDashboard, User, LogOut, MessageSquare 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './UserMenuPill.css';
@@ -112,6 +112,15 @@ const UserMenuPill = () => {
                 <button 
                   type="button" 
                   className="lp-pill-menu-item"
+                  onClick={() => handleNav('/messages')}
+                >
+                  <MessageSquare size={16} />
+                  <span>Messages</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  className="lp-pill-menu-item"
                   onClick={() => handleNav('/customer-dashboard?tab=profile')}
                 >
                   <User size={16} />
@@ -129,6 +138,15 @@ const UserMenuPill = () => {
                 >
                   <LayoutDashboard size={16} />
                   <span>Dashboard</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  className="lp-pill-menu-item"
+                  onClick={() => handleNav('/messages')}
+                >
+                  <MessageSquare size={16} />
+                  <span>Messages</span>
                 </button>
 
                 <button 

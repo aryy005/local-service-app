@@ -609,7 +609,7 @@ const ProviderDashboard = () => {
             <button 
               type="button"
               className={`lp-nav-item ${activeTab === 'messages' ? 'active' : ''}`}
-              onClick={() => setActiveTab('messages')}
+              onClick={() => navigate('/messages')}
             >
               {activeTab === 'messages' && <span className="lp-nav-active-pill"></span>}
               <MessageSquare size={16} />
@@ -971,7 +971,7 @@ const ProviderDashboard = () => {
                     <button 
                       type="button" 
                       className="lp-quick-action-btn"
-                      onClick={() => setActiveTab('messages')}
+                      onClick={() => navigate('/messages')}
                     >
                       <div style={{ display: 'flex', alignItems: 'center' }}>
                         <MessageSquare size={18} className="lp-qa-icon" />
@@ -1309,7 +1309,7 @@ const ProviderDashboard = () => {
                                 <button
                                   type="button"
                                   style={{ background: '#111111', color: '#D2FE00', border: 'none', borderRadius: 4, padding: '0.35rem 0.65rem', fontWeight: 800, cursor: 'pointer' }}
-                                  onClick={() => setActiveChat(job)}
+                                  onClick={() => navigate(`/messages?bookingId=${job._id}`)}
                                   title="Chat with Customer"
                                 >
                                   Chat
@@ -1910,11 +1910,18 @@ const ProviderDashboard = () => {
         {/* TAB 8: MESSAGES */}
         {activeTab === 'messages' && (
           <div className="lp-subview-card fade-in">
-            <div className="lp-subview-header">
+            <div className="lp-subview-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
-                <h3 className="lp-subview-title">Customer Messages & Chat</h3>
+                <h3 className="lp-subview-title">Customer Messages &amp; Chat</h3>
                 <p style={{ color: '#666', fontSize: '0.85rem', margin: '4px 0 0' }}>Real-time coordination and chat with customers who booked services.</p>
               </div>
+              <button
+                type="button"
+                onClick={() => navigate('/messages')}
+                style={{ background: '#111111', color: '#D2FE00', border: 'none', padding: '0.65rem 1.15rem', borderRadius: 6, fontWeight: 800, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
+              >
+                <MessageSquare size={16} /> Open Fullscreen Chat Hub →
+              </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
@@ -1927,7 +1934,7 @@ const ProviderDashboard = () => {
                   </p>
                 </div>
               ) : (
-                jobs.filter(j => j.customerId).slice(0, 4).map((j, idx) => (
+                jobs.filter(j => j.customerId).slice(0, 6).map((j, idx) => (
                 <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', border: '1.5px solid #EAEAE4', borderRadius: 8, background: '#FFF' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#111', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
@@ -1942,8 +1949,8 @@ const ProviderDashboard = () => {
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button 
                       type="button" 
-                      onClick={() => setActiveChat(j)}
-                      style={{ background: '#111', color: '#FFF', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, fontWeight: 800, fontSize: '0.75rem', cursor: 'pointer' }}
+                      onClick={() => navigate(`/messages?bookingId=${j._id}`)}
+                      style={{ background: '#111', color: '#D2FE00', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, fontWeight: 800, fontSize: '0.75rem', cursor: 'pointer' }}
                     >
                       Open Chat
                     </button>
@@ -2133,7 +2140,11 @@ const ProviderDashboard = () => {
                   <button 
                     type="button" 
                     style={{ background: '#111', color: '#D2FE00', border: 'none', padding: '0.65rem 1.25rem', borderRadius: 6, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-                    onClick={() => setActiveChat(selectedJobDetail)}
+                    onClick={() => {
+                      const bId = selectedJobDetail._id;
+                      setSelectedJobDetail(null);
+                      navigate(`/messages?bookingId=${bId}`);
+                    }}
                   >
                     <MessageSquare size={16} /> In-App Chat
                   </button>

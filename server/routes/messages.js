@@ -3,6 +3,61 @@ const router = express.Router();
 const Message = require('../models/Message');
 const auth = require('../middleware/auth');
 
+// @route   GET api/messages/conversations
+// @desc    Get all conversation threads for the current user (customer or provider)
+router.get('/conversations', auth, async (req, res) => {
+  try {
+    const Booking = require('../models/Booking');
+    const userId = req.user.id;
+    const isProvider = req.user.role === 'provider';
+
+    // Find bookings where user is involved
+    const query = isProvider ? { providerId: userId } : { customerId: userId };
+
+    const bookings = await Booking.find(query)
+      .populate('customerId', 'name phone avatarUrl')
+      .populate('providerId', 'name phone avatarUrl providerDetails')
+      .sort({ updatedAt: -1 });
+
+    const conversations = await Promise.all(
+      bookings.map(async (b) => {
+        const lastMessage = await Message.findOne({ bookingId: b._id })
+          .sort({ createdAt: -1 });
+
+        const otherParty = isProvider ? b.customerId : b.providerId;
+        return {
+          bookingId: b._id,
+          orderId: b.orderId || `ORD-${b._id.toString().slice(-6).toUpperCase()}`,
+          serviceCategory: b.providerId?.providerDetails?.categoryName || b.providerId?.providerDetails?.category || 'Service',
+          serviceStage: b.serviceStage || b.status,
+          status: b.status,
+          serviceDate: b.date,
+          serviceAddress: b.serviceAddress,
+          otherUser: {
+            id: otherParty?._id,
+            name: otherParty?.name || (isProvider ? 'Customer' : 'Service Specialist'),
+            phone: otherParty?.phone,
+            avatarUrl: otherParty?.avatarUrl || otherParty?.providerDetails?.avatarUrl,
+            role: isProvider ? 'customer' : 'provider'
+          },
+          lastMessage: lastMessage ? {
+            text: lastMessage.text,
+            createdAt: lastMessage.createdAt,
+            isMine: lastMessage.sender?.toString() === userId.toString()
+          } : null,
+          updatedAt: lastMessage ? lastMessage.createdAt : b.updatedAt
+        };
+      })
+    );
+
+    conversations.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    res.json(conversations);
+  } catch (err) {
+    console.error('Error in GET /api/messages/conversations:', err);
+    res.status(500).json({ message: 'Server error fetching conversations' });
+  }
+});
+
 router.get('/:bookingId', auth, async (req, res) => {
   try {
     const messages = await Message.find({ bookingId: req.params.bookingId })

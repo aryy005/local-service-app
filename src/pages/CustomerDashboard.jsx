@@ -355,7 +355,7 @@ const CustomerDashboard = () => {
 
           <button 
             className={`lp-nav-item ${activeTab === 'messages' ? 'active' : ''}`}
-            onClick={() => setActiveTab('messages')}
+            onClick={() => navigate('/messages')}
           >
             <MessageSquare size={18} />
             <span>Messages</span>
@@ -739,11 +739,7 @@ const CustomerDashboard = () => {
                       )}
 
                       <button 
-                        onClick={() => setActiveChat({
-                          bookingId: booking._id,
-                          receiverId: prov._id,
-                          receiverName: prov.name
-                        })}
+                        onClick={() => navigate(`/messages?bookingId=${booking._id}`)}
                         className="btn btn-outline btn-sm"
                         style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                       >
@@ -778,9 +774,19 @@ const CustomerDashboard = () => {
         {/* ─── 4. MESSAGES TAB ─── */}
         {activeTab === 'messages' && (
           <>
-            <header className="lp-dash-header">
-              <h1>Messages</h1>
-              <p>Direct live chat with your assigned technicians and service specialists.</p>
+            <header className="lp-dash-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h1>Messages</h1>
+                <p>Direct live chat with your assigned technicians and service specialists.</p>
+              </div>
+              <button 
+                type="button" 
+                className="btn btn-lime"
+                onClick={() => navigate('/messages')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
+              >
+                <MessageSquare size={16} /> Open Fullscreen Chat Hub →
+              </button>
             </header>
 
             {bookings.length === 0 ? (
@@ -803,11 +809,7 @@ const CustomerDashboard = () => {
                       key={b._id} 
                       className="lp-booking-card" 
                       style={{ cursor: 'pointer' }}
-                      onClick={() => setActiveChat({
-                        bookingId: b._id,
-                        receiverId: prov._id,
-                        receiverName: prov.name
-                      })}
+                      onClick={() => navigate(`/messages?bookingId=${b._id}`)}
                     >
                       <div className="lp-booking-info">
                         <img 
@@ -820,7 +822,14 @@ const CustomerDashboard = () => {
                           <div className="lp-booking-meta">Service booking #{b.orderId || b._id?.slice(-6).toUpperCase()} • {b.date || 'Scheduled'}</div>
                         </div>
                       </div>
-                      <button className="btn btn-lime btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <button 
+                        className="btn btn-lime btn-sm" 
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/messages?bookingId=${b._id}`);
+                        }}
+                      >
                         <MessageSquare size={15} /> Open Chat
                       </button>
                     </div>
