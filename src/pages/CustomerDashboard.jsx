@@ -876,9 +876,9 @@ const CustomerDashboard = () => {
               <p>Manage your contact details, service locations, and account verification.</p>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            <div className="lp-profile-grid">
               {/* Profile Details Card */}
-              <div className="glass-panel" style={{ padding: '1.75rem', borderRadius: '12px' }}>
+              <div className="lp-profile-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                   <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Contact Information</h3>
                   {!isEditing ? (
@@ -963,7 +963,7 @@ const CustomerDashboard = () => {
               </div>
 
               {/* Addresses Card */}
-              <div className="glass-panel" style={{ padding: '1.75rem', borderRadius: '12px' }}>
+              <div className="lp-profile-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                   <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Saved Addresses</h3>
                   <button className="btn btn-lime btn-sm" onClick={() => setShowNewAddressModal(true)}>

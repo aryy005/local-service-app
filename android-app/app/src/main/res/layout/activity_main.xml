@@ -5,27 +5,11 @@
     android:fitsSystemWindows="true"
     android:background="@color/white">
 
-    <!-- Top Loading Progress Bar -->
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="@android:style/Widget.ProgressBar.Horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="3.5dp"
-        android:layout_alignParentTop="true"
-        android:elevation="10dp"
-        android:indeterminate="false"
-        android:max="100"
-        android:progress="0"
-        android:progressBackgroundTint="#222222"
-        android:progressTint="@color/accent_yellow"
-        android:visibility="gone" />
-
     <!-- Pull-To-Refresh Layout -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/progressBar">
+        android:layout_height="match_parent">
 
         <!-- Core App Native Web Engine -->
         <WebView
@@ -35,6 +19,26 @@
             android:overScrollMode="never" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Center Circular Loading/Refresh Animated Spinner -->
+    <RelativeLayout
+        android:id="@+id/centerLoadingLayout"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/bg_spinner_card"
+        android:elevation="14dp"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/centerProgressBar"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_centerInParent="true"
+            android:indeterminate="true"
+            android:indeterminateTint="@color/primary_dark"
+            android:indeterminateTintMode="src_in" />
+    </RelativeLayout>
 
     <!-- Offline Resilience State View -->
     <LinearLayout

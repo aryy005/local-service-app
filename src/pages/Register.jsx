@@ -208,11 +208,12 @@ const Register = () => {
 
   return (
     <div className="auth-page fade-in">
-      <div className="auth-card glass-panel" style={{ maxWidth: '480px' }}>
-        <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Join LocalFixr in seconds — no hassle setup</p>
+      <div className="auth-card" style={{ maxWidth: '520px' }}>
+        <div className="auth-tag">ACCESS PORTAL</div>
+        <h1 className="auth-title">CREATE ACCOUNT</h1>
+        <p className="auth-subtitle">Join LocalFixr in seconds — verified local services</p>
         
-        {error && <div className="error-alert">{error}</div>}
+        {error && <div className="error-alert">⚠️ {error}</div>}
 
         {/* Role Selector */}
         <div className="role-selector">
@@ -221,18 +222,18 @@ const Register = () => {
             className={`role-btn ${formData.role === 'customer' ? 'active' : ''}`}
             onClick={() => setFormData({...formData, role: 'customer'})}
           >
-            I need services
+            Customer
           </button>
           <button 
             type="button" 
             className={`role-btn ${formData.role === 'provider' ? 'active' : ''}`}
             onClick={() => setFormData({...formData, role: 'provider'})}
           >
-            I offer services
+            Provider
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form mt-4">
+        <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label>Full Name</label>
             <input 
@@ -258,7 +259,7 @@ const Register = () => {
           </div>
 
           <div className="form-group">
-            <label>Password *</label>
+            <label>Password (At least 6 characters)</label>
             <input 
               type="password" 
               name="password" 
@@ -266,12 +267,12 @@ const Register = () => {
               onChange={handleChange} 
               required 
               minLength="6" 
-              placeholder="At least 6 characters"
+              placeholder="••••••••"
             />
           </div>
 
           <div className="form-group">
-            <label>Phone Number *</label>
+            <label>Mobile Number (10 Digits)</label>
             <input 
               type="tel" 
               name="phone" 
@@ -284,11 +285,11 @@ const Register = () => {
           </div>
 
           {/* Location Precision Address Block (For both Customer and Provider) */}
-          <div style={{ marginTop: '1rem', marginBottom: '1rem', borderTop: '1px solid var(--surface-border)', paddingTop: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <h4 style={{ margin: 0, color: '#6366f1', fontSize: '0.9rem', fontWeight: 700 }}>
+          <div style={{ marginTop: '1.25rem', marginBottom: '1.25rem', borderTop: '2px solid #111111', paddingTop: '1.15rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <label style={{ margin: 0, fontWeight: 800, fontSize: '0.78rem', letterSpacing: '0.04em', textTransform: 'uppercase', color: '#111111' }}>
                 Service Location & Address
-              </h4>
+              </label>
               <button
                 type="button"
                 onClick={handleDetectLiveLocation}
@@ -298,28 +299,29 @@ const Register = () => {
                   alignItems: 'center',
                   gap: '6px',
                   padding: '0.35rem 0.75rem',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: '#6366f1',
-                  background: 'rgba(99, 102, 241, 0.1)',
-                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  color: '#111111',
+                  background: '#D2FE00',
+                  border: '2px solid #111111',
                   borderRadius: '6px',
+                  boxShadow: '2px 2px 0 #111111',
                   cursor: locating ? 'not-allowed' : 'pointer'
                 }}
               >
                 {locating ? <Loader2 size={13} className="animate-spin" /> : <Navigation size={13} />}
-                <span>{locating ? 'Detecting Location...' : 'Use Live Location'}</span>
+                <span>{locating ? 'Detecting...' : 'Use Live GPS'}</span>
               </button>
             </div>
 
             {locationSuccessMsg && (
-              <div style={{ fontSize: '0.8rem', color: '#10b981', marginBottom: '0.5rem', fontWeight: 600 }}>
+              <div style={{ fontSize: '0.82rem', color: '#15803D', marginBottom: '0.65rem', fontWeight: 800 }}>
                 ✓ {locationSuccessMsg}
               </div>
             )}
             
-            <div className="form-group mb-3">
-              <label>Street Address / House / Flat / Street No. *</label>
+            <div className="form-group">
+              <label>Street Address / House / Flat</label>
               <input 
                 type="text" 
                 name="street" 
@@ -330,9 +332,9 @@ const Register = () => {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.65rem' }}>
               <div className="form-group">
-                <label>City *</label>
+                <label>City</label>
                 <input 
                   type="text" 
                   name="city" 
@@ -344,7 +346,7 @@ const Register = () => {
               </div>
 
               <div className="form-group">
-                <label>State *</label>
+                <label>State</label>
                 <input 
                   type="text" 
                   name="state" 
@@ -356,7 +358,7 @@ const Register = () => {
               </div>
 
               <div className="form-group">
-                <label>Pincode *</label>
+                <label>Pincode</label>
                 <input 
                   type="text" 
                   name="pincode" 
@@ -371,9 +373,9 @@ const Register = () => {
           </div>
 
           {formData.role === 'provider' && (
-            <>
+            <div style={{ marginTop: '0.5rem', marginBottom: '1.25rem', borderTop: '2px solid #111111', paddingTop: '1.15rem' }}>
               <div className="form-group">
-                <label style={{ fontWeight: 700, color: '#6366f1' }}>🛠️ Service Offered (Select Category)</label>
+                <label>Service Category Offered</label>
                 <select 
                   name="category" 
                   value={formData.category} 
@@ -381,17 +383,19 @@ const Register = () => {
                   required
                   style={{ 
                     width: '100%', 
-                    padding: '0.75rem', 
-                    borderRadius: '0.5rem', 
-                    border: '1px solid var(--surface-border)', 
-                    background: 'var(--surface-card)', 
-                    color: 'var(--text-main)', 
-                    fontWeight: 600,
-                    outline: 'none' 
+                    padding: '0.75rem 1rem', 
+                    borderRadius: '5px', 
+                    border: '2px solid #111111', 
+                    background: '#FFFFFF', 
+                    color: '#111111', 
+                    fontWeight: 700,
+                    boxShadow: '2px 2px 0 #111111',
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 >
                   {categories.map(c => (
-                    <option key={c.id} value={c.id} style={{ background: '#1e293b', color: '#fff' }}>
+                    <option key={c.id} value={c.id} style={{ background: '#FFFFFF', color: '#111111' }}>
                       {c.name} — {c.description}
                     </option>
                   ))}
@@ -399,7 +403,7 @@ const Register = () => {
               </div>
 
               <div className="form-group">
-                <label>Starting / Base Price (₹)</label>
+                <label>Starting / Base Inspection Price (₹)</label>
                 <input 
                   type="number" 
                   name="hourlyRate" 
@@ -409,52 +413,56 @@ const Register = () => {
                   min="1"
                   placeholder="e.g. 199"
                 />
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
-                  Starting price for your base service or minimum inspection fee.
-                </span>
               </div>
-            </>
+            </div>
           )}
 
-          <button type="submit" className="btn btn-primary w-full mt-4" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Create Account'}
+          <button type="submit" className="auth-submit-btn" disabled={loading}>
+            {loading ? 'Creating Account...' : 'Create Account →'}
           </button>
         </form>
 
-        <div className="google-auth-container mt-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', width: '100%', margin: '0.5rem 0' }}>
-            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.2)' }}></div>
-            <span style={{ padding: '0 0.75rem', fontSize: '0.85rem', opacity: 0.7 }}>OR</span>
-            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.2)' }}></div>
-          </div>
+        <div className="auth-divider">
+          <span>OR CONTINUE WITH</span>
+        </div>
+
+        <div className="google-auth-wrapper">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
-            theme="filled_blue"
-            shape="pill"
+            theme="outline"
+            shape="rectangular"
             text="signup_with"
+            width="100%"
           />
         </div>
         
-        <p className="auth-redirect mt-6">
-          Already have an account? <Link to={redirectUrl ? `/auth/login?redirect=${encodeURIComponent(redirectUrl)}` : '/auth/login'}>Sign in</Link>
+        <p className="auth-redirect">
+          Already have an account?{' '}
+          <Link 
+            to={redirectUrl ? `/auth/login?redirect=${encodeURIComponent(redirectUrl)}` : '/auth/login'}
+            className="auth-redirect-link"
+          >
+            Sign in
+          </Link>
         </p>
       </div>
 
       {/* ── Google Sign-Up Address Details Modal ── */}
       {showAddressModal && (
-        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '1rem' }}>
-          <div className="glass-panel" style={{ background: 'var(--card-bg)', width: '100%', maxWidth: '460px', padding: '2rem', borderRadius: '1.25rem', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid var(--surface-border)' }}>
-            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.35rem', color: 'var(--text-main)' }}>
-              Enter Your Service Address
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(17,17,17,0.7)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '1rem' }}>
+          <div style={{ background: '#FFFFFF', border: '2.5px solid #111111', width: '100%', maxWidth: '460px', padding: '2rem', borderRadius: '8px', boxShadow: '6px 6px 0 #111111', color: '#111111' }}>
+            <div className="auth-tag">FINAL STEP</div>
+            <h2 className="auth-title" style={{ fontSize: '1.4rem', margin: '0.25rem 0 0.5rem 0' }}>
+              Service Address
             </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-              Please provide your address so nearby verified service professionals can reach your doorstep.
+            <p className="auth-subtitle" style={{ fontSize: '0.84rem', marginBottom: '1.25rem' }}>
+              Please provide your phone & address so verified professionals can reach you.
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                Service Location
+              <span style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', color: '#111111' }}>
+                Your Location
               </span>
               <button
                 type="button"
@@ -464,30 +472,31 @@ const Register = () => {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '6px',
-                  padding: '0.4rem 0.85rem',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: 'var(--primary, #0047FF)',
-                  background: 'rgba(0, 71, 255, 0.08)',
-                  border: '1px solid rgba(0, 71, 255, 0.25)',
-                  borderRadius: '8px',
+                  padding: '0.35rem 0.75rem',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  color: '#111111',
+                  background: '#D2FE00',
+                  border: '2px solid #111111',
+                  borderRadius: '6px',
+                  boxShadow: '2px 2px 0 #111111',
                   cursor: locating ? 'not-allowed' : 'pointer'
                 }}
               >
                 {locating ? <Loader2 size={13} className="animate-spin" /> : <Navigation size={13} />}
-                <span>{locating ? 'Detecting Location...' : 'Use Live Location'}</span>
+                <span>{locating ? 'Detecting...' : 'Use Live GPS'}</span>
               </button>
             </div>
 
             {locationSuccessMsg && (
-              <div style={{ fontSize: '0.8rem', color: '#10b981', marginBottom: '0.75rem', fontWeight: 600 }}>
+              <div style={{ fontSize: '0.82rem', color: '#15803D', marginBottom: '0.75rem', fontWeight: 800 }}>
                 ✓ {locationSuccessMsg}
               </div>
             )}
 
-            <form onSubmit={handleAddressModalSubmit}>
-              <div className="form-group mb-3">
-                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Phone Number *</label>
+            <form onSubmit={handleAddressModalSubmit} className="auth-form">
+              <div className="form-group">
+                <label>Mobile Number (10 Digits)</label>
                 <input 
                   type="tel" 
                   name="phone" 
@@ -499,8 +508,8 @@ const Register = () => {
                 />
               </div>
 
-              <div className="form-group mb-3">
-                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>House / Flat / Street Address *</label>
+              <div className="form-group">
+                <label>Street Address</label>
                 <input 
                   type="text" 
                   name="street" 
@@ -511,9 +520,9 @@ const Register = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
                 <div className="form-group">
-                  <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>City *</label>
+                  <label>City</label>
                   <input 
                     type="text" 
                     name="city" 
@@ -525,7 +534,7 @@ const Register = () => {
                 </div>
 
                 <div className="form-group">
-                  <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>State *</label>
+                  <label>State</label>
                   <input 
                     type="text" 
                     name="state" 
@@ -537,8 +546,8 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="form-group mb-4">
-                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Pincode *</label>
+              <div className="form-group">
+                <label>Pincode</label>
                 <input 
                   type="text" 
                   name="pincode" 
@@ -550,25 +559,35 @@ const Register = () => {
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
                 <button 
                   type="button" 
-                  className="btn btn-outline" 
-                  style={{ flex: 1 }}
                   onClick={() => {
                     setShowAddressModal(false);
                     setPendingGoogleCredential(null);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '0.85rem',
+                    background: '#FFFFFF',
+                    color: '#111111',
+                    border: '2px solid #111111',
+                    borderRadius: '6px',
+                    boxShadow: '2px 2px 0 #111111',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    cursor: 'pointer'
                   }}
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="btn btn-primary" 
-                  style={{ flex: 1.5 }}
+                  className="auth-submit-btn" 
+                  style={{ flex: 1.6, marginTop: 0 }}
                   disabled={loading}
                 >
-                  {loading ? 'Completing...' : 'Complete Sign-Up →'}
+                  {loading ? 'Completing...' : 'Complete →'}
                 </button>
               </div>
             </form>

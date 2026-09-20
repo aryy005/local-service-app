@@ -2,7 +2,7 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  background: #ffffff;
+  background: #ffffff !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   padding-top: env(safe-area-inset-top, 0px);
 }
@@ -50,17 +50,17 @@
 }
 
 .logo-mark {
-  width: 34px;
-  height: 34px;
-  background: #D2FE00;
-  color: #111111;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  background: #D2FE00 !important;
+  color: #111111 !important;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 900;
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   letter-spacing: -0.04em;
   flex-shrink: 0;
 }
@@ -78,7 +78,7 @@
 .logo-text {
   font-size: 1.55rem;
   font-weight: 900;
-  color: #111111;
+  color: #111111 !important;
   letter-spacing: -0.04em;
   font-family: 'Space Grotesk', sans-serif;
   flex-shrink: 0;
@@ -289,7 +289,7 @@
   display: none;
   background: transparent;
   border: none;
-  color: var(--text-main);
+  color: #111111 !important;
   cursor: pointer;
   padding: 0.25rem;
 }

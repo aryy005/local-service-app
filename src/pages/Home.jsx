@@ -233,18 +233,20 @@ const Home = () => {
                 </button>
               </div>
             </form>
-          </div>
 
-          {/* Trust badge — bottom-right corner on photo */}
-          <div className="lf-trust-badge">
-            <div className="lf-badge-row">
-              <span>LOCAL</span>
-              <ArrowUpRight size={14} strokeWidth={3} />
-            </div>
-            <div>TRUSTED</div>
-            <div className="lf-badge-row">
-              <span>VERIFIED</span>
-              <ArrowUpRight size={14} strokeWidth={3} />
+            {/* Trust badge — situated right below search pill on the right */}
+            <div className="lf-trust-badge-wrap">
+              <div className="lf-trust-badge">
+                <div className="lf-badge-row">
+                  <span>LOCAL</span>
+                  <ArrowUpRight size={14} strokeWidth={3} />
+                </div>
+                <div>TRUSTED</div>
+                <div className="lf-badge-row">
+                  <span>VERIFIED</span>
+                  <ArrowUpRight size={14} strokeWidth={3} />
+                </div>
+              </div>
             </div>
           </div>
         </div>

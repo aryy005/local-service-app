@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
     private SwipeRefreshLayout swipeRefresh;
-    private ProgressBar progressBar;
+    private View centerLoadingLayout;
     private View offlineContainer;
     private Button btnRetry;
 
@@ -90,26 +90,24 @@ public class MainActivity extends AppCompatActivity {
     private void initViews() {
         webView = findViewById(R.id.webView);
         swipeRefresh = findViewById(R.id.swipeRefresh);
-        progressBar = findViewById(R.id.progressBar);
+        centerLoadingLayout = findViewById(R.id.centerLoadingLayout);
         offlineContainer = findViewById(R.id.offlineContainer);
         btnRetry = findViewById(R.id.btnRetry);
 
-        // Customize SwipeRefresh colors to match Localfixr brand
+        // Customize SwipeRefresh colors
         swipeRefresh.setColorSchemeColors(
                 ContextCompat.getColor(this, R.color.accent_yellow),
                 ContextCompat.getColor(this, R.color.primary_dark)
-        );
-        swipeRefresh.setProgressBackgroundColorSchemeColor(
-                ContextCompat.getColor(this, R.color.card_dark)
         );
 
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                swipeRefresh.setRefreshing(false);
                 if (isNetworkAvailable()) {
+                    centerLoadingLayout.setVisibility(View.VISIBLE);
                     webView.reload();
                 } else {
-                    swipeRefresh.setRefreshing(false);
                     showOfflineView(true);
                 }
             }
@@ -337,13 +335,17 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
-            progressBar.setVisibility(View.VISIBLE);
+            if (centerLoadingLayout != null) {
+                centerLoadingLayout.setVisibility(View.VISIBLE);
+            }
         }
 
         @Override
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
-            progressBar.setVisibility(View.GONE);
+            if (centerLoadingLayout != null) {
+                centerLoadingLayout.setVisibility(View.GONE);
+            }
             swipeRefresh.setRefreshing(false);
         }
 
@@ -352,7 +354,9 @@ public class MainActivity extends AppCompatActivity {
             super.onReceivedError(view, request, error);
             if (request.isForMainFrame()) {
                 swipeRefresh.setRefreshing(false);
-                progressBar.setVisibility(View.GONE);
+                if (centerLoadingLayout != null) {
+                    centerLoadingLayout.setVisibility(View.GONE);
+                }
                 showOfflineView(true);
             }
         }
@@ -366,11 +370,12 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onProgressChanged(WebView view, int newProgress) {
             super.onProgressChanged(view, newProgress);
-            progressBar.setProgress(newProgress);
-            if (newProgress >= 100) {
-                progressBar.setVisibility(View.GONE);
-            } else if (progressBar.getVisibility() != View.VISIBLE) {
-                progressBar.setVisibility(View.VISIBLE);
+            if (centerLoadingLayout != null) {
+                if (newProgress >= 100) {
+                    centerLoadingLayout.setVisibility(View.GONE);
+                } else if (centerLoadingLayout.getVisibility() != View.VISIBLE) {
+                    centerLoadingLayout.setVisibility(View.VISIBLE);
+                }
             }
         }
 
