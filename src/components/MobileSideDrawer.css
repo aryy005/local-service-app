@@ -229,10 +229,49 @@
   border-radius: 10px;
 }
 
+/* Contact & Info Box in Drawer */
+.side-drawer-info-box {
+  margin-top: auto;
+  padding: 0.85rem 0.95rem;
+  background: #181818;
+  border: 1px solid #282828;
+  border-radius: 10px;
+  margin-bottom: 0.75rem;
+}
+
+.side-drawer-info-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888888;
+  margin-bottom: 0.5rem;
+}
+
+.side-drawer-info-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.side-drawer-info-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #CCCCCC;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.side-drawer-info-link:hover {
+  color: #D2FE00;
+}
+
 /* Footer & Logout */
 .side-drawer-footer {
-  margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 0.5rem;
   border-top: 1px solid #222222;
 }
 
@@ -257,3 +296,4 @@
   background: rgba(239, 68, 68, 0.1);
   color: #EF4444;
 }
+

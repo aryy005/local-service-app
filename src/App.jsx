@@ -105,7 +105,7 @@ function App() {
           </Routes>
         </ErrorBoundary>
       </main>
-      {!isDashboard && !user && <Footer />}
+      {!isDashboard && <Footer />}
       <MobileBottomNav />
       <Toaster 
         position="bottom-right" 

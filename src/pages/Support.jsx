@@ -131,9 +131,9 @@ const Support = () => {
             <div className="doc-card-icon" style={{ background: '#D2FE00', color: '#111111' }}>
               <Mail size={22} />
             </div>
-            <h3 className="doc-card-title" style={{ color: '#FFFFFF' }}>Email Support Desk</h3>
+            <h3 className="doc-card-title" style={{ color: '#FFFFFF' }}>Email Desk &amp; Inquiries</h3>
             <p className="doc-card-desc" style={{ color: '#CCCCCC', fontSize: '0.86rem' }}>
-              For order assistance, dispute escalation, invoice requests, and general questions.
+              For order assistance, dispute escalation, general inquiries, and info.
             </p>
             <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <a 
@@ -149,7 +149,23 @@ const Support = () => {
                   textAlign: 'center' 
                 }}
               >
-                support@localfixr.site
+                support@localfixr.site (Support)
+              </a>
+              <a 
+                href="mailto:info@localfixr.site" 
+                style={{ 
+                  background: '#1c1c1c', 
+                  color: '#D2FE00', 
+                  border: '1px solid #333333',
+                  padding: '0.55rem 0.85rem', 
+                  borderRadius: 6, 
+                  fontWeight: 900, 
+                  fontSize: '0.85rem', 
+                  textDecoration: 'none', 
+                  textAlign: 'center' 
+                }}
+              >
+                info@localfixr.site (Info &amp; Help)
               </a>
               <button 
                 type="button" 

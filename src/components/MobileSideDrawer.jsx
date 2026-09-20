@@ -7,9 +7,11 @@ import {
   Heart, 
   Settings, 
   LogOut, 
-  Menu, 
+  Menu,
   X,
-  User as UserIcon
+  User as UserIcon,
+  Info,
+  Mail
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './MobileSideDrawer.css';
@@ -199,6 +201,21 @@ const MobileSideDrawer = ({ isOpen, onClose }) => {
               </button>
             </>
           )}
+        </div>
+
+        {/* Contact & Support info box for Web & APK */}
+        <div className="side-drawer-info-box">
+          <div className="side-drawer-info-label">Need Information or Help?</div>
+          <div className="side-drawer-info-links">
+            <a href="mailto:info@localfixr.site" className="side-drawer-info-link" title="Send email to info@localfixr.site">
+              <Info size={14} color="#D2FE00" />
+              <span>info@localfixr.site</span>
+            </a>
+            <a href="mailto:support@localfixr.site" className="side-drawer-info-link" title="Send email to support@localfixr.site">
+              <Mail size={14} color="#D2FE00" />
+              <span>support@localfixr.site</span>
+            </a>
+          </div>
         </div>
 
         {/* Bottom Logout Row */}

@@ -1,26 +1,26 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, ShieldCheck, Copy, Check, ExternalLink } from 'lucide-react';
+import { Mail, Info, ShieldCheck, Copy, Check, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
 const Footer = () => {
   const { user } = useAuth();
   const isProvider = user?.role === 'provider';
-  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState('');
 
-  const handleCopyEmail = (e) => {
+  const handleCopyEmail = (e, email) => {
     e.preventDefault();
-    navigator.clipboard.writeText('support@localfixr.site');
-    setCopiedEmail(true);
-    toast.success('support@localfixr.site copied!');
-    setTimeout(() => setCopiedEmail(false), 2000);
+    navigator.clipboard.writeText(email);
+    setCopiedEmail(email);
+    toast.success(`${email} copied!`);
+    setTimeout(() => setCopiedEmail(''), 2000);
   };
 
   return (
     <footer style={{
       marginTop: 'auto',
-      padding: '3.5rem 0 1.5rem',
+      padding: user ? '3.5rem 0 5.5rem' : '3.5rem 0 1.5rem',
       background: '#111111',
       color: '#ffffff',
       borderTop: '2px solid #222222',
@@ -48,48 +48,92 @@ const Footer = () => {
               : "Local Services. Real People. Certified, nearby skilled trade professionals for doorstep home repairs and maintenance."}
           </p>
 
-          {/* Official Support Card */}
+          {/* Official Support & Info Desk Card */}
           <div style={{
             background: '#1a1a1a',
             border: '1px solid #333333',
             borderRadius: '8px',
-            padding: '0.75rem 0.95rem'
+            padding: '0.75rem 0.95rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.65rem'
           }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#888888', marginBottom: '4px' }}>
-              Customer Support Desk
+            <div>
+              <div style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#888888', marginBottom: '4px' }}>
+                Customer Support Desk
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                <a 
+                  href="mailto:support@localfixr.site" 
+                  style={{ 
+                    color: '#D2FE00', 
+                    fontWeight: 800, 
+                    fontSize: '0.86rem', 
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                  title="Send email to support@localfixr.site"
+                >
+                  <Mail size={14} /> support@localfixr.site
+                </a>
+                <button 
+                  type="button" 
+                  onClick={(e) => handleCopyEmail(e, 'support@localfixr.site')}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#aaaaaa',
+                    cursor: 'pointer',
+                    padding: '2px 4px',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                  title="Copy support email address"
+                >
+                  {copiedEmail === 'support@localfixr.site' ? <Check size={14} color="#D2FE00" /> : <Copy size={14} />}
+                </button>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-              <a 
-                href="mailto:support@localfixr.site" 
-                style={{ 
-                  color: '#D2FE00', 
-                  fontWeight: 800, 
-                  fontSize: '0.88rem', 
-                  textDecoration: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px'
-                }}
-                title="Send email to support@localfixr.site"
-              >
-                <Mail size={14} /> support@localfixr.site
-              </a>
-              <button 
-                type="button" 
-                onClick={handleCopyEmail}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#aaaaaa',
-                  cursor: 'pointer',
-                  padding: '2px 4px',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-                title="Copy support email address"
-              >
-                {copiedEmail ? <Check size={14} color="#D2FE00" /> : <Copy size={14} />}
-              </button>
+
+            <div style={{ borderTop: '1px solid #282828', paddingTop: '0.55rem' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#888888', marginBottom: '4px' }}>
+                General Information &amp; Inquiries
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                <a 
+                  href="mailto:info@localfixr.site" 
+                  style={{ 
+                    color: '#D2FE00', 
+                    fontWeight: 800, 
+                    fontSize: '0.86rem', 
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                  title="Send email to info@localfixr.site"
+                >
+                  <Info size={14} /> info@localfixr.site
+                </a>
+                <button 
+                  type="button" 
+                  onClick={(e) => handleCopyEmail(e, 'info@localfixr.site')}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#aaaaaa',
+                    cursor: 'pointer',
+                    padding: '2px 4px',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                  title="Copy information email address"
+                >
+                  {copiedEmail === 'info@localfixr.site' ? <Check size={14} color="#D2FE00" /> : <Copy size={14} />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -150,8 +194,11 @@ const Footer = () => {
             <Link to="/safety" style={{ fontSize: '0.88rem', color: '#cccccc', textDecoration: 'none' }}>
               Report a Safety Concern
             </Link>
-            <a href="mailto:support@localfixr.site" style={{ fontSize: '0.88rem', color: '#D2FE00', textDecoration: 'none', fontWeight: 700 }}>
-              ✉ support@localfixr.site
+            <a href="mailto:support@localfixr.site" style={{ fontSize: '0.88rem', color: '#D2FE00', textDecoration: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Mail size={14} /> support@localfixr.site
+            </a>
+            <a href="mailto:info@localfixr.site" style={{ fontSize: '0.88rem', color: '#D2FE00', textDecoration: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Info size={14} /> info@localfixr.site
             </a>
           </div>
         </div>
@@ -168,7 +215,7 @@ const Footer = () => {
         gap: '0.75rem',
       }}>
         <p style={{ fontSize: '0.82rem', color: '#888888', margin: 0 }}>
-          &copy; {new Date().getFullYear()} Localfixr Technologies. All rights reserved. &bull; <a href="mailto:support@localfixr.site" style={{ color: '#888888', textDecoration: 'none' }}>support@localfixr.site</a>
+          &copy; {new Date().getFullYear()} Localfixr Technologies. All rights reserved. &bull; <a href="mailto:support@localfixr.site" style={{ color: '#888888', textDecoration: 'none' }}>support@localfixr.site</a> &bull; <a href="mailto:info@localfixr.site" style={{ color: '#888888', textDecoration: 'none' }}>info@localfixr.site</a>
         </p>
         <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
           <Link to="/safety" style={{ fontSize: '0.82rem', color: '#aaaaaa', textDecoration: 'none' }}>Privacy &amp; Data Security</Link>
