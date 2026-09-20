@@ -26,6 +26,16 @@ io.on('connection', (socket) => {
     const Message = require('./models/Message');
     try {
       if (!data || !data.bookingId || !data.text || !data.text.trim()) return;
+
+      // Deduplicate: avoid double-saving if client sends via REST or rapid emits
+      const recentDuplicate = await Message.findOne({
+        bookingId: data.bookingId,
+        sender: data.senderId,
+        text: data.text.trim(),
+        createdAt: { $gte: new Date(Date.now() - 3000) }
+      });
+      if (recentDuplicate) return;
+
       const newMsg = new Message({
         bookingId: data.bookingId,
         sender: data.senderId,

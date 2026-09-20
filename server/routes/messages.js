@@ -60,9 +60,25 @@ router.get('/conversations', auth, async (req, res) => {
 
 router.get('/:bookingId', auth, async (req, res) => {
   try {
-    const messages = await Message.find({ bookingId: req.params.bookingId })
+    const rawMessages = await Message.find({ bookingId: req.params.bookingId })
       .populate('sender', 'name')
       .sort({ createdAt: 1 });
+
+    // Deduplicate any consecutive duplicate messages created within 4 seconds
+    const messages = [];
+    for (const msg of rawMessages) {
+      const prev = messages[messages.length - 1];
+      if (
+        prev &&
+        String(prev.sender?._id || prev.sender) === String(msg.sender?._id || msg.sender) &&
+        prev.text?.trim() === msg.text?.trim() &&
+        Math.abs(new Date(msg.createdAt) - new Date(prev.createdAt)) < 4000
+      ) {
+        continue;
+      }
+      messages.push(msg);
+    }
+
     res.json(messages);
   } catch (err) {
     console.error(err);
@@ -97,6 +113,18 @@ router.post('/', auth, async (req, res) => {
 
     if (!targetReceiverId) {
       return res.status(400).json({ message: 'Could not resolve message receiver' });
+    }
+
+    // Idempotency: Prevent identical duplicate message save within 2.5 seconds
+    const recentDuplicate = await Message.findOne({
+      bookingId,
+      sender: req.user.id,
+      text: text.trim(),
+      createdAt: { $gte: new Date(Date.now() - 2500) }
+    }).populate('sender', 'name');
+
+    if (recentDuplicate) {
+      return res.json(recentDuplicate);
     }
 
     const newMsg = new Message({

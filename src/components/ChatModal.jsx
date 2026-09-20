@@ -51,7 +51,15 @@ const ChatModal = ({
     setMessages((prev) => {
       const exists = prev.some((m) => {
         if (newMsg._id && m._id && String(m._id) === String(newMsg._id)) return true;
-        if (!newMsg._id && m.text === newMsg.text && String(m.sender) === String(newMsg.sender)) return true;
+        const newSender = String(newMsg.sender?._id || newMsg.sender || '');
+        const existingSender = String(m.sender?._id || m.sender || '');
+        if (newSender && existingSender && newSender === existingSender && m.text?.trim() === newMsg.text?.trim()) {
+          const timeA = new Date(m.createdAt || Date.now()).getTime();
+          const timeB = new Date(newMsg.createdAt || Date.now()).getTime();
+          if (Math.abs(timeA - timeB) < 4000) {
+            return true;
+          }
+        }
         return false;
       });
       if (exists) return prev;
@@ -148,12 +156,7 @@ const ChatModal = ({
 
     setText('');
 
-    // 1. Emit via socket for instant peer delivery
-    if (socket && socket.connected) {
-      socket.emit('send_message', payload);
-    }
-
-    // 2. Guaranteed persistence via REST POST endpoint
+    // Persist via REST POST endpoint (which automatically broadcasts to the room)
     try {
       const res = await fetch(`${API_URL}/messages`, {
         method: 'POST',

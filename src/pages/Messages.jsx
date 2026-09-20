@@ -135,13 +135,28 @@ const Messages = () => {
     fetchSingleBooking();
   }, [selectedBookingId, activeConversation, token, user]);
 
+  const selectedBookingIdRef = useRef(selectedBookingId);
+  useEffect(() => {
+    selectedBookingIdRef.current = selectedBookingId;
+  }, [selectedBookingId]);
+
   // Helper to append message avoiding duplicates
   const appendMessage = useCallback((newMsg) => {
     if (!newMsg) return;
     setMessages((prev) => {
       const exists = prev.some((m) => {
+        // 1. Direct ID match
         if (newMsg._id && m._id && String(m._id) === String(newMsg._id)) return true;
-        if (!newMsg._id && m.text === newMsg.text && String(m.sender) === String(newMsg.sender)) return true;
+        // 2. Sender and text match within 4 seconds (handles rapid emits or concurrent REST responses)
+        const newSender = String(newMsg.sender?._id || newMsg.sender || '');
+        const existingSender = String(m.sender?._id || m.sender || '');
+        if (newSender && existingSender && newSender === existingSender && m.text?.trim() === newMsg.text?.trim()) {
+          const timeA = new Date(m.createdAt || Date.now()).getTime();
+          const timeB = new Date(newMsg.createdAt || Date.now()).getTime();
+          if (Math.abs(timeA - timeB) < 4000) {
+            return true;
+          }
+        }
         return false;
       });
       if (exists) return prev;
@@ -193,8 +208,8 @@ const Messages = () => {
 
       socketInstance.on('connect', () => {
         setIsConnected(true);
-        if (selectedBookingId) {
-          socketInstance.emit('join_chat', String(selectedBookingId));
+        if (selectedBookingIdRef.current) {
+          socketInstance.emit('join_chat', String(selectedBookingIdRef.current));
         }
       });
 
@@ -205,9 +220,10 @@ const Messages = () => {
       socketInstance.on('receive_message', (msg) => {
         if (!msg) return;
         const msgBookingId = String(msg.bookingId?._id || msg.bookingId || '');
+        const activeId = String(selectedBookingIdRef.current || '');
 
         // If message is for currently active thread
-        if (msgBookingId === String(selectedBookingId)) {
+        if (msgBookingId === activeId) {
           appendMessage(msg);
           const senderId = String(msg.sender?._id || msg.sender || '');
           if (senderId !== myId) {
@@ -245,7 +261,7 @@ const Messages = () => {
         socketInstance.disconnect();
       }
     };
-  }, [selectedBookingId, myId, token, appendMessage, fetchConversations]);
+  }, [myId, token, appendMessage, fetchConversations]);
 
   // Join room when selectedBookingId updates
   useEffect(() => {
@@ -286,19 +302,7 @@ const Messages = () => {
 
     const targetReceiverId = activeConversation?.otherUser?.id;
 
-    const payload = {
-      bookingId: selectedBookingId,
-      senderId: myId,
-      receiverId: targetReceiverId,
-      text: trimmed
-    };
-
-    // Emit via socket immediately
-    if (socket && socket.connected) {
-      socket.emit('send_message', payload);
-    }
-
-    // Persist via REST POST
+    // Persist via REST POST - server saves once and broadcasts receive_message to room
     try {
       const res = await fetch(`${API_URL}/messages`, {
         method: 'POST',
