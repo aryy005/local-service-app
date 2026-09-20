@@ -4,6 +4,7 @@
   z-index: 50;
   background: #ffffff;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .header-content {
@@ -42,25 +43,26 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.65rem;
   flex-shrink: 0;
   text-decoration: none;
   z-index: 2;
 }
 
 .logo-mark {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   background: #D2FE00;
-  color: #000000;
-  border-radius: 7px;
+  color: #111111;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 900;
-  font-size: 0.95rem;
-  letter-spacing: -0.02em;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  font-size: 1.15rem;
+  letter-spacing: -0.04em;
+  flex-shrink: 0;
 }
 
 .logo-img {

@@ -9,9 +9,9 @@
         <item name="colorSecondary">@color/accent_yellow</item>
         <item name="colorSecondaryVariant">@color/accent_yellow_dark</item>
         <item name="colorOnSecondary">@color/primary_dark</item>
-        <item name="android:statusBarColor">@color/status_bar</item>
+        <item name="android:statusBarColor">#FFFFFF</item>
         <item name="android:navigationBarColor">@color/nav_bar</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
     </style>
 
     <!-- Splash Screen theme -->

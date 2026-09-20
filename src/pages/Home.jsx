@@ -223,7 +223,7 @@ const Home = () => {
                 <MapPin size={18} className="lf-pin-icon" />
                 <input
                   type="text"
-                  placeholder="Search for a service (electrician, plumber...)"
+                  placeholder="Search for a service (electrician, plumb..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="lf-search-input"
