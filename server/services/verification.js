@@ -235,7 +235,10 @@ async function sendPartnerWelcomeEmail(partnerUser) {
   const partnerPhone = partnerUser.phone || 'Provided';
   const partnerId = partnerUser._id ? partnerUser._id.toString() : Date.now().toString();
   const providerId = p.providerId || `LFX-PRV-${partnerId.slice(-4).toUpperCase()}`;
-  const avatarUrl = p.avatarUrl || partnerUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
+  let rawAvatar = p.avatarUrl || partnerUser.avatarUrl || '';
+  const avatarUrl = (rawAvatar && !rawAvatar.startsWith('data:') && rawAvatar.length < 500)
+    ? rawAvatar
+    : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
   const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
   const partnerSignInUrl = `${clientUrl}/auth/login?role=provider&redirect=${encodeURIComponent('/provider-dashboard')}`;
 
