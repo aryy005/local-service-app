@@ -20,6 +20,7 @@ import UserMenuPill from '../components/UserMenuPill';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { getSavedProviders, toggleSaveProvider } from '../utils/savedProviders';
+import { isValidPhone, isValidPincode, sanitizeDigits } from '../utils/validation';
 import './CustomerDashboard.css';
 
 const CustomerDashboard = () => {
@@ -182,8 +183,8 @@ const CustomerDashboard = () => {
   }, [user, fetchBookings]);
 
   const handleSendPhoneOtp = async (channel = 'sms') => {
-    if (!phoneInput || phoneInput.trim().length < 10) {
-      setPhoneError('Please enter a valid 10-digit phone number');
+    if (!phoneInput || !isValidPhone(phoneInput)) {
+      setPhoneError('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)');
       return;
     }
     setPhoneLoading(true);
@@ -219,7 +220,7 @@ const CustomerDashboard = () => {
       const res = await fetch(`${API_URL}/verify/phone/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ otp: phoneOtp.trim() })
+        body: JSON.stringify({ phone: phoneInput.trim(), otp: phoneOtp.trim() })
       });
       const data = await res.json();
       if (res.ok) {
@@ -240,15 +241,28 @@ const CustomerDashboard = () => {
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.name || formData.name.trim().length < 2) {
+      alert('Please enter a valid full name (at least 2 characters)');
+      return;
+    }
+    const targetPhone = phoneInput.trim() || formData.phone.trim();
+    if (targetPhone && !isValidPhone(targetPhone)) {
+      alert('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)');
+      return;
+    }
+    if (formData.pincode && formData.pincode.trim() !== '' && !isValidPincode(formData.pincode)) {
+      alert('Please enter a valid 6-digit Indian PIN code (e.g. 141001)');
+      return;
+    }
     try {
       await updateProfile({
-        name: formData.name,
-        phone: formData.phone,
+        name: formData.name.trim(),
+        phone: targetPhone,
         addressDetails: {
-          street: formData.street,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode
+          street: (formData.street || '').trim(),
+          city: (formData.city || '').trim(),
+          state: (formData.state || '').trim(),
+          pincode: (formData.pincode || '').trim()
         }
       });
       setIsEditing(false);
@@ -260,8 +274,22 @@ const CustomerDashboard = () => {
 
   const handleAddAddress = async (e) => {
     e.preventDefault();
+    if (!newAddressData.street.trim() || !newAddressData.city.trim()) {
+      alert('Street address and City are required');
+      return;
+    }
+    if (newAddressData.pincode && newAddressData.pincode.trim() !== '' && !isValidPincode(newAddressData.pincode)) {
+      alert('Please enter a valid 6-digit Indian PIN code (e.g. 141001)');
+      return;
+    }
     try {
-      await addAddress(newAddressData);
+      await addAddress({
+        ...newAddressData,
+        street: newAddressData.street.trim(),
+        city: newAddressData.city.trim(),
+        state: (newAddressData.state || '').trim(),
+        pincode: (newAddressData.pincode || '').trim()
+      });
       setShowNewAddressModal(false);
       setNewAddressData({ label: 'Home', street: '', city: '', state: '', pincode: '', isDefault: false });
     } catch (err) {
@@ -892,7 +920,12 @@ const CustomerDashboard = () => {
                       <input 
                         type="tel" 
                         value={phoneInput} 
-                        onChange={(e) => setPhoneInput(e.target.value)}
+                        onChange={(e) => {
+                          const clean = sanitizeDigits(e.target.value, 10);
+                          setPhoneInput(clean);
+                          setFormData(prev => ({ ...prev, phone: clean }));
+                        }}
+                        maxLength={10}
                         placeholder="10-digit mobile number"
                       />
                       {!user?.phoneVerified && (
@@ -915,7 +948,7 @@ const CustomerDashboard = () => {
                         <input 
                           type="text" 
                           value={phoneOtp} 
-                          onChange={(e) => setPhoneOtp(e.target.value)}
+                          onChange={(e) => setPhoneOtp(sanitizeDigits(e.target.value, 6))}
                           placeholder="6-digit code"
                           maxLength={6}
                         />
@@ -1172,8 +1205,10 @@ const CustomerDashboard = () => {
                   <input 
                     type="text" 
                     value={newAddressData.pincode} 
-                    onChange={(e) => setNewAddressData({ ...newAddressData, pincode: e.target.value })} 
+                    onChange={(e) => setNewAddressData({ ...newAddressData, pincode: sanitizeDigits(e.target.value, 6) })} 
                     required 
+                    maxLength={6}
+                    placeholder="6 digits (e.g. 141001)"
                     style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid #111111', borderRadius: '5px', boxShadow: '2px 2px 0 #111111', boxSizing: 'border-box' }}
                   />
                 </div>

@@ -7,6 +7,7 @@ import {
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { isValidEmail } from '../utils/validation';
 import './Documentation.css';
 
 const FAQS = [
@@ -64,6 +65,11 @@ const Support = () => {
     e.preventDefault();
     if (!ticketData.name || !ticketData.email || !ticketData.message) {
       toast.error('Please fill in all required fields.');
+      return;
+    }
+
+    if (!isValidEmail(ticketData.email)) {
+      toast.error('Please enter a valid email address.');
       return;
     }
 
@@ -281,9 +287,21 @@ const Support = () => {
                     required
                     placeholder="name@example.com"
                     value={ticketData.email}
-                    onChange={(e) => setTicketData({ ...ticketData, email: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem 1rem', border: '1.5px solid #111111', borderRadius: 8, fontSize: '0.92rem', outline: 'none' }}
+                    onChange={(e) => setTicketData({ ...ticketData, email: e.target.value.trim().toLowerCase() })}
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem 1rem', 
+                      border: ticketData.email && !isValidEmail(ticketData.email) ? '1.5px solid #EF4444' : '1.5px solid #111111', 
+                      borderRadius: 8, 
+                      fontSize: '0.92rem', 
+                      outline: 'none' 
+                    }}
                   />
+                  {ticketData.email && !isValidEmail(ticketData.email) && (
+                    <div style={{ color: '#EF4444', fontSize: '0.72rem', fontWeight: 600, marginTop: '3px' }}>
+                      Please enter a valid email address
+                    </div>
+                  )}
                 </div>
               </div>
 

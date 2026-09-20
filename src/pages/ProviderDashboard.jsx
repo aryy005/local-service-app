@@ -18,6 +18,15 @@ import ConfirmFinalBillModal from '../components/ConfirmFinalBillModal';
 import NotificationCenter from '../components/NotificationCenter';
 import ProviderCollectPaymentModal from '../components/ProviderCollectPaymentModal';
 import { openWhatsAppChat, formatWhatsAppBookingMessage } from '../utils/whatsapp';
+import { 
+  isValidPhone, 
+  isValidEmail, 
+  isValidUpi, 
+  isValidPincode, 
+  isValidAadhaar, 
+  isValidRate, 
+  sanitizeDigits 
+} from '../utils/validation';
 import './ProviderDashboard.css';
 
 // Preset sample photos to make testing and demonstration instant for service partners
@@ -45,14 +54,14 @@ const checkProviderProfile = (user) => {
   const checks = [
     { key: 'avatarUrl', label: 'Profile Photo', valid: !!(p.avatarUrl && p.avatarUrl.trim().length > 0), value: p.avatarUrl ? 'Uploaded' : null },
     { key: 'name', label: 'Full Name', valid: !!(user?.name && user.name.trim().length > 0), value: user?.name },
-    { key: 'phone', label: 'Phone Number', valid: !!(user?.phone && user.phone.trim().length >= 10), value: user?.phone },
+    { key: 'phone', label: 'Phone Number', valid: !!(user?.phone && isValidPhone(user.phone)), value: user?.phone },
     { key: 'street', label: 'Doorstep / Street Address', valid: !!(addr.street && addr.street.trim().length > 0), value: addr.street },
     { key: 'city', label: 'Operating City & Area', valid: !!((user?.city || addr.city || p.location) && (user?.city || addr.city || p.location).trim().length > 0), value: user?.city || addr.city || p.location },
     { key: 'category', label: 'Service Category', valid: !!(p.category && p.category.trim().length > 0), value: p.category },
     { key: 'hourlyRate', label: 'Starting / Base Price (₹)', valid: !!(p.hourlyRate && Number(p.hourlyRate) > 0), value: p.hourlyRate ? `Starts from ₹${p.hourlyRate}` : null },
     { key: 'experienceYears', label: 'Experience (Years)', valid: (p.experienceYears !== undefined && p.experienceYears !== null && Number(p.experienceYears) >= 0), value: p.experienceYears !== undefined ? `${p.experienceYears} yrs` : null },
     { key: 'description', label: 'Bio / Description (min 10 chars)', valid: !!(p.description && p.description.trim().length >= 10), value: p.description },
-    { key: 'upiId', label: 'Payout UPI ID', valid: !!(p.upiId && p.upiId.trim().length > 0), value: p.upiId },
+    { key: 'upiId', label: 'Payout UPI ID', valid: !!(p.upiId && isValidUpi(p.upiId)), value: p.upiId },
     { key: 'portfolio', label: 'Work Portfolio (Min 1 Image)', valid: !!(p.portfolioImages && Array.isArray(p.portfolioImages) && p.portfolioImages.length > 0), value: p.portfolioImages?.length ? `${p.portfolioImages.length} photos` : null },
     { key: 'verification', label: 'Identity Verified (Phone / Aadhaar)', valid: !!(user?.phoneVerified || p.aadhaarVerified), value: user?.phoneVerified ? 'Phone Verified' : (p.aadhaarVerified ? 'Aadhaar Verified' : null) }
   ];
@@ -341,12 +350,16 @@ const ProviderDashboard = () => {
 
   // Verification Handlers
   const handleSendPhoneOtp = async () => {
-    if (!phoneInput) { setPhoneError('Enter mobile number'); return; }
+    const targetPhone = phoneInput || formData.phone || user?.phone;
+    if (!targetPhone || !isValidPhone(targetPhone)) { 
+      setPhoneError('Please enter a valid 10-digit Indian mobile number'); 
+      return; 
+    }
     setPhoneLoading(true); setPhoneError('');
     try {
       const res = await fetch(`${API_URL}/verify/phone/send-otp`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phoneInput, channel: 'sms' })
+        body: JSON.stringify({ phone: targetPhone, channel: 'sms' })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -356,16 +369,17 @@ const ProviderDashboard = () => {
   };
 
   const handleVerifyPhoneOtp = async () => {
-    if (phoneOtp.length < 6) { setPhoneError('Enter 6-digit OTP'); return; }
+    const targetPhone = phoneInput || formData.phone || user?.phone;
+    if (phoneOtp.length !== 6) { setPhoneError('Enter 6-digit OTP'); return; }
     setPhoneLoading(true); setPhoneError('');
     try {
       const res = await fetch(`${API_URL}/verify/phone/verify-otp`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phoneInput, otp: phoneOtp })
+        body: JSON.stringify({ phone: targetPhone, otp: phoneOtp })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      await updateProfile({ phone: phoneInput, phoneVerified: true });
+      await updateProfile({ phone: targetPhone, phoneVerified: true });
       setPhoneOtpSent(false);
       alert('Phone verified successfully!');
     } catch (err) { setPhoneError(err.message); }
@@ -373,7 +387,10 @@ const ProviderDashboard = () => {
   };
 
   const handleSendAadhaarOtp = async () => {
-    if (aadhaarInput.length !== 12) { setAadhaarError('Enter 12-digit Aadhaar number'); return; }
+    if (!isValidAadhaar(aadhaarInput)) { 
+      setAadhaarError('Enter a valid 12-digit Aadhaar number'); 
+      return; 
+    }
     setAadhaarLoading(true); setAadhaarError('');
     try {
       const res = await fetch(`${API_URL}/verify/aadhaar/send-otp`, {
@@ -389,7 +406,7 @@ const ProviderDashboard = () => {
   };
 
   const handleVerifyAadhaarOtp = async () => {
-    if (aadhaarOtp.length < 6) { setAadhaarError('Enter 6-digit OTP'); return; }
+    if (aadhaarOtp.length !== 6) { setAadhaarError('Enter 6-digit OTP'); return; }
     setAadhaarLoading(true); setAadhaarError('');
     try {
       const res = await fetch(`${API_URL}/verify/aadhaar/verify-otp`, {
@@ -414,27 +431,53 @@ const ProviderDashboard = () => {
 
   // Profile Save
   const handleSaveProfile = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+
+    if (!formData.name || formData.name.trim().length < 2) {
+      alert('Please enter a valid full name (at least 2 characters)');
+      return;
+    }
+
+    if (formData.phone && !isValidPhone(formData.phone)) {
+      alert('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)');
+      return;
+    }
+
+    if (formData.upiId && formData.upiId.trim() !== '' && !isValidUpi(formData.upiId)) {
+      alert('Please enter a valid UPI ID (e.g. mobile@upi or name@okhdfcbank)');
+      return;
+    }
+
+    if (formData.hourlyRate !== undefined && formData.hourlyRate !== '' && !isValidRate(formData.hourlyRate)) {
+      alert('Starting / base hourly rate must be greater than ₹0');
+      return;
+    }
+
+    if (formData.pincode && formData.pincode.trim() !== '' && !isValidPincode(formData.pincode)) {
+      alert('Please enter a valid 6-digit Indian PIN code (e.g. 141001)');
+      return;
+    }
+
     try {
       await updateProfile({
-        name: formData.name,
-        phone: formData.phone,
-        city: formData.city,
+        name: formData.name.trim(),
+        phone: formData.phone ? formData.phone.trim() : '',
+        city: formData.city.trim(),
         addressDetails: {
-          street: formData.street,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode
+          street: (formData.street || '').trim(),
+          city: (formData.city || '').trim(),
+          state: (formData.state || '').trim(),
+          pincode: (formData.pincode || '').trim()
         },
         providerDetails: {
           ...user.providerDetails,
           category: formData.category,
           categoryName: formData.category,
           hourlyRate: Number(formData.hourlyRate) || 350,
-          experienceYears: Number(formData.experienceYears) || 3,
+          experienceYears: Math.max(0, Number(formData.experienceYears) || 0),
           location: formData.location || formData.city,
           description: formData.description,
-          upiId: formData.upiId,
+          upiId: (formData.upiId || '').trim(),
           avatarUrl: formData.avatarUrl,
           portfolioImages: formData.portfolioImages
         }
@@ -1358,8 +1401,13 @@ const ProviderDashboard = () => {
                     <label style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Base Hourly Rate (₹)</label>
                     <input 
                       type="number" 
+                      min="1"
+                      placeholder="e.g. 350"
                       value={formData.hourlyRate}
-                      onChange={e => setFormData({ ...formData, hourlyRate: e.target.value })}
+                      onChange={e => {
+                        const val = e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 0);
+                        setFormData({ ...formData, hourlyRate: val });
+                      }}
                       style={{ width: '100%', padding: '0.65rem', borderRadius: 6, border: '2px solid #111', fontWeight: 700 }}
                     />
                   </div>
@@ -1368,8 +1416,13 @@ const ProviderDashboard = () => {
                     <label style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Experience (Years)</label>
                     <input 
                       type="number" 
+                      min="0"
+                      placeholder="e.g. 5"
                       value={formData.experienceYears}
-                      onChange={e => setFormData({ ...formData, experienceYears: e.target.value })}
+                      onChange={e => {
+                        const val = e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value) || 0);
+                        setFormData({ ...formData, experienceYears: val });
+                      }}
                       style={{ width: '100%', padding: '0.65rem', borderRadius: 6, border: '2px solid #111', fontWeight: 700 }}
                     />
                   </div>
@@ -1495,12 +1548,30 @@ const ProviderDashboard = () => {
                 <div>
                   <label style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Phone Number *</label>
                   <input 
-                    type="text" 
+                    type="tel" 
                     required 
+                    maxLength={10}
+                    placeholder="10-digit mobile number"
                     value={formData.phone} 
-                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: 6, border: '2px solid #111', fontWeight: 600, boxSizing: 'border-box' }}
+                    onChange={e => {
+                      const clean = sanitizeDigits(e.target.value, 10);
+                      setFormData({ ...formData, phone: clean });
+                      setPhoneInput(clean);
+                    }}
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem', 
+                      borderRadius: 6, 
+                      border: formData.phone && !isValidPhone(formData.phone) ? '2px solid #EF4444' : '2px solid #111', 
+                      fontWeight: 600, 
+                      boxSizing: 'border-box' 
+                    }}
                   />
+                  {formData.phone && !isValidPhone(formData.phone) && (
+                    <div style={{ color: '#EF4444', fontSize: '0.7rem', fontWeight: 700, marginTop: '4px' }}>
+                      Enter a valid 10-digit Indian mobile number (starts with 6-9)
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1545,10 +1616,22 @@ const ProviderDashboard = () => {
                     required
                     placeholder="e.g. mobile@upi, name@okhdfcbank, or 9876543210@paytm" 
                     value={formData.upiId} 
-                    onChange={e => setFormData({ ...formData, upiId: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: 6, border: '2px solid #111', fontWeight: 600, boxSizing: 'border-box' }}
+                    onChange={e => setFormData({ ...formData, upiId: e.target.value.trim().toLowerCase() })}
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem', 
+                      borderRadius: 6, 
+                      border: formData.upiId && !isValidUpi(formData.upiId) ? '2px solid #EF4444' : '2px solid #111', 
+                      fontWeight: 600, 
+                      boxSizing: 'border-box' 
+                    }}
                   />
                 </div>
+                {formData.upiId && !isValidUpi(formData.upiId) && (
+                  <div style={{ color: '#EF4444', fontSize: '0.7rem', fontWeight: 700, marginTop: '4px' }}>
+                    Invalid UPI format. Must be formatted like username@bank or 9876543210@upi
+                  </div>
+                )}
                 <p style={{ fontSize: '0.72rem', color: '#666', margin: '4px 0 0' }}>
                   Customer payments are deposited directly into this UPI ID upon job completion. You cannot accept orders without this.
                 </p>
@@ -1611,7 +1694,14 @@ const ProviderDashboard = () => {
                         </button>
                       ) : (
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <input type="text" placeholder="6-digit OTP" value={phoneOtp} onChange={e => setPhoneOtp(e.target.value)} style={{ width: '100px', padding: '0.4rem', border: '1.5px solid #111', borderRadius: 4 }} />
+                          <input 
+                            type="text" 
+                            maxLength={6} 
+                            placeholder="6-digit OTP" 
+                            value={phoneOtp} 
+                            onChange={e => setPhoneOtp(sanitizeDigits(e.target.value, 6))} 
+                            style={{ width: '100px', padding: '0.4rem', border: '1.5px solid #111', borderRadius: 4 }} 
+                          />
                           <button type="button" onClick={handleVerifyPhoneOtp} style={{ background: '#10B981', color: '#FFF', border: 'none', padding: '0.4rem 0.8rem', borderRadius: 4, fontWeight: 800, fontSize: '0.75rem' }}>
                             Verify
                           </button>
@@ -1633,14 +1723,28 @@ const ProviderDashboard = () => {
                     <div style={{ marginTop: '0.75rem' }}>
                       {aadhaarStep === 'input' ? (
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <input type="text" maxLength={12} placeholder="12-digit Aadhaar" value={aadhaarInput} onChange={e => setAadhaarInput(e.target.value)} style={{ width: '130px', padding: '0.4rem', border: '1.5px solid #111', borderRadius: 4 }} />
+                          <input 
+                            type="text" 
+                            maxLength={12} 
+                            placeholder="12-digit Aadhaar" 
+                            value={aadhaarInput} 
+                            onChange={e => setAadhaarInput(sanitizeDigits(e.target.value, 12))} 
+                            style={{ width: '130px', padding: '0.4rem', border: '1.5px solid #111', borderRadius: 4 }} 
+                          />
                           <button type="button" onClick={handleSendAadhaarOtp} style={{ background: '#111', color: '#FFF', border: 'none', padding: '0.4rem 0.8rem', borderRadius: 4, fontWeight: 800, fontSize: '0.75rem' }}>
                             Get OTP
                           </button>
                         </div>
                       ) : (
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <input type="text" placeholder="6-digit UIDAI OTP" value={aadhaarOtp} onChange={e => setAadhaarOtp(e.target.value)} style={{ width: '120px', padding: '0.4rem', border: '1.5px solid #111', borderRadius: 4 }} />
+                          <input 
+                            type="text" 
+                            maxLength={6} 
+                            placeholder="6-digit UIDAI OTP" 
+                            value={aadhaarOtp} 
+                            onChange={e => setAadhaarOtp(sanitizeDigits(e.target.value, 6))} 
+                            style={{ width: '120px', padding: '0.4rem', border: '1.5px solid #111', borderRadius: 4 }} 
+                          />
                           <button type="button" onClick={handleVerifyAadhaarOtp} style={{ background: '#10B981', color: '#FFF', border: 'none', padding: '0.4rem 0.8rem', borderRadius: 4, fontWeight: 800, fontSize: '0.75rem' }}>
                             Verify
                           </button>

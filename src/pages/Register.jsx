@@ -5,6 +5,13 @@ import { Navigation, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { categories } from '../data/mockData';
 import { getCurrentDetailedAddress } from '../utils/geolocation';
+import { 
+  isValidEmail, 
+  isValidPhone, 
+  isValidPincode, 
+  isValidRate, 
+  sanitizeDigits 
+} from '../utils/validation';
 import './Auth.css';
 
 const Register = () => {
@@ -46,7 +53,13 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    if (name === 'phone') {
+      setFormData({ ...formData, phone: sanitizeDigits(value, 10) });
+    } else if (name === 'pincode') {
+      setFormData({ ...formData, pincode: sanitizeDigits(value, 6) });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleDetectLiveLocation = async () => {
@@ -117,6 +130,14 @@ const Register = () => {
       setError('All fields are required. Please fill in Phone, Street Address, City, State, and Pincode.');
       return;
     }
+    if (!isValidPhone(formData.phone)) {
+      setError('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).');
+      return;
+    }
+    if (!isValidPincode(formData.pincode)) {
+      setError('Please enter a valid 6-digit Indian PIN code (e.g. 141001).');
+      return;
+    }
     if (pendingGoogleCredential) {
       executeGoogleRegister(pendingGoogleCredential, formData);
     }
@@ -135,21 +156,46 @@ const Register = () => {
       return;
     }
 
+    if (formData.name.trim().length < 2) {
+      setError('Please enter a valid full name (at least 2 characters).');
+      return;
+    }
+
+    if (!isValidEmail(formData.email)) {
+      setError('Please enter a valid email address (e.g. yourname@example.com).');
+      return;
+    }
+
+    if (!isValidPhone(formData.phone)) {
+      setError('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).');
+      return;
+    }
+
+    if (!isValidPincode(formData.pincode)) {
+      setError('Please enter a valid 6-digit Indian PIN code (e.g. 141001).');
+      return;
+    }
+
+    if (formData.role === 'provider' && !isValidRate(formData.hourlyRate)) {
+      setError('Starting hourly rate must be greater than ₹0.');
+      return;
+    }
+
     setLoading(true);
     try {
       const data = await register({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
         password: formData.password,
         role: formData.role,
         category: formData.category,
         hourlyRate: Number(formData.hourlyRate),
-        street: formData.street,
-        city: formData.city,
-        state: formData.state,
-        pincode: formData.pincode,
-        location: `${formData.street ? formData.street + ', ' : ''}${formData.city}, ${formData.state} - ${formData.pincode}`
+        street: formData.street.trim(),
+        city: formData.city.trim(),
+        state: formData.state.trim(),
+        pincode: formData.pincode.trim(),
+        location: `${formData.street ? formData.street.trim() + ', ' : ''}${formData.city.trim()}, ${formData.state.trim()} - ${formData.pincode.trim()}`
       });
 
       handleRoleRedirect(data.user.role);
@@ -232,7 +278,8 @@ const Register = () => {
               value={formData.phone} 
               onChange={handleChange} 
               required 
-              placeholder="e.g. 9876543210"
+              maxLength={10}
+              placeholder="10-digit mobile (e.g. 9876543210)"
             />
           </div>
 
@@ -316,7 +363,8 @@ const Register = () => {
                   value={formData.pincode} 
                   onChange={handleChange} 
                   required 
-                  placeholder="e.g. 141001"
+                  maxLength={6}
+                  placeholder="6 digits (e.g. 141001)"
                 />
               </div>
             </div>
@@ -446,7 +494,8 @@ const Register = () => {
                   value={formData.phone} 
                   onChange={handleChange} 
                   required
-                  placeholder="e.g. 9876543210"
+                  maxLength={10}
+                  placeholder="10-digit mobile (e.g. 9876543210)"
                 />
               </div>
 
@@ -496,7 +545,8 @@ const Register = () => {
                   value={formData.pincode} 
                   onChange={handleChange} 
                   required 
-                  placeholder="e.g. 141001"
+                  maxLength={6}
+                  placeholder="6 digits (e.g. 141001)"
                 />
               </div>
 

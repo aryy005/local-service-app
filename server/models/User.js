@@ -2,9 +2,32 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: String, default: '' },
+  name: { type: String, required: true, trim: true },
+  email: { 
+    type: String, 
+    required: true, 
+    trim: true, 
+    lowercase: true,
+    validate: {
+      validator: function(v) {
+        return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v);
+      },
+      message: props => `"${props.value}" is not a valid email address.`
+    }
+  },
+  phone: { 
+    type: String, 
+    default: '', 
+    trim: true,
+    validate: {
+      validator: function(v) {
+        if (!v || v.trim() === '') return true;
+        const clean = v.replace(/[\s\-()]/g, '').replace(/^\+91|^91/, '');
+        return /^[6-9]\d{9}$/.test(clean);
+      },
+      message: props => `"${props.value}" is not a valid 10-digit Indian mobile number.`
+    }
+  },
   password: { 
     type: String, 
     required: function() { return this.authProvider === 'local'; } 
@@ -14,19 +37,41 @@ const userSchema = new mongoose.Schema({
   authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
 
   // Detailed address & location precision for all users
-  city: { type: String, default: '' },
+  city: { type: String, default: '', trim: true },
   addressDetails: {
-    street: { type: String, default: '' },
-    city: { type: String, default: '' },
-    state: { type: String, default: '' },
-    pincode: { type: String, default: '' }
+    street: { type: String, default: '', trim: true },
+    city: { type: String, default: '', trim: true },
+    state: { type: String, default: '', trim: true },
+    pincode: { 
+      type: String, 
+      default: '', 
+      trim: true,
+      validate: {
+        validator: function(v) {
+          if (!v || v.trim() === '') return true;
+          return /^[1-9][0-9]{5}$/.test(v.trim());
+        },
+        message: props => `"${props.value}" is not a valid 6-digit Indian pincode.`
+      }
+    }
   },
   savedAddresses: [{
-    label: { type: String, default: 'Home' }, // 'Home', 'Work', 'Other'
-    street: { type: String, default: '' },
-    city: { type: String, default: '' },
-    state: { type: String, default: '' },
-    pincode: { type: String, default: '' },
+    label: { type: String, default: 'Home', trim: true }, // 'Home', 'Work', 'Other'
+    street: { type: String, default: '', trim: true },
+    city: { type: String, default: '', trim: true },
+    state: { type: String, default: '', trim: true },
+    pincode: { 
+      type: String, 
+      default: '', 
+      trim: true,
+      validate: {
+        validator: function(v) {
+          if (!v || v.trim() === '') return true;
+          return /^[1-9][0-9]{5}$/.test(v.trim());
+        },
+        message: props => `"${props.value}" is not a valid 6-digit Indian pincode.`
+      }
+    },
     isDefault: { type: Boolean, default: false }
   }],
 
@@ -44,12 +89,31 @@ const userSchema = new mongoose.Schema({
 
   // Provider specific fields
   providerDetails: {
-    upiId: { type: String }, // For Instant Payouts
-    experienceYears: { type: Number, default: 0 },
+    upiId: { 
+      type: String, 
+      trim: true,
+      validate: {
+        validator: function(v) {
+          if (!v || v.trim() === '') return true;
+          return /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(v.trim());
+        },
+        message: props => `"${props.value}" is not a valid UPI ID (e.g. mobile@upi or name@okhdfcbank).`
+      }
+    }, // For Instant Payouts
+    experienceYears: { type: Number, default: 0, min: 0 },
     totalJobsCompleted: { type: Number, default: 0 },
     category: { type: String },
     categoryName: { type: String, default: '' },
-    hourlyRate: { type: Number },
+    hourlyRate: { 
+      type: Number,
+      validate: {
+        validator: function(v) {
+          if (v === undefined || v === null) return true;
+          return v > 0;
+        },
+        message: 'Hourly rate must be greater than 0.'
+      }
+    },
     location: { type: String },
     locationGeo: {
       type: { type: String, enum: ['Point'], default: 'Point' },

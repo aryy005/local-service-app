@@ -8,6 +8,12 @@ const Complaint = require('../models/Complaint');
 const Review = require('../models/Review');
 const { sendPartnerWelcomeEmail } = require('../services/verification');
 const auth = require('../middleware/auth');
+const {
+  isValidEmail,
+  isValidPhone,
+  normalizePhone,
+  isValidRate
+} = require('../utils/validation');
 
 // Middleware to verify admin privileges
 const admin = async (req, res, next) => {
@@ -466,9 +472,22 @@ router.put('/providers/:id', [auth, admin], async (req, res) => {
 
     const { name, email, phone, category, location, hourlyRate, experienceYears, status, rating } = req.body;
 
-    if (name) provider.name = name;
-    if (email) provider.email = email;
-    if (phone) provider.phone = phone;
+    if (name) {
+      if (name.trim().length < 2) return res.status(400).json({ message: 'Name must be at least 2 characters' });
+      provider.name = name.trim();
+    }
+    if (email) {
+      if (!isValidEmail(email)) return res.status(400).json({ message: 'Please provide a valid email address' });
+      provider.email = email.toLowerCase().trim();
+    }
+    if (phone !== undefined) {
+      if (phone && phone.trim() !== '') {
+        if (!isValidPhone(phone)) return res.status(400).json({ message: 'Please provide a valid 10-digit Indian mobile number' });
+        provider.phone = normalizePhone(phone);
+      } else {
+        provider.phone = '';
+      }
+    }
     if (location) provider.city = location;
 
     if (!provider.providerDetails) provider.providerDetails = {};
@@ -532,15 +551,31 @@ router.post('/providers', [auth, admin], async (req, res) => {
       return res.status(400).json({ message: 'Name and email are required' });
     }
 
-    const existingUser = await User.findOne({ email });
+    if (name.trim().length < 2) {
+      return res.status(400).json({ message: 'Provider name must be at least 2 characters' });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address' });
+    }
+
+    if (phone && phone.trim() !== '' && !isValidPhone(phone)) {
+      return res.status(400).json({ message: 'Please provide a valid 10-digit Indian mobile number' });
+    }
+
+    if (hourlyRate !== undefined && hourlyRate !== '' && !isValidRate(hourlyRate)) {
+      return res.status(400).json({ message: 'Starting / base hourly rate must be greater than ₹0' });
+    }
+
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
       return res.status(400).json({ message: 'A user with this email already exists' });
     }
 
     const newProvider = new User({
-      name,
-      email,
-      phone: phone || '',
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      phone: phone ? normalizePhone(phone) : '',
       password: 'Provider@123',
       role: 'provider',
       city: location || 'Chandigarh',
@@ -620,13 +655,26 @@ router.put('/customers/:id', [auth, admin], async (req, res) => {
     }
 
     const { name, email, phone, city } = req.body;
-    if (name) customer.name = name;
-    if (email) customer.email = email;
-    if (phone) customer.phone = phone;
+    if (name) {
+      if (name.trim().length < 2) return res.status(400).json({ message: 'Customer name must be at least 2 characters' });
+      customer.name = name.trim();
+    }
+    if (email) {
+      if (!isValidEmail(email)) return res.status(400).json({ message: 'Please provide a valid email address' });
+      customer.email = email.toLowerCase().trim();
+    }
+    if (phone !== undefined) {
+      if (phone && phone.trim() !== '') {
+        if (!isValidPhone(phone)) return res.status(400).json({ message: 'Please provide a valid 10-digit Indian mobile number' });
+        customer.phone = normalizePhone(phone);
+      } else {
+        customer.phone = '';
+      }
+    }
     if (city) {
-      customer.city = city;
+      customer.city = city.trim();
       if (!customer.addressDetails) customer.addressDetails = {};
-      customer.addressDetails.city = city;
+      customer.addressDetails.city = city.trim();
     }
 
     await customer.save();

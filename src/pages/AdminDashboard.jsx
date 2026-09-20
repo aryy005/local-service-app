@@ -12,6 +12,7 @@ import {
   Wrench, Scissors, Paintbrush, Snowflake, Trash2, Edit2, LogOut,
   IndianRupee, Activity, Star, Eye, RefreshCw
 } from 'lucide-react';
+import { isValidEmail, isValidPhone, sanitizeDigits } from '../utils/validation';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -367,6 +368,15 @@ const AdminDashboard = () => {
     if (!selectedDetailProvider) return;
     const pId = selectedDetailProvider.id || selectedDetailProvider._id;
 
+    if (editProviderForm.email && !isValidEmail(editProviderForm.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    if (editProviderForm.phone && !isValidPhone(editProviderForm.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/admin/providers/${pId}`, {
         method: 'PUT',
@@ -426,6 +436,15 @@ const AdminDashboard = () => {
     e.preventDefault();
     if (!editingCustomer) return;
     const cId = editingCustomer.id || editingCustomer._id;
+
+    if (editCustomerForm.email && !isValidEmail(editCustomerForm.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    if (editCustomerForm.phone && !isValidPhone(editCustomerForm.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
 
     try {
       const res = await fetch(`${API_URL}/admin/customers/${cId}`, {
@@ -515,6 +534,14 @@ const AdminDashboard = () => {
     e.preventDefault();
     if (!newProviderForm.name || !newProviderForm.email) {
       toast.error('Please fill in name and email');
+      return;
+    }
+    if (!isValidEmail(newProviderForm.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    if (newProviderForm.phone && !isValidPhone(newProviderForm.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number');
       return;
     }
 
@@ -2254,11 +2281,17 @@ const AdminDashboard = () => {
                   <input 
                     type="tel" 
                     required
-                    placeholder="+91 98765 43210"
+                    maxLength={10}
+                    placeholder="10-digit mobile number"
                     value={newProviderForm.phone}
-                    onChange={(e) => setNewProviderForm({ ...newProviderForm, phone: e.target.value })}
+                    onChange={(e) => setNewProviderForm({ ...newProviderForm, phone: sanitizeDigits(e.target.value, 10) })}
                     className="admin-form-input"
                   />
+                  {newProviderForm.phone && !isValidPhone(newProviderForm.phone) && (
+                    <div style={{ color: '#EF4444', fontSize: '0.72rem', fontWeight: 600, marginTop: '3px' }}>
+                      Must be a valid 10-digit Indian mobile number
+                    </div>
+                  )}
                 </div>
                 <div className="admin-form-group">
                   <label className="admin-form-label">Location / City *</label>
@@ -2630,11 +2663,18 @@ const AdminDashboard = () => {
                         <div className="admin-form-group">
                           <label className="admin-form-label">Phone</label>
                           <input 
-                            type="text" 
+                            type="tel" 
+                            maxLength={10}
+                            placeholder="10-digit mobile number"
                             value={editProviderForm.phone} 
-                            onChange={e => setEditProviderForm({...editProviderForm, phone: e.target.value})}
+                            onChange={e => setEditProviderForm({...editProviderForm, phone: sanitizeDigits(e.target.value, 10)})}
                             className="admin-form-input" 
                           />
+                          {editProviderForm.phone && !isValidPhone(editProviderForm.phone) && (
+                            <div style={{ color: '#EF4444', fontSize: '0.72rem', fontWeight: 600, marginTop: '3px' }}>
+                              Must be 10 digits
+                            </div>
+                          )}
                         </div>
                         <div className="admin-form-group">
                           <label className="admin-form-label">Email</label>
@@ -2944,11 +2984,18 @@ const AdminDashboard = () => {
                 <div className="admin-form-group">
                   <label className="admin-form-label">Phone Number</label>
                   <input 
-                    type="text" 
+                    type="tel" 
+                    maxLength={10}
+                    placeholder="10-digit mobile number"
                     value={editCustomerForm.phone} 
-                    onChange={e => setEditCustomerForm({...editCustomerForm, phone: e.target.value})}
+                    onChange={e => setEditCustomerForm({...editCustomerForm, phone: sanitizeDigits(e.target.value, 10)})}
                     className="admin-form-input" 
                   />
+                  {editCustomerForm.phone && !isValidPhone(editCustomerForm.phone) && (
+                    <div style={{ color: '#EF4444', fontSize: '0.72rem', fontWeight: 600, marginTop: '3px' }}>
+                      Must be 10 digits
+                    </div>
+                  )}
                 </div>
                 <div className="admin-form-group">
                   <label className="admin-form-label">City</label>

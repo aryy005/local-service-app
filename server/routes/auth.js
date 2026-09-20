@@ -5,6 +5,14 @@ const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const { hashAadhaar, isValidAadhaar, sendPartnerWelcomeEmail } = require('../services/verification');
+const {
+  isValidEmail,
+  isValidPhone,
+  normalizePhone,
+  isValidUpi,
+  isValidPincode,
+  isValidRate
+} = require('../utils/validation');
 
 // @route   POST api/auth/google
 // @route   POST api/auth/google
@@ -98,6 +106,14 @@ router.post('/google', async (req, res) => {
         });
       }
 
+      if (phone && phone.trim() !== '' && !isValidPhone(phone)) {
+        return res.status(400).json({ message: 'Please provide a valid 10-digit Indian mobile number' });
+      }
+
+      if (pincode && pincode.trim() !== '' && !isValidPincode(pincode)) {
+        return res.status(400).json({ message: 'Please provide a valid 6-digit Indian PIN code' });
+      }
+
       const primaryCity = city.trim() || 'Delhi NCR';
       const addressObj = {
         street: street.trim(),
@@ -121,7 +137,7 @@ router.post('/google', async (req, res) => {
       user = new User({
         name: name || 'Google User',
         email: normalizedEmail,
-        phone: phone.trim(),
+        phone: phone ? normalizePhone(phone) : '',
         role: normalizedRole,
         googleId,
         authProvider: 'google',
@@ -191,8 +207,29 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    if (name.trim().length < 2) {
+      return res.status(400).json({ message: 'Please provide a valid name (at least 2 characters)' });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address (e.g. user@example.com)' });
+    }
+
+    if (phone && phone.trim() !== '' && !isValidPhone(phone)) {
+      return res.status(400).json({ message: 'Please provide a valid 10-digit Indian mobile number (e.g. 9876543210)' });
+    }
+
+    if (pincode && pincode.trim() !== '' && !isValidPincode(pincode)) {
+      return res.status(400).json({ message: 'Please provide a valid 6-digit Indian PIN code (e.g. 141001)' });
+    }
+
     const normalizedRole = ['customer', 'provider', 'admin'].includes(role) ? role : 'customer';
+
+    if (normalizedRole === 'provider' && hourlyRate !== undefined && hourlyRate !== null && !isValidRate(hourlyRate)) {
+      return res.status(400).json({ message: 'Starting / base hourly rate must be greater than ₹0' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
 
     // Strict 1 Email = 1 Account Global Check
     let user = await User.findOne({ email: normalizedEmail });
@@ -203,18 +240,18 @@ router.post('/register', async (req, res) => {
     const formattedLocation = location || [street, city, state, pincode].filter(Boolean).join(', ') || 'City Center';
 
     user = new User({
-      name,
+      name: name.trim(),
       email: normalizedEmail,
-      phone: phone || '',
+      phone: phone ? normalizePhone(phone) : '',
       password,
       role: normalizedRole,
       authProvider: 'local',
       city: (city || location || '').trim(),
       addressDetails: {
-        street: street || '',
+        street: (street || '').trim(),
         city: (city || location || '').trim(),
-        state: state || '',
-        pincode: pincode || ''
+        state: (state || '').trim(),
+        pincode: (pincode || '').trim()
       },
       emailVerified: false,
       phoneVerified: false,
@@ -276,6 +313,10 @@ router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: 'Email address is required' });
 
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address' });
+    }
+
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
 
@@ -315,6 +356,10 @@ router.post('/reset-password', async (req, res) => {
 
     if (!email || !otp || !newPassword) {
       return res.status(400).json({ message: 'Email, OTP code, and new password are required' });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address' });
     }
 
     if (newPassword.length < 6) {
@@ -362,6 +407,10 @@ router.post('/login', async (req, res) => {
 
     if (!email || !password || !role) {
       return res.status(400).json({ message: 'Email, password, and role are all required to sign in' });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Please enter a valid email address' });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -430,20 +479,50 @@ router.put('/me', auth, async (req, res) => {
     
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (name) user.name = name;
-    if (phone !== undefined) user.phone = phone;
-    if (city) user.city = city;
+    if (name) {
+      if (name.trim().length < 2) {
+        return res.status(400).json({ message: 'Name must be at least 2 characters' });
+      }
+      user.name = name.trim();
+    }
+
+    if (phone !== undefined) {
+      if (phone && phone.trim() !== '') {
+        if (!isValidPhone(phone)) {
+          return res.status(400).json({ message: 'Please provide a valid 10-digit Indian mobile number (e.g. 9876543210)' });
+        }
+        user.phone = normalizePhone(phone);
+      } else {
+        user.phone = '';
+      }
+    }
+
+    if (city) user.city = city.trim();
     
     if (addressDetails) {
       if (!user.addressDetails) user.addressDetails = {};
-      if (addressDetails.street !== undefined) user.addressDetails.street = addressDetails.street;
-      if (addressDetails.city !== undefined) user.addressDetails.city = addressDetails.city;
-      if (addressDetails.state !== undefined) user.addressDetails.state = addressDetails.state;
-      if (addressDetails.pincode !== undefined) user.addressDetails.pincode = addressDetails.pincode;
-      if (addressDetails.city) user.city = addressDetails.city;
+      if (addressDetails.street !== undefined) user.addressDetails.street = addressDetails.street.trim();
+      if (addressDetails.city !== undefined) user.addressDetails.city = addressDetails.city.trim();
+      if (addressDetails.state !== undefined) user.addressDetails.state = addressDetails.state.trim();
+      if (addressDetails.pincode !== undefined) {
+        if (addressDetails.pincode && addressDetails.pincode.trim() !== '') {
+          if (!isValidPincode(addressDetails.pincode)) {
+            return res.status(400).json({ message: 'Please provide a valid 6-digit Indian PIN code (e.g. 141001)' });
+          }
+          user.addressDetails.pincode = addressDetails.pincode.trim();
+        } else {
+          user.addressDetails.pincode = '';
+        }
+      }
+      if (addressDetails.city) user.city = addressDetails.city.trim();
     }
 
     if (Array.isArray(savedAddresses)) {
+      for (const addr of savedAddresses) {
+        if (addr.pincode && addr.pincode.trim() !== '' && !isValidPincode(addr.pincode)) {
+          return res.status(400).json({ message: `Invalid PIN code "${addr.pincode}". Must be a valid 6-digit PIN code.` });
+        }
+      }
       user.savedAddresses = savedAddresses;
     }
 
@@ -476,11 +555,30 @@ router.put('/me', auth, async (req, res) => {
           };
           user.providerDetails.categoryName = catLabels[providerDetails.category] || providerDetails.categoryName || 'Service Provider';
         }
-        if (providerDetails.hourlyRate !== undefined) user.providerDetails.hourlyRate = Number(providerDetails.hourlyRate) || 0;
-        if (providerDetails.experienceYears !== undefined) user.providerDetails.experienceYears = Number(providerDetails.experienceYears) || 0;
+        if (providerDetails.hourlyRate !== undefined) {
+          if (providerDetails.hourlyRate !== '' && providerDetails.hourlyRate !== null) {
+            if (!isValidRate(providerDetails.hourlyRate)) {
+              return res.status(400).json({ message: 'Starting / base hourly rate must be greater than ₹0' });
+            }
+            user.providerDetails.hourlyRate = Number(providerDetails.hourlyRate);
+          }
+        }
+        if (providerDetails.experienceYears !== undefined) {
+          const exp = Number(providerDetails.experienceYears);
+          user.providerDetails.experienceYears = isNaN(exp) || exp < 0 ? 0 : exp;
+        }
         if (providerDetails.location !== undefined) user.providerDetails.location = providerDetails.location;
         if (providerDetails.description !== undefined) user.providerDetails.description = providerDetails.description;
-        if (providerDetails.upiId !== undefined) user.providerDetails.upiId = providerDetails.upiId;
+        if (providerDetails.upiId !== undefined) {
+          if (providerDetails.upiId && providerDetails.upiId.trim() !== '') {
+            if (!isValidUpi(providerDetails.upiId)) {
+              return res.status(400).json({ message: 'Please enter a valid UPI ID (e.g. mobileNumber@upi or name@okhdfcbank)' });
+            }
+            user.providerDetails.upiId = providerDetails.upiId.trim();
+          } else {
+            user.providerDetails.upiId = '';
+          }
+        }
         if (providerDetails.skills !== undefined && Array.isArray(providerDetails.skills)) user.providerDetails.skills = providerDetails.skills;
         if (providerDetails.portfolioImages !== undefined && Array.isArray(providerDetails.portfolioImages)) {
           user.providerDetails.portfolioImages = providerDetails.portfolioImages;
@@ -545,6 +643,10 @@ router.post('/addresses', auth, async (req, res) => {
       return res.status(400).json({ message: 'Street address and City are required' });
     }
 
+    if (pincode && pincode.trim() !== '' && !isValidPincode(pincode)) {
+      return res.status(400).json({ message: 'Please provide a valid 6-digit Indian PIN code (e.g. 141001)' });
+    }
+
     let user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -561,7 +663,7 @@ router.post('/addresses', auth, async (req, res) => {
         street: street.trim(),
         city: city.trim(),
         state: state.trim(),
-        pincode: pincode.trim()
+        pincode: (pincode || '').trim()
       };
     }
 
@@ -570,7 +672,7 @@ router.post('/addresses', auth, async (req, res) => {
       street: street.trim(),
       city: city.trim(),
       state: state.trim(),
-      pincode: pincode.trim(),
+      pincode: (pincode || '').trim(),
       isDefault: shouldBeDefault
     });
 
@@ -593,6 +695,12 @@ router.put('/addresses/:id', auth, async (req, res) => {
 
     const addr = user.savedAddresses.id(req.params.id);
     if (!addr) return res.status(404).json({ message: 'Address not found' });
+
+    if (pincode !== undefined && pincode.trim() !== '') {
+      if (!isValidPincode(pincode)) {
+        return res.status(400).json({ message: 'Please provide a valid 6-digit Indian PIN code (e.g. 141001)' });
+      }
+    }
 
     if (label !== undefined) addr.label = label.trim();
     if (street !== undefined) addr.street = street.trim();

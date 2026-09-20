@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
+import { isValidEmail } from '../utils/validation';
 import './Auth.css';
 
 const Login = () => {
@@ -33,9 +34,15 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!isValidEmail(formData.email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const data = await login(formData.email, formData.password, formData.role);
+      const data = await login(formData.email.trim().toLowerCase(), formData.password, formData.role);
       handleRoleRedirect(data.user.role);
     } catch (err) {
       setError(err.message);

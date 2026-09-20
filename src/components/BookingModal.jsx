@@ -3,6 +3,7 @@ import { X, Calendar, Clock, CheckCircle, MapPin, Lock, ArrowLeft, ArrowRight, S
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentDetailedAddress } from '../utils/geolocation';
+import { isValidPincode, sanitizeDigits } from '../utils/validation';
 import { API_URL } from '../config';
 import '../pages/Auth.css';
 import './BookingModal.css';
@@ -126,6 +127,11 @@ const BookingModal = ({ provider, initialDate, initialTime, onClose, onSuccess }
 
     if (!addressData.street.trim() || !addressData.city.trim()) {
       setError('Please verify that street and city are filled in.');
+      return;
+    }
+
+    if (addressData.pincode && !isValidPincode(addressData.pincode)) {
+      setError('Please enter a valid 6-digit Indian postal pincode (e.g. 110001).');
       return;
     }
 
@@ -640,10 +646,19 @@ const BookingModal = ({ provider, initialDate, initialTime, onClose, onSuccess }
                         <label>Pincode</label>
                         <input 
                           type="text" 
+                          maxLength={6}
                           placeholder="e.g. 400001"
                           value={addressData.pincode}
-                          onChange={(e) => setAddressData({ ...addressData, pincode: e.target.value })}
+                          onChange={(e) => setAddressData({ ...addressData, pincode: sanitizeDigits(e.target.value, 6) })}
+                          style={{
+                            borderColor: addressData.pincode && !isValidPincode(addressData.pincode) ? '#EF4444' : undefined
+                          }}
                         />
+                        {addressData.pincode && !isValidPincode(addressData.pincode) && (
+                          <div style={{ color: '#EF4444', fontSize: '0.68rem', fontWeight: 700, marginTop: '2px' }}>
+                            6-digit pincode
+                          </div>
+                        )}
                       </div>
 
                       <div style={{ paddingTop: '1.25rem' }}>

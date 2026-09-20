@@ -3,6 +3,7 @@ import { ShieldCheck, CreditCard, QrCode, Building, Wallet, Banknote, CheckCircl
 import { API_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
 import { playNotificationSound } from '../utils/soundNotifications';
+import { isValidUpi } from '../utils/validation';
 import './PaymentModal.css';
 import '../pages/Auth.css';
 
@@ -83,7 +84,11 @@ const PaymentModal = ({ booking, onClose, onSuccess }) => {
         if (cardCvv.length < 3) throw new Error('Enter a valid 3-digit CVV');
         if (!cardName.trim()) throw new Error('Enter cardholder name');
       } else if (activeTab === 'upi') {
-        if (!selectedUpiApp && !upiId) throw new Error('Please select a UPI App or enter UPI ID');
+        if (upiId) {
+          if (!isValidUpi(upiId.trim())) throw new Error('Please enter a valid UPI ID (e.g. mobile@upi or name@okhdfcbank)');
+        } else if (!selectedUpiApp) {
+          throw new Error('Please select a UPI App or enter UPI ID');
+        }
       }
 
       await new Promise((resolve) => setTimeout(resolve, 1400));
@@ -310,8 +315,16 @@ const PaymentModal = ({ booking, onClose, onSuccess }) => {
                       className="form-input" 
                       placeholder="e.g. mobileNumber@upi or name@okicici"
                       value={upiId}
-                      onChange={(e) => setUpiId(e.target.value)}
+                      onChange={(e) => setUpiId(e.target.value.trim().toLowerCase())}
+                      style={{
+                        borderColor: upiId && !isValidUpi(upiId) ? '#EF4444' : undefined
+                      }}
                     />
+                    {upiId && !isValidUpi(upiId) && (
+                      <div style={{ color: '#EF4444', fontSize: '0.72rem', fontWeight: 600, marginTop: '4px' }}>
+                        Invalid UPI ID format (e.g. mobile@upi or name@okhdfcbank)
+                      </div>
+                    )}
                   </div>
 
                   <div className="upi-apps-grid">

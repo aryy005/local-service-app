@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
+import { isValidEmail } from '../utils/validation';
 import './AdminLogin.css';
 
 const AdminLogin = () => {
@@ -15,8 +16,14 @@ const AdminLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid administrator email address.');
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const res = await login(email, password, 'admin');

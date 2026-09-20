@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { KeyRound, Mail, ArrowLeft, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react';
+import { isValidEmail, sanitizeDigits } from '../utils/validation';
 import { API_URL } from '../config';
 import './Auth.css';
 
@@ -27,12 +28,17 @@ const ForgotPassword = () => {
       return;
     }
 
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email: email.trim().toLowerCase() })
       });
 
       const data = await res.json();
@@ -172,7 +178,7 @@ const ForgotPassword = () => {
               <input 
                 type="text" 
                 value={otp}
-                onChange={(e) => setOtp(e.target.value)}
+                onChange={(e) => setOtp(sanitizeDigits(e.target.value, 6))}
                 placeholder="e.g. 849201" 
                 required
                 maxLength={6}
