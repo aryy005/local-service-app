@@ -63,15 +63,16 @@ function verifyStoredOTP(key, inputOtp) {
 // ═══════════════════════════════════════════════════════════════
 
 function getCleanEmailCredentials() {
-  const user = (process.env.SMTP_USER || 'localfixrr@gmail.com').trim();
+  const user = (process.env.SMTP_USER || 'localfixr@gmail.com').trim();
   // Strip all whitespace from pass (Google App Passwords are shown with spaces like "abcd efgh ijkl mnop")
   const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '').trim();
   const host = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
   const port = parseInt(process.env.SMTP_PORT) || 465;
   const isSecure = process.env.SMTP_SECURE === 'true' || port === 465;
-  const from = (process.env.SMTP_FROM || `"LocalFixr" <${user}>`).trim();
+  const from = (process.env.SMTP_FROM || '"LocalFixr" <info@localfixr.site>').trim();
+  const replyTo = (process.env.SMTP_REPLY_TO || 'info@localfixr.site').trim();
 
-  return { user, pass, host, port, isSecure, from };
+  return { user, pass, host, port, isSecure, from, replyTo };
 }
 
 async function getEmailTransporter() {
@@ -161,7 +162,7 @@ async function sendEmailOTP(email) {
   const key = `email:${email.toLowerCase()}`;
   storeOTP(key, otp);
 
-  const { user, pass, from } = getCleanEmailCredentials();
+  const { user, pass, from, replyTo } = getCleanEmailCredentials();
   const isConfigured = Boolean(user && pass);
   const transporter = await getEmailTransporter();
   
@@ -169,6 +170,7 @@ async function sendEmailOTP(email) {
     try {
       const info = await transporter.sendMail({
         from: from,
+        replyTo: replyTo,
         to: email,
         subject: 'LocalFixr - Email Verification OTP',
         html: `
@@ -478,7 +480,7 @@ async function sendPartnerWelcomeEmail(partnerUser) {
                     🛡️ Official Service Partner Engagement Letter • LocalFixr Marketplace
                   </td>
                   <td align="right" style="font-size:11px; color:#64748b;">
-                    Support: support@localfixr.com
+                    Support: info@localfixr.site
                   </td>
                 </tr>
               </table>
@@ -493,7 +495,7 @@ async function sendPartnerWelcomeEmail(partnerUser) {
 </html>
   `;
 
-  const { user, pass, from } = getCleanEmailCredentials();
+  const { user, pass, from, replyTo } = getCleanEmailCredentials();
   const isConfigured = Boolean(user && pass);
   const transporter = await getEmailTransporter();
   const subject = `Welcome to the LocalFixr Partner Network, ${partnerName}! 🌟 Official Onboarding Confirmation`;
@@ -502,6 +504,7 @@ async function sendPartnerWelcomeEmail(partnerUser) {
     try {
       const info = await transporter.sendMail({
         from: from,
+        replyTo: replyTo,
         to: partnerEmail,
         subject: subject,
         html: htmlContent
@@ -549,7 +552,7 @@ async function sendPartnerWelcomeEmail(partnerUser) {
 async function sendBookingConfirmationEmail(booking, customer, provider) {
   if (!customer || !customer.email) return { sent: false, error: 'Customer email missing' };
 
-  const { user, pass, from } = getCleanEmailCredentials();
+  const { user, pass, from, replyTo } = getCleanEmailCredentials();
   const isConfigured = Boolean(user && pass);
   const transporter = await getEmailTransporter();
   const orderId = booking.orderId || `ORD-${booking.orderNumber || 'LF'}`;
@@ -613,7 +616,7 @@ async function sendBookingConfirmationEmail(booking, customer, provider) {
       </div>
     </div>
     <div style="background:#f8fafc; padding:16px 24px; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
-      LocalFixr Automated Support: ${user}
+      LocalFixr Support: info@localfixr.site
     </div>
   </div>
 </body>
@@ -624,6 +627,7 @@ async function sendBookingConfirmationEmail(booking, customer, provider) {
     try {
       const info = await transporter.sendMail({
         from: from,
+        replyTo: replyTo,
         to: customer.email,
         subject,
         html: htmlContent
@@ -644,7 +648,7 @@ async function sendBookingConfirmationEmail(booking, customer, provider) {
 async function sendBookingNotificationToProvider(booking, customer, provider) {
   if (!provider || !provider.email) return { sent: false, error: 'Provider email missing' };
 
-  const { user, pass, from } = getCleanEmailCredentials();
+  const { user, pass, from, replyTo } = getCleanEmailCredentials();
   const isConfigured = Boolean(user && pass);
   const transporter = await getEmailTransporter();
   const orderId = booking.orderId || `ORD-${booking.orderNumber || 'LF'}`;
@@ -709,7 +713,7 @@ async function sendBookingNotificationToProvider(booking, customer, provider) {
       </div>
     </div>
     <div style="background:#f8fafc; padding:16px 24px; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
-      LocalFixr Partner Operations: ${user}
+      LocalFixr Partner Operations: info@localfixr.site
     </div>
   </div>
 </body>
@@ -720,6 +724,7 @@ async function sendBookingNotificationToProvider(booking, customer, provider) {
     try {
       const info = await transporter.sendMail({
         from: from,
+        replyTo: replyTo,
         to: provider.email,
         subject,
         html: htmlContent
@@ -740,7 +745,7 @@ async function sendBookingNotificationToProvider(booking, customer, provider) {
 async function sendBookingStatusUpdateEmail(booking, customer, provider, stage) {
   if (!customer || !customer.email) return { sent: false };
 
-  const { user, pass, from } = getCleanEmailCredentials();
+  const { user, pass, from, replyTo } = getCleanEmailCredentials();
   const transporter = await getEmailTransporter();
   const orderId = booking.orderId || `ORD-${booking.orderNumber || 'LF'}`;
   const providerName = provider?.name || 'Your Service Specialist';
@@ -797,7 +802,7 @@ async function sendBookingStatusUpdateEmail(booking, customer, provider, stage) 
       </div>
     </div>
     <div style="background:#f8fafc; padding:16px 24px; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
-      LocalFixr Notifications: ${user}
+      LocalFixr Notifications: info@localfixr.site
     </div>
   </div>
 </body>
@@ -807,7 +812,8 @@ async function sendBookingStatusUpdateEmail(booking, customer, provider, stage) 
   if (transporter) {
     try {
       await transporter.sendMail({
-        from,
+        from: from,
+        replyTo: replyTo,
         to: customer.email,
         subject,
         html: htmlContent
@@ -825,7 +831,7 @@ async function sendBookingStatusUpdateEmail(booking, customer, provider, stage) 
  * Send a test email to verify SMTP delivery on demand
  */
 async function sendTestEmail(targetEmail) {
-  const { user, pass, from } = getCleanEmailCredentials();
+  const { user, pass, from, replyTo } = getCleanEmailCredentials();
   if (!user || !pass) {
     return {
       success: false,
@@ -836,7 +842,8 @@ async function sendTestEmail(targetEmail) {
   const transporter = await getEmailTransporter();
   try {
     const info = await transporter.sendMail({
-      from,
+      from: from,
+      replyTo: replyTo,
       to: targetEmail,
       subject: 'LocalFixr - Automated Email Service Test ✅',
       html: `
