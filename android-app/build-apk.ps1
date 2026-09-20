@@ -31,6 +31,7 @@ try {
         $outputApk = "$scriptDir\app\build\outputs\apk\debug\app-debug.apk"
         $destApk = "$rootDir\Localfixr.apk"
         Copy-Item $outputApk $destApk -Force
+        (Get-Item $destApk).LastWriteTime = Get-Date
         Write-Host ""
         Write-Host "[SUCCESS] Build Successful!" -ForegroundColor Green
         Write-Host "[APK] Output APK: $destApk" -ForegroundColor Green
